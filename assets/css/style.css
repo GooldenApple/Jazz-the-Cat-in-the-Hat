@@ -22,6 +22,7 @@
   --neon-purple: #a64dff;
   --neon-cyan:   #00ffd5;
   --neon-blue:   #4db8ff;
+  --neon-green:  #39ff14;
 
   /* Background gradient stops (synthwave sky) */
   --bg-navy:   #0b0c1d;   /* very dark navy (top/bottom) */
@@ -210,12 +211,12 @@ body {
 }
 
 /* force arrow fills from CSS rather than SVG,This lets tokens override hardcoded SVG fills. */
-/*
+
 .ctrl-btn.left  .arrow-icon polygon { fill: var(--label-left);  }
 .ctrl-btn.up    .arrow-icon polygon { fill: var(--label-up);    }
 .ctrl-btn.down  .arrow-icon polygon { fill: var(--label-down);  }
 .ctrl-btn.right .arrow-icon polygon { fill: var(--label-right); }
-*/
+
 
 /* Direction-specific label hues (colors only; global glow lives in .ctrl-btn .label) */
 .ctrl-btn.left  .label { color: var(--label-left); }
@@ -371,6 +372,75 @@ body::before {
     0 0 28px rgba(0,255,213,.45);
   font-weight: 800;
 }
+
+/* === Jazz cat neon accents === */
+
+#dancer svg { 
+    filter: none; /* keeps the glow only on targeted parts */
+} 
+
+/* Hat band: static neon glow using our LEFT token color */
+#hat-band {
+  fill: var(--label-left);
+  stroke: white;
+  stroke-width: 1; /* thinner rim so the hat itself doesn't glow */
+  filter:
+    drop-shadow(0 0 3px var(--label-left))  /* tighter inner glow */
+    drop-shadow(0 0 3px var(--label-left)); /* outer glow */
+}
+
+/* Bow tie: same neon color but with a gentle pulse */
+#bowtie > * {
+  fill: var(--label-left);
+  stroke: white;              /* small white rim for neon feel */
+  stroke-width: 1.5;
+}
+#bowtie {
+  /* base glow; animation deepens it mid-cycle */
+  filter: drop-shadow(0 0 6px var(--label-left));
+  animation: bowPulse 1.2s ease-in-out infinite; /* makes the bow dynamic */
+}
+@keyframes bowPulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px var(--label-left))
+      drop-shadow(0 0 10px white);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 14px var(--label-left))
+      drop-shadow(0 0 20px white);
+  }
+}
+
+/* Glasses: subtle neon reflection around the frames */
+#glasses rect {
+  fill: black;                 /* keep lenses dark */
+  stroke: var(--label-left);   /* faint neon rim */
+  stroke-width: 1.25;          /* thin so it doesn't overpower */
+  /* tiny glow so it reads as neon */
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.6))
+          drop-shadow(0 0 4px var(--label-left));
+  opacity: 0.95;               /* keep them slightly subdued */
+}
+/* Bridge: even subtler so it doesn't look too heavy */
+#glasses rect:nth-child(3) {
+  stroke-width: 1;
+  filter: none;                /* skip glow on the bridge */
+  opacity: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* =================
