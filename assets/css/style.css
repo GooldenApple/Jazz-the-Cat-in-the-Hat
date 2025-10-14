@@ -1,0 +1,38 @@
+/* =============================
+   Jazz the Cat in the Hat – Base Skeleton CSS
+   ============================= */
+
+/* Theme variables */
+:root {
+  --bg: #0b1221;
+  --panel: #121b34;
+  --ink: #f5f7ff;
+  --muted: #a9b3d3;
+  --accent: #7aa2ff;
+  --good: #3ddc97;
+  --bad: #ff6b6b;
+}
+
+/* Reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Layout structure */
+.topbar { }
+.main-nav { }
+.nav-list { }
+
+.game { }
+.hud { }
+.stage { }
+.controls { }
+
+.overlay { }
+.hidden { display: none; }

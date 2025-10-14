@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jazz the Cat in the Hat</title>
+  <meta name="description" content="Rhythm-based reaction game with keyboard & touch controls." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <!-- Global header: branding + primary navigation -->
+  <header class="topbar" role="banner">
+    <!-- Main navigation; keyboard/touch friendly -->
+    <nav class="main-nav" aria-label="Main">
+      <!-- Brand link placeholder for now -->
+      <a href="#" class="brand">🐱🎩 Jazz the Cat in the Hat</a>
+      <!-- Primary actions as a list (semantics + a11y) -->
+      <ul class="nav-list">
+        <!-- Start game; JS listens to data-action -->
+        <li><button class="nav-btn" data-action="play">Play</button></li>
+        <!-- Tutorial overlay for controls/goals -->
+        <li><button class="nav-btn" data-action="tutorial">Tutorial</button></li>
+        <!-- Settings: sound mode, WASD, voice cues -->
+        <li><button class="nav-btn" data-action="settings">Settings</button></li>
+        <!-- High score view (localStorage later) -->
+        <li><button class="nav-btn" data-action="highscore">High Score</button></li>
+    </ul>
+    </nav>
+  </header>
+
+  <main id="game" class="game" role="main">
+    <!-- HUD -->
+    <section class="hud" aria-label="Heads-up display"></section>
+
+    <!-- Game stage -->
+    <section class="stage" aria-label="Game stage"></section>
+
+    <!-- Touch/Click controls -->
+    <section class="controls" aria-label="Arrow controls"></section>
+  </main>
+
+  <!-- Overlays (tutorial / pause / summary) -->
+  <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Entry point -->
+  <script type="module" src="assets/js/game.js"></script>
+</body>
+</html>
