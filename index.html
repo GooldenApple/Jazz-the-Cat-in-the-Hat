@@ -1,48 +1,149 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jazz the Cat in the Hat</title>
-  <meta name="description" content="Rhythm-based reaction game with keyboard & touch controls." />
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
-  <!-- Global header: branding + primary navigation -->
-  <header class="topbar" role="banner">
-    <!-- Main navigation; keyboard/touch friendly -->
-    <nav class="main-nav" aria-label="Main">
-      <!-- Brand link placeholder for now -->
-      <a href="#" class="brand">🐱🎩 Jazz the Cat in the Hat</a>
-      <!-- Primary actions as a list (semantics + a11y) -->
-      <ul class="nav-list">
-        <!-- Start game; JS listens to data-action -->
-        <li><button class="nav-btn" data-action="play">Play</button></li>
-        <!-- Tutorial overlay for controls/goals -->
-        <li><button class="nav-btn" data-action="tutorial">Tutorial</button></li>
-        <!-- Settings: sound mode, WASD, voice cues -->
-        <li><button class="nav-btn" data-action="settings">Settings</button></li>
-        <!-- High score view (localStorage later) -->
-        <li><button class="nav-btn" data-action="highscore">High Score</button></li>
-    </ul>
-    </nav>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jazz the Cat in the Hat</title>
+    <meta
+      name="description"
+      content="Rhythm-based reaction game with keyboard & touch controls."
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <!-- Global header: branding + primary navigation -->
+    <header class="topbar" role="banner">
+      <!-- Main navigation; keyboard/touch friendly -->
+      <nav class="main-nav" aria-label="Main">
+        <!-- Brand link placeholder for now -->
+        <a href="#" class="brand">🐱🎩 Jazz the Cat in the Hat</a>
+        <!-- Primary actions as a list (semantics + a11y) -->
+        <ul class="nav-list">
+          <!-- Start game; JS listens to data-action -->
+          <li><button class="nav-btn" data-action="play">Play</button></li>
+          <!-- Tutorial overlay for controls/goals -->
+          <li>
+            <button class="nav-btn" data-action="tutorial">Tutorial</button>
+          </li>
+          <!-- Settings: sound mode, WASD, voice cues -->
+          <li>
+            <button class="nav-btn" data-action="settings">Settings</button>
+          </li>
+          <!-- High score view (localStorage later) -->
+          <li>
+            <button class="nav-btn" data-action="highscore">High Score</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
 
-  <main id="game" class="game" role="main">
-    <!-- HUD -->
-    <section class="hud" aria-label="Heads-up display"></section>
+    <main id="game" class="game" role="main">
+      <!-- HUD -->
+      <section class="hud" aria-label="Heads-up display">
+        <!-- HUD: lives, score, best, level, mode -->
+        <section class="hud" aria-label="Heads-up display">
+          <!-- Lives: start at 3 hearts -->
+          <div class="hud-item">
+            <span class="hud-label">Lives</span>
+            <div id="lives" class="lives" aria-live="polite">❤️❤️❤️</div>
+          </div>
 
-    <!-- Game stage -->
-    <section class="stage" aria-label="Game stage"></section>
+          <!-- Score: will update during play -->
+          <div class="hud-item">
+            <span class="hud-label">Score</span>
+            <div id="score" class="metric" aria-live="polite">0</div>
+          </div>
 
-    <!-- Touch/Click controls -->
-    <section class="controls" aria-label="Arrow controls"></section>
-  </main>
+          <!-- Best: persistent later (localStorage) -->
+          <div class="hud-item">
+            <span class="hud-label">Best</span>
+            <div id="best" class="metric" aria-live="polite">0</div>
+          </div>
 
-  <!-- Overlays (tutorial / pause / summary) -->
-  <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true"></div>
+          <!-- Level: simple progression counter -->
+          <div class="hud-item">
+            <span class="hud-label">Level</span>
+            <div id="level" class="metric" aria-live="polite">1</div>
+          </div>
 
-  <!-- Entry point -->
-  <script type="module" src="assets/js/game.js"></script>
-</body>
+          <!-- Mode: FX / Music / Mute (linked to settings) -->
+          <div class="hud-item">
+            <span class="hud-label">Mode</span>
+            <div id="soundMode" class="metric">FX</div>
+          </div>
+        </section>
+      </section>
+
+      <!-- Game stage -->
+      <section class="stage" aria-label="Game stage">
+        <!-- Stage: prompt lane + dancer + feedback -->
+        <section class="stage" aria-label="Game stage">
+          <!-- Lane where prompts will appear (SR-friendly updates) -->
+          <div
+            id="promptLane"
+            class="prompt-lane"
+            aria-live="polite"
+            aria-atomic="true"
+          ></div>
+
+          <!-- Dancer: inline SVG cat with hat & sunglasses -->
+          <div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
+            <svg viewBox="0 0 150 180" width="150" height="180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              
+                <!-- Ears -->
+              <polygon points="35,55 20,15 50,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+              <polygon points="115,55 130,15 100,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+              
+              <!-- Head -->
+              <circle cx="75" cy="80" r="40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+              
+              <!-- Hat -->
+              <rect id="hat-top" x="50" y="25" width="50" height="20" rx="4" fill="#2b2d3a" />
+              <rect id="hat-brim" x="40" y="45" width="70" height="8" rx="4" fill="#2b2d3a" />
+              
+              <!-- Glasses -->
+              <rect x="50" y="70" width="20" height="12" rx="3" fill="black" />
+              <rect x="80" y="70" width="20" height="12" rx="3" fill="black" />
+              <rect x="70" y="73" width="10" height="4" fill="black" />
+             
+              <!-- Eyes (behind glasses) -->
+              <circle cx="60" cy="76" r="3" fill="white" />
+              <circle cx="90" cy="76" r="3" fill="white" />
+              
+              <!-- Nose -->
+              <circle cx="75" cy="90" r="4" fill="#2b1c12" />
+              
+              <!-- Mouth -->
+              <path d="M65 100 Q75 110 85 100" stroke="#2b1c12" stroke-width="3" fill="none" />
+              
+              <!-- Body -->
+              <ellipse cx="75" cy="140" rx="35" ry="30" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+             
+              <!-- Arms -->
+              <line x1="40" y1="130" x2="20" y2="150" stroke="#2b1c12" stroke-width="6" />
+              <line x1="110" y1="130" x2="130" y2="150" stroke="#2b1c12" stroke-width="6" />
+              
+              <!-- Legs -->
+              <line x1="65" y1="160" x2="55" y2="180" stroke="#2b1c12" stroke-width="6" />
+              <line x1="85" y1="160" x2="95" y2="180" stroke="#2b1c12" stroke-width="6" />
+            </svg>
+          </div>
+
+          <!-- Feedback text for hits/misses/combo -->
+          <div id="feedback" class="feedback" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <!-- Touch/Click controls -->
+      <section class="controls" aria-label="Arrow controls"></section>
+    </main>
+
+    <!-- Overlays (tutorial / pause / summary) -->
+    <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
+
+    </div>
+
+    <!-- Entry point -->
+    <script type="module" src="assets/js/game.js"></script>
+  </body>
 </html>
