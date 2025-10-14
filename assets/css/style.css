@@ -25,14 +25,64 @@ body {
 }
 
 /* Layout structure */
-.topbar { }
-.main-nav { }
-.nav-list { }
 
-.game { }
-.hud { }
-.stage { }
-.controls { }
+/* Header / nav */
+.topbar { /* keep header tidy and spaced */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--panel);
+}
+.main-nav { /* horizontal nav container */
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.nav-list { /* list → row of buttons */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+}
 
-.overlay { }
-.hidden { display: none; }
+/* Main game area */
+.game { /* stack sections with gentle spacing */
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  place-items: center;
+}
+
+/* HUD */
+.hud { /* simple row that wraps on small screens */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.hud .hud-item { /* label + value aligned */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stage */
+.stage { /* center dancer + prompt + feedback */
+  display: grid;
+  gap: 12px;
+  place-items: center;
+  min-height: 220px; /* ensures space around the cat */
+}
+.prompt-lane { min-height: 24px; } /* space for text prompts */
+
+/* Controls */
+.controls { /* row of arrow buttons */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Overlay */
+.overlay.hidden { display: none; } /* keep overlay hidden by default */
