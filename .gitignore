@@ -1,0 +1,18 @@
+# all npm packages go here, I don't want to track them in git
+node_modules/
+
+# if I build a production version later, these folders are not needed in git
+dist/
+build/
+
+# system junk files, don't want them in the repo
+.DS_Store
+Thumbs.db
+
+# log and temp files
+*.log
+*.tmp
+*.swp
+
+# jest coverage folder (tests will generate this, no need in git)
+coverage/
