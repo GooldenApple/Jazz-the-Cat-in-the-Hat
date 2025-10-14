@@ -38,8 +38,7 @@
     </header>
 
     <main id="game" class="game" role="main">
-      <!-- HUD -->
-      <section class="hud" aria-label="Heads-up display">
+
         <!-- HUD: lives, score, best, level, mode -->
         <section class="hud" aria-label="Heads-up display">
           <!-- Lives: start at 3 hearts -->
@@ -72,25 +71,19 @@
             <div id="soundMode" class="metric">FX</div>
           </div>
         </section>
-      </section>
 
-      <!-- Game stage -->
-      <section class="stage" aria-label="Game stage">
-        <!-- Stage: prompt lane + dancer + feedback -->
+
+
+        <!-- Game Stage: prompt lane + dancer + feedback -->
         <section class="stage" aria-label="Game stage">
           <!-- Lane where prompts will appear (SR-friendly updates) -->
-          <div
-            id="promptLane"
-            class="prompt-lane"
-            aria-live="polite"
-            aria-atomic="true"
-          ></div>
+          <div id="promptLane" class="prompt-lane" aria-live="polite" aria-atomic="true"></div>
 
           <!-- Dancer: inline SVG cat with hat & sunglasses -->
           <div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
             <svg viewBox="0 0 150 180" width="150" height="180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               
-                <!-- Ears -->
+              <!-- Ears -->
               <polygon points="38,55 26,25 48,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
               <polygon points="112,55 124,25 102,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
               
@@ -140,33 +133,45 @@
           <!-- Feedback text for hits/misses/combo -->
           <div id="feedback" class="feedback" aria-live="polite"></div>
         </section>
-      </section>
 
-      <!-- Touch/Click controls -->
-      <section class="controls" aria-label="Arrow controls">
-        <!-- Controls: touch/click arrows (keyboard will come via JS) -->
-        <section class="controls" aria-label="Arrow controls">
-            <!-- Left -->
-            <button class="ctrl-btn" data-dir="Left" aria-label="Left arrow">
-                <span class="icon">⬅️</span><span class="label">LEFT</span>
-            </button>
 
-            <!-- Up -->
-            <button class="ctrl-btn" data-dir="Up" aria-label="Up arrow">
-                <span class="icon">⬆️</span><span class="label">UP</span>
-            </button>
+<!-- Controls: DDR-style SVG arrows with label above -->
+<section class="controls" aria-label="Arrow controls">
+  <!-- Left: purple arrow with thick white stroke -->
+  <button class="ctrl-btn left" data-dir="Left" aria-label="Left arrow">
+    <span class="label">LEFT</span>
+    <!-- Using an inline SVG so stroke/fill are easy to style and animate -->
+    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="60,15 20,50 60,85" fill="#7A3FFF" stroke="white" stroke-width="10"/>
+    </svg>
+  </button>
 
-            <!-- Down -->
-            <button class="ctrl-btn" data-dir="Down" aria-label="Down arrow">
-                <span class="icon">⬇️</span><span class="label">DOWN</span>
-            </button>
+  <!-- Up: mint/cyan -->
+  <button class="ctrl-btn up" data-dir="Up" aria-label="Up arrow">
+    <span class="label">UP</span>
+    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="15,60 50,20 85,60" fill="#7AF3E1" stroke="white" stroke-width="10"/>
+    </svg>
+  </button>
 
-            <!-- Right -->
-            <button class="ctrl-btn" data-dir="Right" aria-label="Right arrow">
-                <span class="icon">➡️</span><span class="label">RIGHT</span>
-            </button>
-        </section>
-      </section>
+  <!-- Down: orange -->
+  <button class="ctrl-btn down" data-dir="Down" aria-label="Down arrow">
+    <span class="label">DOWN</span>
+    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="15,40 50,80 85,40" fill="#FFC04D" stroke="white" stroke-width="10"/>
+    </svg>
+  </button>
+
+  <!-- Right: magenta/pink -->
+  <button class="ctrl-btn right" data-dir="Right" aria-label="Right arrow">
+    <span class="label">RIGHT</span>
+    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="40,15 80,50 40,85" fill="#FF6AD5" stroke="white" stroke-width="10"/>
+    </svg>
+  </button>
+</section>
+
+
     </main>
 
     <!-- Overlays (tutorial / pause / summary) -->

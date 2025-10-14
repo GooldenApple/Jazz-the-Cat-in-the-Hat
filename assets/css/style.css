@@ -2,87 +2,387 @@
    Jazz the Cat in the Hat – Base Skeleton CSS
    ============================= */
 
-/* Theme variables */
+/* -----------------------------
+   Theme variables (CSS custom properties)
+   - These define the main color palette for the neon arcade vibe
+   - Instead of hardcoding colors everywhere, we reuse these variables
+   ----------------------------- */
 :root {
-  --bg: #0b1221;
-  --panel: #121b34;
-  --ink: #f5f7ff;
-  --muted: #a9b3d3;
-  --accent: #7aa2ff;
-  --good: #3ddc97;
-  --bad: #ff6b6b;
+  /* Base app theme */
+  --bg: #0b1221;          /* page background (fallback solid) */
+  --panel: #121b34;       /* panel background (HUD pills / header) */
+  --ink: #f5f7ff;         /* primary text color */
+  --muted: #a9b3d3;       /* secondary/label text */
+  --accent: #7aa2ff;      /* UI focus ring / links */
+  --good: #3ddc97;        /* success/positive feedback */
+  --bad: #ff6b6b;         /* error/negative feedback */
+
+  /* Neon palette for the arcade vibe */
+  --neon-pink:   #ff4dd2;
+  --neon-purple: #a64dff;
+  --neon-cyan:   #00ffd5;
+  --neon-blue:   #4db8ff;
+
+  /* Background gradient stops (synthwave sky) */
+  --bg-navy:   #0b0c1d;   /* very dark navy (top/bottom) */
+  --bg-purple: #2e005f;   /* deep purple (mid) */
+  --bg-indigo: #180030;   /* indigo transition (lower mid) */
+
+  /* Control label colors (kept explicit for readability) */
+  --label-left:  #39ff14; /* LEFT label neon green */
+  --label-up:    #7af3e1; /* UP label tone mint/cyan */
+  --label-down:  #ffc04d; /* DOWN label tone orange */
+  --label-right: #ff6ad5; /* RIGHT label tone pink  */
 }
 
-/* Reset */
+
+/* ---------------------------------------------------------
+   Reset / globals, Normalize margins/padding and set the base grid layout
+   --------------------------------------------------------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
+
 body {
-  font-family: system-ui, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--ink);
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  font-family: system-ui, Arial, sans-serif; /* clean, readable default */
+  background: var(--bg);                     /* solid fallback */
+  color: var(--ink);                         /* default text color */
+  display: grid;                             /* page-level grid */
+  grid-template-rows: auto 1fr auto;         /* header / main / footer */
 }
 
-/* Layout structure */
 
-/* Header / nav */
-.topbar { /* keep header tidy and spaced */
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+
+/* ---------------- Header / Nav ---------------- */
+/* Places brand on the left and nav buttons on the right */
+.topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: var(--panel);
+  background: var(--panel);                  /* gives a subtle bar */
 }
-.main-nav { /* horizontal nav container */
+
+/* Horizontal nav container (Play / Tutorial / Settings / High Score) */
+.main-nav {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 16px;                                 /* space between brand and list */
 }
-.nav-list { /* list → row of buttons */
+
+/* nav list */
+.nav-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   gap: 12px;
 }
 
-/* Main game area */
-.game { /* stack sections with gentle spacing */
+/* ---------------- Main Game Area ---------------- */
+
+/* Centers the three main sections: HUD, Stage, Controls */
+.game {
   display: grid;
-  gap: 16px;
+  gap: 16px;                                 /* distance between sections */
   padding: 16px;
-  place-items: center;
+  place-items: center;                       /* center horizontally + vertically */
 }
 
-/* HUD */
-.hud { /* simple row that wraps on small screens */
+/* =========================================================
+   HUD (Lives / Score / Best / Level / Mode)
+   ========================================================= */
+
+/* Layout row that wraps on small screens */
+.hud {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
 }
-.hud .hud-item { /* label + value aligned */
-  display: inline-flex;
+
+/* Each HUD item shown as a compact rounded pill */
+.hud .hud-item {
+  display: inline-flex;                      /* label + value inline */
   align-items: center;
   gap: 8px;
+  padding: 6px 10px;
+  background: var(--panel);                  /* dark pill surface */
+  border: 1px solid rgba(255,255,255,.08);   /* subtle edge */
+  border-radius: 999px;                      /* fully rounded */
 }
 
-/* Stage */
-.stage { /* center dancer + prompt + feedback */
+/* Small uppercase labels inside each pill */
+.hud .hud-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--muted);
+}
+
+/* Numeric part (Score, Best, Level, Mode text) */
+.metric {
+  min-width: 28px;                           /* keeps numbers aligned */
+  text-align: center;
+  font-variant-numeric: tabular-nums;        /* monospaced digits */
+  font-weight: 600;
+}
+
+/* Hearts: makes them slightly larger and spaced */
+#lives {
+  font-size: 18px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   STAGE (cat + prompt lane + feedback)
+   ========================================================= */
+
+/* Centers the dancer, prompt lane, and feedback message */
+.stage {
   display: grid;
   gap: 12px;
   place-items: center;
-  min-height: 220px; /* ensures space around the cat */
+  min-height: 220px;                         /* ensures breathing room */
 }
-.prompt-lane { min-height: 24px; } /* space for text prompts */
 
-/* Controls */
-.controls { /* row of arrow buttons */
+/* Reserved space for textual prompts above the controls */
+.prompt-lane { min-height: 24px; }
+
+/* Keep overlays opt-in (hidden by default via .hidden) */
+.overlay.hidden { display: none; }
+
+
+/* ========================
+   CONTROLS arrows + labels
+  ========================== */
+
+/* Control bar: four arrows in a centered row that can wrap */
+.controls {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
+  justify-content: center;                   /* center the row */
+  gap: 32px;                                 /* generous spacing between arrows */
+  margin: 24px 0;
+  flex-wrap: wrap;                        /* allow wrapping on smaller screens */
 }
 
-/* Overlay */
-.overlay.hidden { display: none; } /* keep overlay hidden by default */
+/* Base style for each control button */
+.ctrl-btn {
+  background: none;                           /* remove default button look */
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;                     /* label above arrow */
+  align-items: center;
+  gap: 8px;
+  padding: 0;                                 /* visual size defined by SVG */
+  user-select: none;                          /* avoid text selection on rapid tapping */
+  transition: transform .1s ease, filter .2s ease;
+}
+
+/* Labels above arrows */
+.ctrl-btn .label {
+  font-size: 18px; 
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+
+  /* Stronger neon glow for better contrast */
+  text-shadow: 
+    0 0 5px rgba(0, 0, 0, 0.8),  /* dark outline for contrast */
+    0 0 10px currentColor,         /* neon glow inner */
+    0 0 20px currentColor,          /* stronger glow */
+    0 0 40px currentColor;          /* wide outer glow */
+  transition: transform 0.2s ease;
+}
+
+/* arrow icon, big and give a base neon haze */
+.arrow-icon {
+  width: 100px;                                /* BIG arrows (desktop) */
+  height: 100px;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.75)); /* gentle global glow */
+  transition: transform .1s ease, filter .2s ease;
+}
+
+/* force arrow fills from CSS rather than SVG,This lets tokens override hardcoded SVG fills. */
+/*
+.ctrl-btn.left  .arrow-icon polygon { fill: var(--label-left);  }
+.ctrl-btn.up    .arrow-icon polygon { fill: var(--label-up);    }
+.ctrl-btn.down  .arrow-icon polygon { fill: var(--label-down);  }
+.ctrl-btn.right .arrow-icon polygon { fill: var(--label-right); }
+*/
+
+/* Direction-specific label hues (colors only; global glow lives in .ctrl-btn .label) */
+.ctrl-btn.left  .label { color: var(--label-left); }
+.ctrl-btn.up    .label { color: var(--label-up); }
+.ctrl-btn.down  .label { color: var(--label-down); }
+.ctrl-btn.right .label { color: var(--label-right); }
+
+/* Active state, JS will toggle .active on press */
+.ctrl-btn.active .arrow-icon {
+  animation: neonPulse 0.8s infinite;
+  transform: scale(1.1);
+}
+.ctrl-btn.active .label {
+  animation: textPulse 0.8s infinite;
+  transform: scale(1.1);
+}
+
+/* Keyboard accessibility: strong visible focus ring */
+.ctrl-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+
+/* ---------------- Animations (used when a button becomes active) ---------------- */
+
+/* Arrow pulse glow, Uses currentColor where applicable, which lets the same animation look correct across differently colored arrows. */
+@keyframes neonPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px white) drop-shadow(0 0 12px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px white) drop-shadow(0 0 28px currentColor);
+  }
+}
+
+/* Text pulse glow, Matches the arrow pulse but for text (labels). Keeps a dark outline for readability at all times. */
+@keyframes textPulse {
+  0%, 100% {
+    text-shadow: 0 0 6px white, 0 0 10px white, 1px 1px 2px black;
+  }
+  50% {
+    text-shadow: 0 0 12px white, 0 0 24px currentColor, 1px 1px 2px black;
+  }
+}
+
+/* Apply animations when the control is flagged as .active (via JS) */
+.ctrl-btn.active .arrow-icon {
+  animation: neonPulse 0.8s infinite;
+  transform: scale(1.1);                      /* a touch of punch */
+}
+.ctrl-btn.active .label {
+  animation: textPulse 0.8s infinite;
+  transform: scale(1.1);
+}
+
+
+/* =========================================================
+   RETRO 80s SYNTHWAVE BACKGROUND, Animated gradient “sky” + neon grid floor “in perspective”,Kept visually behind the UI via stacking context
+   ========================================================= */
+
+/* Animated vertical gradient for the sky */
+body {
+  background: linear-gradient(
+    180deg,                     /* top → bottom */
+    var(--bg-navy)   0%,        /* very dark top */
+    var(--bg-purple) 55%,       /* deep purple mid */
+    var(--bg-indigo) 80%,       /* indigo lower mid */
+    var(--bg-navy)   100%       /* dark again at the bottom */
+  );
+  background-size: 100% 100%;   /* fill viewport */
+  animation: bgShift 22s ease-in-out infinite; /* slow “breathing” motion */
+}
+
+/* Moves the gradient slightly up/down over time */
+@keyframes bgShift {
+  0%, 100% { background-position: 50% 0%; }   /* neutral at start/end */
+  50%      { background-position: 50% 20%; }  /* gentle downward drift */
+}
+
+/* Keep interactive UI above any decorative background layers */
+.topbar, .game { position: relative; z-index: 1; }
+
+/* Neon grid floor, Two repeating gradients for horizontal/vertical, linesTilted with 3D transform to simulate floor perspective */
+body::before {
+  content: "";
+  position: fixed;
+  left: 0; right: 0;
+  bottom: -6vh;                                /* start slightly off-screen */
+  height: 50vh;                                /* bottom half of viewport */
+  z-index: 0;                                  /* stay behind .game/.topbar */
+
+  /* Glowing grid lines (cyan) */
+  background:
+    /* horizontal lines */
+    repeating-linear-gradient(
+      to top,
+      rgba(0,255,213,0.25) 0px,                /* thin neon line */
+      rgba(0,255,213,0.25) 2px,                /* line thickness */
+      transparent 2px,
+      transparent 28px                         /* gap between lines */
+    ),
+    /* vertical lines */
+    repeating-linear-gradient(
+      to right,
+      rgba(0,255,213,0.25) 0px,
+      rgba(0,255,213,0.25) 2px,
+      transparent 2px,
+      transparent 36px
+    );
+
+  transform: perspective(700px) rotateX(62deg); /* tilt up to look like a floor */
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 10px rgba(0,255,213,.5)); /* soft neon haze */
+  opacity: .75;                                   /* let the sky show through */
+  pointer-events: none;                           /* decorative only */
+}
+
+/* Soft “cabinet” glow around the main game container */
+.game {
+  box-shadow:
+    0 0 0 2px rgba(255,77,210,.15),   /* pink inner ring */
+    0 0 24px rgba(255,77,210,.25),    /* pink soft glow */
+    0 0 48px rgba(0,255,213,.18);     /* cyan outer haze */
+  border-radius: 16px;
+  padding: 16px;                       /* leave breathing room inside the frame */
+}
+
+
+/* =========================================================
+   NEON TEXT UTILITIES, helper for any headings or emphasis 
+   ========================================================= */
+
+.neon-text {
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 6px #fff,
+    0 0 14px var(--neon-cyan),
+    0 0 28px var(--neon-cyan);
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+/* Brand link (logo) with a gradient fill + glow */
+.brand {
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan));
+  -webkit-background-clip: text;      /* show gradient only where text exists */
+  background-clip: text;
+  color: transparent;                  /* text itself is transparent */
+  text-shadow:
+    0 0 6px rgba(255,255,255,.65),
+    0 0 18px rgba(166,77,255,.55),
+    0 0 28px rgba(0,255,213,.45);
+  font-weight: 800;
+}
+
+
+/* =================
+   RESPONSIVE TWEAKS
+  =================== */
+@media (max-width: 480px) {  /* Smaller arrows + text on small screens */
+  .controls { gap: 20px; margin: 16px 0; }
+  .arrow-icon { width: 70px; height: 70px; }
+  .ctrl-btn .label { font-size: 14px; }
+}
+
+@media (max-width: 768px) {
+  .controls { gap: 28px; }
+  .arrow-icon { width: 70px; height: 70px; }  /* gentle middle step */
+}
