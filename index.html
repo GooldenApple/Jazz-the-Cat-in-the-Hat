@@ -111,7 +111,7 @@
               <circle cx="90" cy="76" r="3" fill="white" />
               
               <!-- Nose -->
-              <circle cx="75" cy="90" r="4" fill="#2b1c12" />
+              <circle cx="75" cy="90" r="4" fill="#2b1c12"/>
               
               <!-- Mouth -->
               <path d="M65 100 Q75 110 85 100" stroke="#2b1c12" stroke-width="3" fill="none" />
@@ -135,7 +135,30 @@
       </section>
 
       <!-- Touch/Click controls -->
-      <section class="controls" aria-label="Arrow controls"></section>
+      <section class="controls" aria-label="Arrow controls">
+        <!-- Controls: touch/click arrows (keyboard will come via JS) -->
+        <section class="controls" aria-label="Arrow controls">
+            <!-- Left -->
+            <button class="ctrl-btn" data-dir="Left" aria-label="Left arrow">
+                <span class="icon">⬅️</span><span class="label">LEFT</span>
+            </button>
+
+            <!-- Up -->
+            <button class="ctrl-btn" data-dir="Up" aria-label="Up arrow">
+                <span class="icon">⬆️</span><span class="label">UP</span>
+            </button>
+
+            <!-- Down -->
+            <button class="ctrl-btn" data-dir="Down" aria-label="Down arrow">
+                <span class="icon">⬇️</span><span class="label">DOWN</span>
+            </button>
+
+            <!-- Right -->
+            <button class="ctrl-btn" data-dir="Right" aria-label="Right arrow">
+                <span class="icon">➡️</span><span class="label">RIGHT</span>
+            </button>
+        </section>
+      </section>
     </main>
 
     <!-- Overlays (tutorial / pause / summary) -->
