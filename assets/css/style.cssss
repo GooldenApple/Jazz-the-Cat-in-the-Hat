@@ -1,0 +1,1059 @@
+/* =============================
+   Jazz the Cat in the Hat 
+   ============================= */
+
+/* -----------------------------
+   Theme variables (CSS custom properties)
+   - These define the main color palette for the neon arcade vibe
+   - Instead of hardcoding colors everywhere, I reuse these variables
+   ----------------------------- */
+:root {
+  /* Base app theme */
+  --bg: #0b1221;          /* page background (fallback solid) */
+  --panel: #121b34;       /* panel background (HUD pills / header) */
+  --ink: #f5f7ff;         /* primary text color */
+  --muted: #a9b3d3;       /* secondary/label text */
+  --accent: #7aa2ff;      /* UI focus ring / links */
+  --good: #3ddc97;        /* success/positive feedback */
+  --bad: #ff6b6b;         /* error/negative feedback */
+
+  /* Neon palette */
+  --neon-pink:   #ff4dd2;
+  --neon-purple: #a64dff;
+  --neon-cyan:   #00ffd5;
+  --neon-blue:   #4db8ff;
+  --neon-green:  #39ff14;
+  --neon-red:    #fd0404;
+
+    /* Control label colors (kept explicit for readability) */
+
+  --label-left:  #39ff14; /* LEFT label neon green */
+  --label-up:    #7af3e1; /* UP label tone mint/cyan */
+  --label-down:  #ffc04d; /* DOWN label tone orange */
+  --label-right: #ff6ad5; /* RIGHT label tone pink  */
+
+  /* Background gradient stops /not used right now */
+
+  --bg-navy:   #0b0c1d;   /* very dark navy (top/bottom) */
+  --bg-purple: #2e005f;   /* deep purple (mid) */
+  --bg-indigo: #180030;   /* indigo transition (lower mid) */
+
+  /* Control label colors (kept explicit for readability) */
+
+  --label-left:  #39ff14; /* LEFT label neon green */
+  --label-up:    #7af3e1; /* UP label tone mint/cyan */
+  --label-down:  #ffc04d; /* DOWN label tone orange */
+  --label-right: #ff6ad5; /* RIGHT label tone pink  */
+
+   --overlay-y: 30vh;  /* vertical position for the play CTA */
+
+   /* play button background */
+  --btn-bg: rgba(10,14,28,0.55);
+
+  /* glow effects for play button */
+  --btn-glow-cyan: 
+    0 0 10px var(--neon-cyan),
+    0 0 24px rgba(0,255,213,0.35),
+    inset 0 0 16px rgba(0,255,213,0.25);
+
+  --btn-glow-pink:
+    0 0 12px var(--neon-pink),
+    0 0 28px rgba(255,77,210,0.4),
+    inset 0 0 18px rgba(255,77,210,0.3);
+
+ 
+  /* --- global text settings --- */
+  --font-hud: 'Press Start 2P', monospace;   /* default font for labels/nav */
+  --font-score: 'VT323', monospace;          /* numeric HUD values */
+  --text-case: uppercase;
+  --text-spacing: 1px;
+  --text-color: var(--neon-pink);            /* default text color */
+  --text-color-left: #00ff66;                /* arrow label: LEFT */
+  --text-color-up: #00ffee;                  /* arrow label: UP */
+  --text-color-down: #ffae00;                /* arrow label: DOWN */
+  --text-color-right: #ff66ff;               /* arrow label: RIGHT */
+
+  /* -- Text effects --- */
+  --text-glow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan);
+
+/* --- Responsive knobs (central control) --- */
+
+  /* arrows + labels */
+  --arrow-size: 100px;
+  --ctrl-label-size: 16px;
+
+  /* controls spacing / lift from floor */
+  --controls-gap: 32px;
+  --controls-bottom: 6vh;
+
+  /* arrow + label glow strength */
+  --arrow-glow-inner: 6px;
+  --arrow-glow-outer: 12px;
+  --label-glow-inner: 6px;
+  --label-glow-outer: 12px;
+
+  /* neon floor (pseudo-element) */
+  --floor-opacity: 0.75;
+  --floor-height: 45vh;
+  --floor-bottom: -4vh;
+
+  --topbar-h: 60px; /* height of the topbar; HUD/overlay use this */
+
+}
+
+
+/*  Reset / globals, Normalize margins/padding and set the base grid layout */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
+
+/* Locks the viewport */
+html, body { 
+  height: 100%; 
+  overflow: hidden;                 /* no scrollbars on any device */
+}
+
+/* Base page styling + full-viewport background image (mobile-safe) */
+body {
+  font-family: var(--font-hud);
+  text-transform: var(--text-case);
+  letter-spacing: var(--text-spacing);
+  color: var(--text-color);
+  text-shadow: var(--text-glow);
+  font-size: 12px;
+
+  /* Layout grid for the page wrapper */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+
+  /* Important: ensure full viewport coverage without scroll */
+  min-height: 100svh;                 /* handles mobile browser UI chrome */
+  background-color: var(--bg);        /* solid fallback behind the image */
+  background-image: url('../images/background.png.png'); /* your current bg */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+
+/* ========
+   LAYOUT
+  ========= */
+
+/* ---------------- Header / Nav ---------------- */
+
+/* sticky neon topbar with soft glass look */
+.topbar {
+  position: sticky;                 /* stays at the top on scroll */
+  top: 0;
+  z-index: 30;                      /* above HUD background/glow */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--topbar-h);                 /* keep a consistent bar height */
+  padding: 6px 16px;                /* compact, arcade feel */
+  background: linear-gradient(
+              to bottom,
+              rgba(18, 27, 52, 0.92),
+              rgba(18, 27, 52, 0.78));
+  backdrop-filter: blur(6px);       /* subtle glass effect */
+  border-bottom: 2px solid rgba(166,77,255,0.35);
+  box-shadow:
+    0 0 12px rgba(166,77,255,0.35),
+    0 0 24px rgba(0,255,213,0.18);  /* purple + cyan haze */
+}
+
+/* ============================================
+   Neon Hamburger Toggler (my custom styling)
+   - Applies only when the button has .hamburger
+   - No conflicts: selectors are new/specific
+   ============================================ */
+
+/* The button itself (container around the three bars) */
+.navbar-toggler.hamburger {
+  border: 2px solid var(--neon-purple);   /* neon border ring so it matches theme */
+  border-radius: 10px;                    /* soft rounded corners (consistent with pills) */
+  padding: 6px;                           /* space inside so bars don’t touch the border */
+  background: rgba(10,14,28,0.55);        /* glassy dark background so glow reads well */
+  box-shadow:                             
+    0 0 6px rgba(166,77,255,0.55),        /* outer purple haze */
+    inset 0 0 10px rgba(166,77,255,0.25); /* inner neon “glass” effect */
+}
+
+/* Each of the three bars inside the button */
+.navbar-toggler.hamburger span {
+  display: block;                         /* make each bar a block so width/height apply */
+  width: 24px;                            /* bar length (compact so it fits in the pill) */
+  height: 2px;                            /* bar thickness (thin = crisp) */
+  background: #fff;                       /* white so it stands out on dark glass */
+  margin: 5px 0;                          /* vertical spacing between the bars */
+  transition: transform .2s ease,         /* smooth movement for “X” animation */
+              opacity .2s ease,           /* fade out the middle bar when open */
+              background .2s ease;        /* room to theme later if needed */
+  box-shadow: 0 0 6px rgba(255,255,255,.6); /* soft white glow so bars pop */
+}
+
+/* Keyboard focus: keep a strong, accessible focus ring */
+.navbar-toggler.hamburger:focus-visible {
+  outline: 3px solid var(--accent);       /* themed focus outline */
+  outline-offset: 2px;                    /* gap so it doesn’t merge with border */
+}
+
+/* When the mobile nav is OPEN:
+   - JS adds data-nav-open on <body>
+   - Transform the three bars into a neat “X” */
+body[data-nav-open] .navbar-toggler.hamburger span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);   /* move top bar down + rotate */
+}
+body[data-nav-open] .navbar-toggler.hamburger span:nth-child(2) {
+  opacity: 0;                                 /* hide the middle bar */
+}
+body[data-nav-open] .navbar-toggler.hamburger span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg); /* move bottom bar up + rotate */
+}
+
+
+/* nav container: brand on left, actions on right */
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;                        /* space between brand and list */
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* horizontal list of actions */
+.nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;                        /* tight arcade spacing */
+  flex-wrap: wrap;                  /* wrap nicely on small screens */
+  row-gap: 8px;                     /* breathing room when wrapped */
+}
+
+/* neon pill buttons for Play/Tutorial/Settings/High Score */
+.nav-btn {
+  appearance: none;
+  border: 2px solid var(--neon-purple);
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: rgba(10, 14, 28, 0.55);     /* translucent pill */
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow:
+    0 0 6px rgba(166,77,255,0.55),
+    inset 0 0 10px rgba(166,77,255,0.25);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+  font-family: var(--font-hud);
+  text-transform: var(--text-case);
+  letter-spacing: var(--text-spacing);
+  color: var(--text-color);
+  text-shadow: var(--text-glow);
+
+}
+
+/* hover = brighter glow, tiny lift */
+.nav-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--neon-cyan);
+  box-shadow:
+    0 0 8px rgba(0,255,213,0.65),
+    0 0 18px rgba(0,255,213,0.35),
+    inset 0 0 12px rgba(0,255,213,0.25);
+}
+
+/* active = quick press feel */
+.nav-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 6px rgba(166,77,255,0.55),
+    inset 0 0 14px rgba(166,77,255,0.35);
+}
+
+/* keyboard focus: strong outline, accessible */
+.nav-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Brand link (logo) with a gradient fill + glow */
+.brand {
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan));
+  -webkit-background-clip: text;      /* show gradient only where text exists */
+  background-clip: text;
+  color: transparent;                  /* text itself is transparent */
+  text-shadow:
+    0 0 6px rgba(255,255,255,.65),
+    0 0 18px rgba(166,77,255,.55),
+    0 0 28px rgba(0,255,213,.45);
+  font-weight: 800;
+}
+
+/* brand hover: a touch more glow (your existing .brand styles can stay) */
+.brand:hover {
+  text-shadow:
+    0 0 10px rgba(255,255,255,.75),
+    0 0 22px rgba(166,77,255,.65),
+    0 0 36px rgba(0,255,213,.55);
+}
+
+/* Neon hamburger (hidden by default; shown on phones only) */
+.hamburger{
+  display:none;                  /* phones only in MQ below */
+  width:40px; height:34px; 
+  border:2px solid var(--neon-purple);
+  border-radius:10px;
+  background: rgba(10,14,28,0.55);
+  box-shadow:0 0 6px rgba(166,77,255,0.55), inset 0 0 10px rgba(166,77,255,0.25);
+  padding:6px 8px;
+  cursor:pointer;
+}
+.hamburger:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+.hamburger span{
+  display:block; height:2px; margin:5px 0;
+  background: var(--ink);
+  box-shadow: 0 0 6px var(--neon-cyan), 0 0 10px var(--neon-pink);
+  transition: transform .2s ease, opacity .2s ease;
+}
+/* X animation when open */
+body[data-nav-open] .hamburger span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+body[data-nav-open] .hamburger span:nth-child(2){ opacity:0; }
+body[data-nav-open] .hamburger span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+/* Make overlay respect topbar height (already set this, keeping for safety) */
+.overlay { inset: var(--topbar-h) 0 0 0; }
+
+/* ---------------- Main Game Area ---------------- */
+
+/* Centers the three main sections: HUD, Stage, Controls */
+.game {
+  display: grid;
+  gap: 16px;                                 /* distance between sections */
+  padding: 16px;
+  place-items: center;                       /* center horizontally + vertically */
+}
+
+
+/* =========================================================
+   HUD (Lives / Score / Best / Level / Mode)
+   ========================================================= */
+/* note to self:
+   keep HUD offset in sync with topbar height.
+   if I change the topbar height, adjust .hud { top: ... } too
+   (or switch both to the same --topbar-h variable to avoid manual updates).
+*/
+
+/* HUD container: fixed at top, two rows stacked */
+.hud {
+  position: fixed !important;              /* stays visible at the top, prevents later resets to static */
+  top: calc(var(--topbar-h) + 8px);         
+  left: 0;
+  right: 0;
+  width: 100%;                 /* full width across the viewport,  */
+  display: flex;                /* stack top/bottom rows */
+  flex-direction: column;
+  align-items: center;          /* center the column content */
+  gap: 14px;                    /* space between top and bottom rows */
+  z-index: 20;                  /* above stage */
+  pointer-events: none;         /* whole HUD ignores pointer... */
+  padding: 0 16px;              /* safe side padding */
+}
+
+/* Top row: spread boxed items evenly across full width */
+.hud-top {
+  display: grid;                                              /* wrapping layout */
+  grid-template-columns: repeat(auto-fit, minmax(var(--hud-chip-min), 1fr)); /* never shrink below min width */
+  gap: 12px;                                                  /* breathing room between chips */
+  width: 100%;                                                /* span full row */
+  pointer-events: none;                                       /* whole row ignores pointer */
+  /* each .hud-item re-enables pointer-events so buttons still work */
+}
+
+/* Bottom row: lives centered, can grow/wrap without pushing top row */
+.hud-bottom {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Individual HUD chips (boxed metrics) */
+.hud-item {
+  pointer-events: auto;          /* ...but each item can receive pointer */
+  min-width: 100px;
+  padding: 10px 16px;
+  border: 5px solid var(--neon-purple);
+  border-radius: 6px;
+  background: rgba(18, 27, 52, 0.8);
+  box-shadow: 0 0 12px var(--neon-purple);
+  text-align: center;
+}
+
+/* Plain item (Lives): no frame so the hearts area can expand freely */
+.hud-item.hud-item--plain {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;                    /* label + hearts handle spacing */
+  min-width: 0;                  /* allow narrow on small screens */
+}
+
+/* slight variety for first/last in top row */
+.hud-top .hud-item:first-child { 
+  border-color: var(--neon-pink); 
+}
+.hud-top .hud-item:last-child  { 
+  border-color: var(--neon-blue); 
+}
+
+/* Labels (arcade style) */
+.hud-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--neon-pink);
+  text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan);
+  display: block;                /* ensures label sits on its own line */
+  margin-bottom: 6px;            /* space above values/hearts */
+}
+
+/* Metric digits */
+.metric {
+  font-family: var(--font-score);     /* my score font */
+  font-size: 32px;                    
+  line-height: 1;                     /* tight digits */
+  color: var(--neon-cyan);            /* cyan neon for numbers */
+  text-shadow: 
+    0 0 5px var(--neon-cyan), 
+    0 0 10px var(--neon-pink);        /* glow effect */
+}
+
+/* Lives row: hearts line (SVG version) */
+.lives {
+  display: flex;                 /* hearts in a row */
+  flex-wrap: wrap;               /* allow wrapping if many */
+  gap: 12px;                     /* spacing between hearts */
+  align-items: center;           /* vertical alignment */
+  justify-content: center;       /* center as a group */
+  padding: 6px 2px;              /* breathing room */
+}
+
+
+/* Base heart style */
+.svg-heart {
+  width: 28px;                  /* scalable size */
+  height: 28px;
+  fill: var(--neon-red);        /* default heart color */
+  filter: drop-shadow(0 0 4px var(--neon-red))
+          drop-shadow(0 0 10px var(--neon-pink)); /* neon glow */
+  transition: opacity 0.25s ease, fill 0.25s ease;
+}
+
+/* Heart states (stepwise depletion) */
+.svg-heart.full {
+  opacity: 1;                   /* fully visible */
+  fill: var(--neon-red);
+}
+
+.svg-heart.threequarter {
+  opacity: 0.85;                /* slightly dimmed */
+  fill: var(--neon-red);
+}
+
+.svg-heart.half {
+  opacity: 0.65;                /* dimmer */
+  fill: var(--neon-red);
+}
+
+.svg-heart.quarter {
+  opacity: 0.4;                 /* almost gone */
+  fill: var(--neon-red);
+}
+
+.svg-heart.empty {
+  opacity: 0.15;                /* faint ghost */
+  fill: var(--muted);           /* greyed out */
+  filter: none;                 /* no glow when empty */
+}
+
+
+/* === Play Button Overlay === */
+
+/* arcade style */
+.ui-label {
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;         /* all caps look */
+  letter-spacing: 1px;               /* gives retro spacing */
+  text-shadow: 0 0 5px var(--neon-pink),
+               0 0 10px var(--neon-cyan); /* neon glow effect */
+}
+
+/* overlay that sits above the stage when game is not running */
+.overlay {
+  position: fixed;           /* stays over the game area */
+  inset: var(--topbar-h) 0 0 0;         /* clear the topbar */
+  pointer-events: none;      /* safe default; children re-enable */
+  z-index: 25;               /* above stage, below topbar */
+}
+
+/* hide the overlay when not needed it (during gameplay) */
+.overlay.hidden {
+  display: none;
+}
+
+/* positioned the CTA explicitly */
+.play-cta {
+  position: absolute;        /* place it precisely */
+  top: var(--overlay-y);     /* vertical spot between HUD and dancer */
+  left: 50%;
+  transform: translateX(-50%); /* center horizontally */
+  pointer-events: auto;      /* clickable again */
+
+  display: flex;             /* keep icon + label stacked */
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* round button that represents "play" */
+.play-cta .play-btn {
+  width: 96px;                        /* size of the button */
+  height: 96px;
+  border-radius: 50%;                 /* makes it a perfect circle */
+  border: 4px solid var(--neon-cyan); /* neon border */
+  background: var(--btn-bg);    /* semi-transparent dark bg */
+  position: relative;                 /* needed for triangle inside */
+  cursor: pointer;                    /* shows pointer on hover */
+ box-shadow: var(--btn-glow-cyan);  /* use the root multi-shadow as-is */
+  transition: transform .12s ease,
+              box-shadow .2s ease,
+              border-color .2s ease;  /* smooth hover animations */
+}
+
+
+/*  triangle that acts as the "play" symbol */
+.play-cta .play-btn::before {
+  content: "";
+  position: absolute;
+  left: 38%;                       /* eyeballed centering for CSS triangle */
+  top: 50%;
+  transform: translateY(-50%);     /* vertical centering only */
+  border-style: solid;
+  border-width: 14px 0 14px 22px;  /* triangle shape */
+  border-color: transparent transparent transparent var(--neon-cyan);
+  filter: drop-shadow(0 0 8px var(--neon-cyan)); /* neon glow */
+}
+
+/* hover effect: button glows pink and lifts slightly */
+.play-cta .play-btn:hover {
+  transform: translateY(-1px);        /* tiny lift effect */
+  border-color: var(--neon-pink);
+  box-shadow: var(--btn-glow-pink);
+}
+
+/* label text under the play button (same HUD text style) */
+.play-cta .play-label {
+  font-family: var(--font-hud);
+  text-transform: var(--text-case);
+  letter-spacing: var(--text-spacing);
+  color: var(--text-color);
+  text-shadow: var(--text-glow);
+  font-size: 20px; /* keep this tweak for size */
+}
+
+/* =========================================================
+   STAGE (cat + prompt lane + feedback)
+   ========================================================= */
+
+/* Centers the dancer, prompt lane, and feedback message */
+.stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* push content towards bottom */
+  align-items: center;
+  min-height: clamp(420px, 60vh, 700px);  /* keep enough room without crushing controls */
+}
+
+/* Reserved space for textual prompts above the controls */
+.prompt-lane { 
+  min-height: 24px; 
+}
+
+
+/* ========================
+   CONTROLS: DDR-style arrows
+   ========================
+   Note to self:
+   - Strategy: SVG contains two polygons per arrow:
+       * .arrow-glow → no stroke; only does neon glow
+       * .arrow-main → has white stroke; keeps the visible outline
+   ======================== */
+
+/* Container for all arrows */
+.controls {
+  display: flex;                          /* lay out arrows in a row */
+  justify-content: center;                /* center the row */
+  gap: var(--controls-gap);               /* spacing between arrow buttons */
+  margin: 4vh 0 var(--controls-bottom);   /* air above/below the control bar */
+  flex-wrap: wrap;                        /* allow wrapping on small screens */
+}
+
+/* Each arrow button (label + icon stacked) */
+.ctrl-btn {
+  appearance: none;               /* reset browser button styles */
+  background: transparent;        /* no background box */
+  border: 0;                      /* no border */
+  cursor: pointer;                /* pointer cursor on hover */
+  display: flex;                  /* stack label + svg vertically */
+  flex-direction: column;
+  align-items: center;            /* center both items */
+  gap: 8px;                       /* label ↕ arrow spacing */
+  padding: 0;                     /* no extra padding to avoid boxes */
+  user-select: none;              /* no accidental text selection */
+  transition: transform .12s ease;/* tiny press motion */
+}
+
+/* Labels above arrows */
+.ctrl-btn .label {
+  font-family: var(--font-hud);           /* arcade HUD font */
+  text-transform: var(--text-case);       /* uppercase via :root */
+  letter-spacing: var(--text-spacing);    /* consistent spacing */
+  text-shadow: var(--text-glow);          /* neon text glow */
+  font-size: var(--ctrl-label-size);         /* desktop size */
+  margin-bottom: 8px;                     /* air above the arrow */
+  transition: transform 0.2s ease;        /* gentle scale on active */
+  text-shadow:
+    0 0 var(--label-glow-inner) #fff,
+    0 0 var(--label-glow-outer) currentColor,
+    0 0 calc(var(--label-glow-outer) + 6px) currentColor;
+}
+
+/* SVG wrapper */
+.arrow-icon {
+  width: var(--arrow-size);
+  height: var(--arrow-size);
+}
+
+/* ============================
+   Direction-specific coloring
+   (sets currentColor on the button so glow can read the hue)
+   ============================ */
+
+/* feed currentColor so drop-shadows can read the hue */
+.ctrl-btn.left  { color: var(--label-left);  }
+.ctrl-btn.up    { color: var(--label-up);    }
+.ctrl-btn.down  { color: var(--label-down);  }
+.ctrl-btn.right { color: var(--label-right); }
+
+/* label colors to match arrow hue (visual cue) */
+.ctrl-btn.left  .label { color: var(--label-left);  }
+.ctrl-btn.up    .label { color: var(--label-up);    }
+.ctrl-btn.down  .label { color: var(--label-down);  }
+.ctrl-btn.right .label { color: var(--label-right); }
+
+/* (Optional) If I ever remove inline fills in HTML, I can enforce fills here:
+.ctrl-btn.left  .arrow-main, .ctrl-btn.left  .arrow-glow  { fill: var(--label-left);  }
+.ctrl-btn.up    .arrow-main, .ctrl-btn.up    .arrow-glow  { fill: var(--label-up);    }
+.ctrl-btn.down  .arrow-main, .ctrl-btn.down  .arrow-glow  { fill: var(--label-down);  }
+.ctrl-btn.right .arrow-main, .ctrl-btn.right .arrow-glow  { fill: var(--label-right); }
+*/
+
+/* ============================
+   Arrow parts (two-layer approach)
+   ============================ */
+
+/* 1) Glow polygon → ONLY for neon. No stroke so glow hugs the shape. */
+.arrow-glow {
+  /* base neon haze; currentColor = the direction hue above */
+  filter:
+    drop-shadow(0 0 var(--arrow-glow-inner) #fff)
+    drop-shadow(0 0 var(--arrow-glow-outer) currentColor);
+  transition: transform .12s ease, filter .2s ease;
+}
+
+/* 2) Main polygon → WHITE OUTLINE ONLY (no fill) on top of glow */
+.arrow-main {
+  fill: none;                    /* important: no fill so color can't bleed */
+  stroke: white;                 /* the bold DDR outline */
+  stroke-width: 15px;              /* outline thickness */
+  stroke-linejoin: round;        /* round corners reduce anti-alias artifacts */
+  stroke-linecap: round;         /* just in case edges meet at ends */
+  transition: transform .12s ease, filter .2s ease;
+}
+
+/* ============================
+   Interaction states
+   ============================ */
+
+/* Hover/focus → gentle pop + stronger glow */
+.ctrl-btn:hover .arrow-glow,
+.ctrl-btn:focus-visible .arrow-glow {
+  transform: scale(1.08);                      /* tiny pop */
+  filter:
+    drop-shadow(0 0 6px #fff)                  /* inner white flash */
+    drop-shadow(0 0 14px currentColor);        /* boosted color glow */
+}
+
+/* Pressed → a touch more intensity */
+.ctrl-btn:active .arrow-glow {
+  transform: scale(1.12);
+  filter:
+    drop-shadow(0 0 8px #fff)
+    drop-shadow(0 0 18px currentColor);
+}
+
+/* Gameplay active state (JS toggles .active) */
+.ctrl-btn.active .arrow-glow {
+  animation: neonPulse 0.8s infinite; /* reuse my existing keyframes */
+  transform: scale(1.1);
+}
+.ctrl-btn.active .label {
+  animation: textPulse 0.8s infinite; /* label breathes too */
+  transform: scale(1.1);
+}
+
+/* Keyboard accessibility: strong visible focus ring */
+.ctrl-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* ---------------- Animations (used when a button becomes active) ---------------- */
+
+/* Arrow pulse glow, Uses currentColor where applicable, which lets the same animation look correct across differently colored arrows. */
+@keyframes neonPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px white) drop-shadow(0 0 12px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px white) drop-shadow(0 0 28px currentColor);
+  }
+}
+
+/* Text pulse glow, Matches the arrow pulse but for text (labels). Keeps a dark outline for readability at all times. */
+@keyframes textPulse {
+  0%, 100% {
+    text-shadow: 0 0 6px white, 0 0 10px white, 1px 1px 2px black;
+  }
+  50% {
+    text-shadow: 0 0 12px white, 0 0 24px currentColor, 1px 1px 2px black;
+  }
+}
+
+/* Apply animations when the control is flagged as .active (via JS) */
+.ctrl-btn.active .arrow-icon {
+  animation: neonPulse 0.8s infinite;
+  transform: scale(1.1);                      /* a touch of punch */
+}
+.ctrl-btn.active .label {
+  animation: textPulse 0.8s infinite;
+  transform: scale(1.1);
+}
+
+
+/* interactive UI above decorative background layers */
+.topbar, .game { 
+  position: relative; 
+  z-index: 1; 
+}
+
+/* Neon grid floor  */
+body::before {
+  content: "";
+  position: fixed;
+  left: 0; right: 0;
+  bottom: var(--floor-bottom);             /*  to avoid overflow */
+  height: var(--floor-height);             /*  to avoid overflow */
+  z-index: 0;
+  pointer-events: none;
+
+  /* Glowing grid lines (cyan) */
+  background:
+    /* horizontal lines */
+    repeating-linear-gradient(
+      to top,
+      rgba(0,255,213,0.25) 0px,
+      rgba(0,255,213,0.25) 2px,
+      transparent 2px,
+      transparent 28px
+    ),
+    /* vertical lines */
+    repeating-linear-gradient(
+      to right,
+      rgba(0,255,213,0.25) 0px,
+      rgba(0,255,213,0.25) 2px,
+      transparent 2px,
+      transparent 36px
+    );
+
+  transform: perspective(700px) rotateX(62deg);
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 10px rgba(0,255,213,.5));
+  opacity: var(--floor-opacity);
+}
+
+
+
+/* =========================================================
+   NEON TEXT UTILITIES, helper for any headings or emphasis 
+   ========================================================= */
+
+.neon-text {
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 6px #fff,
+    0 0 14px var(--neon-cyan),
+    0 0 28px var(--neon-cyan);
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+/* === Jazz cat neon accents === */
+
+#dancer svg { 
+    filter: none; /* keeps the glow only on targeted parts */
+} 
+
+/* Hat band: static neon glow using our LEFT token color */
+#hat-band {
+  fill: var(--label-left);
+  stroke: white;
+  stroke-width: 1; /* thinner rim so the hat itself doesn't glow */
+  filter:
+    drop-shadow(0 0 3px var(--label-left))  /* tighter inner glow */
+    drop-shadow(0 0 3px var(--label-left)); /* outer glow */
+}
+
+/* Bow tie: same neon color but with a gentle pulse */
+#bowtie > * {
+  fill: var(--label-left);
+  
+  stroke-width: 1.5;
+}
+#bowtie {
+  /* base glow; animation deepens it mid-cycle */
+  filter: drop-shadow(0 0 6px var(--label-left));
+  animation: bowPulse 1.2s ease-in-out infinite; /* makes the bow dynamic */
+}
+@keyframes bowPulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px var(--label-left))
+      drop-shadow(0 0 10px white);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 14px var(--label-left))
+      drop-shadow(0 0 20px white);
+  }
+}
+
+/* Glasses: subtle neon reflection around the frames */
+#glasses rect {
+  fill: black;                 /* keep lenses dark */
+  stroke: var(--label-left);   /* faint neon rim */
+  stroke-width: 1.25;          /* thin so it doesn't overpower */
+  /* tiny glow so it reads as neon */
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.6))
+          drop-shadow(0 0 4px var(--label-left));
+  opacity: 0.95;               /* keep them slightly subdued */
+}
+/* Bridge: even subtler so it doesn't look too heavy */
+#glasses rect:nth-child(3) {
+  stroke-width: 1;
+  filter: none;                /* skip glow on the bridge */
+  opacity: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =================
+   RESPONSIVE TWEAKS
+  =================== */
+
+@media (max-width: 480px) {
+  /* Override only variables here , one row of arrows, Labels above; bigger arrows; no clipping */
+  :root {
+    --overlay-y: 28vh;                      /* lift PLAY a bit */
+    --controls-bottom: 3vh;                /* lift arrows from the floor */
+    --controls-gap: clamp(8px, 3vw, 16px);  /* spacing between arrows */
+    --arrow-size: clamp(80px, 22vw, 112px); /* larger arrows on phones */
+
+    --arrow-glow-inner: 10px;               /* stronger glow on mobile */
+    --arrow-glow-outer: 22px;
+
+    --floor-opacity: 0.55;                  /* dim & lower the grid floor */
+    --floor-height: 32vh;
+    --floor-bottom: -14vh;
+
+    --ctrl-label-size: clamp(12px, 3.6vw, 14px);
+
+    --hud-chip-min: 92px;      /* min width per pill  */
+    --hud-chip-pad: 8px 10px;  /* compact padding on phones */
+    --hud-label-size: 12px;    /* smaller label text */
+    --hud-metric-size: 22px;   /* smaller digits */
+
+    --topbar-h: 72px;
+
+  }
+
+  .hamburger { 
+    display: inline-flex; 
+    align-items:center; 
+    justify-content:center; 
+  }
+
+  /* Layout: one row LEFT | UP | DOWN | RIGHT */
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: auto;
+    grid-template-areas: "left up down right";
+    column-gap: var(--controls-gap);
+    row-gap: 0;
+    align-items: center;
+    justify-items: center;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    margin-block-end: var(--controls-bottom);
+  }
+  .ctrl-btn.left  { 
+    grid-area: left;  
+    justify-self: center; 
+  }
+  .ctrl-btn.up    { 
+    grid-area: up;    
+  }
+  .ctrl-btn.down  { 
+    grid-area: down;  
+  }
+  .ctrl-btn.right { 
+    grid-area: right; 
+    justify-self: center; 
+  }
+
+  /* Labels above arrows on mobile */
+  .ctrl-btn { position: static; }
+  .ctrl-btn .label {
+    position: static;
+    order: 0;                   /* label before SVG → above */
+    margin: 0 0 8px 0;
+    transform: none;
+    text-align: center;
+    font-size: var(--ctrl-label-size);
+  }
+
+  /* Failsafe: ensure arrow size wins on mobile */
+  svg.arrow-icon {
+    width: var(--arrow-size) !important;
+    height: var(--arrow-size) !important;
+  }
+
+  /* HUD spacing a touch tighter on phones */
+  .hud { gap: 8px; }
+
+ /*3 columns when space allows, auto wraps to 2 or 1 on narrower screens, centered and width-capped so pills don't stretch full-width */
+  .hud-top {
+    display: grid;
+    grid-template-columns: 1fr;      /* 1 chip per row */
+    justify-items: start;            /* left align chips */
+    gap: 8px;                        /* compact spacing */
+    max-width: none;                 /* remove any previous width cap */
+    padding-left: 8px;               /* tiny breathing on the left */
+  }
+
+  /* keep each chip compact and centered in its cell */
+  .hud-item {
+    min-width: var(--hud-chip-min);
+    padding: var(--hud-chip-pad);
+    justify-self: center;
+  }
+
+.game { 
+  padding-bottom: 0; 
+  gap: 12px; 
+}
+
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  /* knobs for this range */
+  :root {
+    --arrow-size: clamp(88px, 14vw, 120px);   /* a bit larger than phone */
+    --controls-gap: clamp(12px, 2.5vw, 24px);
+    --controls-bottom: 10vh;                  /* lower than phone */
+    --overlay-y: 26vh;
+
+    --hud-chip-min: 108px;                    /* 3 compact columns */
+    --hud-chip-pad: 10px 12px;
+    --hud-label-size: 13px;
+    --hud-metric-size: 24px;
+
+    --floor-opacity: 0.65;
+    --floor-height: 36vh;
+    --floor-bottom: -10vh;
+  }
+
+    .navbar .navbar-toggler.hamburger {
+    margin-left: auto;                        /* pushes the button to the far right */
+  }
+  
+  /* Controls: force back to one-row flex (override mobile grid) */
+  .controls {
+    display: flex !important;                 /* kill grid from mobile */
+    justify-content: center;
+    align-items: center;
+    gap: var(--controls-gap);
+    margin: 0 !important;
+    margin-block-end: var(--controls-bottom) !important;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  /* HUD: exactly 3 compact columns, centered, no full-width stretch */
+  .hud-top {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    gap: 10px 12px;
+    justify-content: center;
+  }
+  .hud-item {
+    min-width: var(--hud-chip-min);
+    padding: var(--hud-chip-pad);
+    justify-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar { 
+    padding: 6px 12px; 
+  }
+  .nav-btn { 
+    padding: 5px 9px; 
+    font-weight: 600; 
+  }
+  .nav-list { 
+    gap: 8px; 
+    row-gap: 6px; 
+  }
+}
+
+
+

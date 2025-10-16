@@ -18,7 +18,6 @@ const hud = {
   score: document.getElementById('score'),
   best: document.getElementById('best'),
   level: document.getElementById('level'),
-  soundMode: document.getElementById('soundMode'),
 };
 
 const overlay = document.getElementById('overlay');
@@ -190,7 +189,20 @@ playBtn.addEventListener('click', () => {
   // later I will call actual startGame() logic here
 });
 
+/* ----------------------------------------
+   Mobile nav toggle (hamburger)
+   ---------------------------------------- */
+(() => {
+  const btn = document.getElementById('navToggle');
+  const list = document.getElementById('primaryNav');
+  if (!btn || !list) return;
 
+  btn.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    document.body.toggleAttribute('data-nav-open'); // CSS reads this
+  });
+})();
 
 
 
@@ -203,4 +215,30 @@ playBtn.addEventListener('click', () => {
 window.addEventListener('DOMContentLoaded', () => {
   init();
   bindControls();
+  
+const nav = document.getElementById('mainNav'); // Get the collapsible nav element (Bootstrap controls this)
+
+// Safeguard: only if the collapse element exists (mobile/Bootstrap present)
+if (nav) {
+  // When the menu opens → mark <body> so CSS can morph bars into an "X"
+  nav.addEventListener('shown.bs.collapse', () => {
+    document.body.setAttribute('data-nav-open', '');
+  });
+
+  // When it closes, remove the flag so bars go back to hamburger
+  nav.addEventListener('hidden.bs.collapse', () => {
+    document.body.removeAttribute('data-nav-open');
+  });
+}
+});
+
+document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const collapseEl = document.getElementById('mainNav');
+    if (collapseEl && collapseEl.classList.contains('show')) {
+      
+      const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+      collapse.hide();
+    }
+  });
 });
