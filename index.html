@@ -16,7 +16,7 @@
       <!-- Main navigation; keyboard/touch friendly -->
       <nav class="main-nav" aria-label="Main">
         <!-- Brand link placeholder for now -->
-        <a href="#" class="brand">🐱🎩 Jazz the Cat in the Hat</a>
+        <a href="#" class="brand">🐱 Jazz the Cat in the Hat 🎩</a>
         <!-- Primary actions as a list (semantics + a11y) -->
         <ul class="nav-list">
           <!-- Start game; JS listens to data-action -->
@@ -37,42 +37,42 @@
       </nav>
     </header>
 
-    <main id="game" class="game" role="main">
+<main id="game" class="game" role="main">
+      <!-- HUD: lives, score, best, level, mode -->
+<section class="hud" aria-label="Heads-up display">
 
-        <!-- HUD: lives, score, best, level, mode -->
-        <section class="hud" aria-label="Heads-up display">
-          <!-- Lives: start at 3 hearts -->
-          <div class="hud-item">
-            <span class="hud-label">Lives</span>
-            <div id="lives" class="lives" aria-live="polite">❤️❤️❤️</div>
-          </div>
+  <!-- Top row of HUD: Score / Best / Level / Mode, Spread evenly across the full width, Boxed neon chips-->
+  <div class="hud-top">
+    <div class="hud-item">
+      <span class="hud-label">Score</span>
+      <div id="score" class="metric" aria-live="polite">0</div>
+    </div>
 
-          <!-- Score: will update during play -->
-          <div class="hud-item">
-            <span class="hud-label">Score</span>
-            <div id="score" class="metric" aria-live="polite">0</div>
-          </div>
+    <div class="hud-item">
+      <span class="hud-label">Best</span>
+      <div id="best" class="metric" aria-live="polite">0</div>
+    </div>
 
-          <!-- Best: persistent later (localStorage) -->
-          <div class="hud-item">
-            <span class="hud-label">Best</span>
-            <div id="best" class="metric" aria-live="polite">0</div>
-          </div>
+    <div class="hud-item">
+      <span class="hud-label">Level</span>
+      <div id="level" class="metric" aria-live="polite">1</div>
+    </div>
 
-          <!-- Level: simple progression counter -->
-          <div class="hud-item">
-            <span class="hud-label">Level</span>
-            <div id="level" class="metric" aria-live="polite">1</div>
-          </div>
+    <div class="hud-item">
+      <span class="hud-label">Mode</span>
+      <div id="soundMode" class="metric">FX</div>
+    </div>
+  </div>
 
-          <!-- Mode: FX / Music / Mute (linked to settings) -->
-          <div class="hud-item">
-            <span class="hud-label">Mode</span>
-            <div id="soundMode" class="metric">FX</div>
-          </div>
-        </section>
+  <!-- Bottom row just for livesm Centered block, Label above the hearts,  Hearts can wrap as they grow -->
+  <div class="hud-bottom">
+    <div class="hud-item hud-item--plain">
+      <span class="hud-label">Lives:</span>
+      <div id="lives" class="lives" aria-live="polite"></div>
+    </div>
+  </div>
 
-
+</section>
 
         <!-- Game Stage: prompt lane + dancer + feedback -->
 <section class="stage" aria-label="Game stage">
@@ -105,7 +105,6 @@
             <line x1="44" y1="74" x2="28" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/>  <!-- left temple -->
             <line x1="106" y1="74" x2="122" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/> <!-- right temple -->
 
-              
               <!-- Nose -->
             <circle cx="75" cy="90" r="4" fill="#2b1c12"/>
               
@@ -118,14 +117,14 @@
               <!-- Belly highlight -->
             <ellipse cx="75" cy="138" rx="18" ry="15" fill="#ffe7c6" stroke="#2b1c12" stroke-width="2"/>
 
-             <!-- Bow tie (classic triangles + center knot) -->
+             <!-- Bow tie -->
             <g id="bowtie" aria-label="Bow tie">
                 <!-- left wing (points inward → tip at x=72) -->
-                <polygon points="60,108 72,115 60,122" fill="var(--label-left)"/>
+                <polygon points="60,108 72,115 60,122" fill="var(--label-left)" stroke="#000" stroke-width="1.5"/>
                 <!-- right wing (points inward → tip at x=78) -->
-                <polygon points="90,108 78,115 90,122" fill="var(--label-left)"/>
+                <polygon points="90,108 78,115 90,122" fill="var(--label-left)" stroke="#000" stroke-width="1.5"/>
                 <!-- knot in the center -->
-                <circle cx="75" cy="115" r="5" fill="var(--label-left)"/>
+                <circle cx="75" cy="115" r="5" fill="var(--label-left)" stroke="#000" stroke-width="1.5"/>
             </g>
 
               <!-- Arms -->
@@ -142,50 +141,83 @@
         <div id="feedback" class="feedback" aria-live="polite"></div>
 </section>
 
+<!--  Note to self:
+     - Each button = one arrow direction
+     - Inside each button: label + SVG
+     - SVG has TWO polygons:
+       1) .arrow-glow = only for neon glow (no stroke)
+       2) .arrow-main = arrow shape with white outline (stroke)-->
 
 <!-- Controls: DDR-style SVG arrows with label above -->
 <section class="controls" aria-label="Arrow controls">
-  <!-- Left: purple arrow with thick white stroke -->
+
+  <!-- LEFT arrow -->
   <button class="ctrl-btn left" data-dir="Left" aria-label="Left arrow">
-    <span class="label">LEFT</span>
-    <!-- Using an inline SVG so stroke/fill are easy to style and animate -->
-    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="60,15 20,50 60,85" fill="var(--label-left)" stroke="white" stroke-width="10"/>
-    </svg>
-  </button>
+  <!-- label text above the arrow -->
+  <span class="label">LEFT</span>
 
-  <!-- Up: mint/cyan -->
+  <!-- SVG container for the arrow -->
+  <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+    <!-- Arrow glow + fill (green triangle) -->
+    <polygon class="arrow-glow" points="60,15 20,50 60,85" fill="var(--label-left)" />
+    <!-- White outline only (DDR-style border) -->
+    <polygon class="arrow-main" points="60,15 20,50 60,85" />
+  </svg>
+</button>
+
+  <!-- UP arrow -->
   <button class="ctrl-btn up" data-dir="Up" aria-label="Up arrow">
-    <span class="label">UP</span>
-    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="15,60 50,20 85,60" fill="var(--label-up)" stroke="white" stroke-width="10"/>
-    </svg>
-  </button>
+  <span class="label">UP</span>
 
-  <!-- Down: orange -->
+  <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+    <!-- Arrow glow + fill (cyan/mint triangle, pointing up) -->
+    <polygon class="arrow-glow" points="15,60 50,20 85,60" fill="var(--label-up)" />
+    <!-- White outline only -->
+    <polygon class="arrow-main" points="15,60 50,20 85,60" />
+  </svg>
+</button>
+
+  <!-- DOWN arrow -->
   <button class="ctrl-btn down" data-dir="Down" aria-label="Down arrow">
-    <span class="label">DOWN</span>
-    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="15,40 50,80 85,40" fill="var(--label-down)" stroke="white" stroke-width="10"/>
-    </svg>
-  </button>
+  <span class="label">DOWN</span>
 
-  <!-- Right: magenta/pink -->
+  <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+    <!-- Arrow glow + fill (orange triangle, tip points down at y=80) -->
+    <polygon class="arrow-glow" points="15,40 50,80 85,40" fill="var(--label-down)" />
+    <!-- White outline only -->
+    <polygon class="arrow-main" points="15,40 50,80 85,40" />
+  </svg>
+</button>
+
+  <!-- RIGHT arrow -->
   <button class="ctrl-btn right" data-dir="Right" aria-label="Right arrow">
-    <span class="label">RIGHT</span>
-    <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="40,15 80,50 40,85" fill="var(--label-right)" stroke="white" stroke-width="10"/>
-    </svg>
-  </button>
+  <span class="label">RIGHT</span>
+
+  <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
+    <!-- Arrow glow + fill (pink/magenta triangle, pointing right) -->
+    <polygon class="arrow-glow" points="40,15 80,50 40,85" fill="var(--label-right)" />
+    <!-- White outline only -->
+    <polygon class="arrow-main" points="40,15 80,50 40,85" />
+  </svg>
+</button>
+
 </section>
 
-
-    </main>
-
-    <!-- Overlays (tutorial / pause / summary) -->
-    <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
-
+    <!-- Overlays tutorial / pause / ..., play button overlay only shows when game is not running -->
+  <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
+    <!-- play call-to-action container -->
+    <div class="play-cta">
+      <!-- circular neon play button -->
+      <div class="play-btn"></div>
+      <!-- text under the button -->
+      <span class="play-label">Play</span>
     </div>
+
+  </div>
+
+</main>
+
+
 
     <!-- Entry point -->
     <script type="module" src="assets/js/game.js"></script>
