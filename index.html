@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Viewport: lock zoom and use full safe area -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>Jazz the Cat in the Hat</title>
     <meta
       name="description"
@@ -24,7 +25,18 @@
 <header class="topbar navbar navbar-expand-md" role="banner">
   <!-- brand (left) -->
   <a class="navbar-brand brand" href="#">🐱 Jazz the Cat in the Hat 🎩</a>
-
+  
+  <!-- Rotation blocker: shown only in landscape -->
+<div class="rotate-blocker" id="rotateBlocker" aria-hidden="true">
+  <div class="rb-card" role="dialog" aria-label="Rotate device">
+    <div class="rb-icon" aria-hidden="true">📱↩️</div> <!-- small hint emoji -->
+    <p class="rb-title">Rotate to portrait</p>        <!-- main message -->
+    <p class="rb-text">This game is optimized for portrait mode.</p> <!-- sub -->
+    <button class="rb-try" type="button" aria-label="Continue in landscape">
+      Try anyway
+    </button>
+  </div>
+</div>
   <!-- hamburger toggler (right on mobile) -->
   <button class="navbar-toggler hamburger" type="button"
         data-bs-toggle="collapse" data-bs-target="#mainNav"

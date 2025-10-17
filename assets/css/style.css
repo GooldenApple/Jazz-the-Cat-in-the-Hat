@@ -49,7 +49,17 @@
 }    
 html, body { 
     height: 100%;                          /* full height document */
- }           
+ }
+ 
+ /* Prevent auto text zoom on iOS */
+html {                                      /* keep text size stable */
+  -webkit-text-size-adjust: 100%; 
+}
+
+/* Prevent double-tap zoom on interactive UI */
+body, .controls, .ctrl-btn, .nav-btn { 
+  touch-action: manipulation;           /* disable double-tap zoom on supported browsers */
+}
 
 body {
   background-color: var(--bg);           /* fallback background color */
@@ -251,6 +261,62 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   color: var(--neon-cyan);               /* digits color */
   text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink); /* digits glow */
 }
+
+/* ----------------------------------------------
+   Landscape overlay: covers game in landscape
+   ---------------------------------------------- */
+
+/* overlay container */
+.rotate-blocker {                      /* hidden by default */
+  position: fixed;                     /* pin to viewport */
+  inset: var(--topbar-h) 0 0 0;        /* respect sticky navbar height */
+  display: none;                       /* toggled via MQ/JS */
+  align-items: center;                 /* center card vertically */
+  justify-content: center;             /* center card horizontally */
+  background: rgba(5, 8, 18, .86);     /* dark veil */
+  backdrop-filter: blur(4px);          /* soft glass feel */
+  z-index: 9999;                       /* above everything */
+  pointer-events: none;                /* let card handle clicks */
+}
+
+/* show overlay only in landscape (default behavior) */
+@media (orientation: landscape) {
+  body:not([data-allow-landscape]) .rotate-blocker {
+    display: flex;                     /* reveal overlay */
+  }
+}
+
+/* message card */
+.rb-card {
+  pointer-events: auto;                /* accept clicks */
+  padding: 16px 18px;                  /* inner spacing */
+  border: 2px solid var(--neon-purple);/* neon frame */
+  border-radius: 12px;                 /* soft corners */
+  background: rgba(10,14,28,.92);      /* glass panel */
+  color: var(--ink);                   /* readable text */
+  text-align: center;                  /* center content */
+  box-shadow:
+    0 0 14px rgba(166,77,255,.5),      /* outer glow */
+    inset 0 0 12px rgba(166,77,255,.25);/* inner glow */
+}
+
+/* small bits */
+.rb-icon  { font-size: 28px; margin-bottom: 6px; } /* emoji size + gap */
+.rb-title { font-size: 16px; margin: 0 0 6px; }    /* title line */
+.rb-text  { font-size: 13px; margin: 0 0 10px; }   /* helper line */
+
+/* “try anyway” pill */
+.rb-try {
+  padding: 6px 12px;                               /* click target */
+  border: 2px solid var(--neon-purple);            /* neon rim */
+  border-radius: 999px;                            /* pill shape */
+  background: rgba(10,14,28,.6);                   /* glass bg */
+  color: var(--ink);                               /* label color */
+  font: inherit;                                   /* use HUD font */
+  cursor: pointer;                                 /* pointer cursor */
+  box-shadow: 0 0 8px rgba(166,77,255,.55);        /* glow */
+}
+
 
 /* stage: reserve space for HUD above and controls below */
 .stage {
