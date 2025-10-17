@@ -262,29 +262,7 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink); /* digits glow */
 }
 
-/* ----------------------------------------------
-   Landscape overlay: covers game in landscape
-   ---------------------------------------------- */
 
-/* overlay container */
-.rotate-blocker {                      /* hidden by default */
-  position: fixed;                     /* pin to viewport */
-  inset: var(--topbar-h) 0 0 0;        /* respect sticky navbar height */
-  display: none;                       /* toggled via MQ/JS */
-  align-items: center;                 /* center card vertically */
-  justify-content: center;             /* center card horizontally */
-  background: rgba(5, 8, 18, .86);     /* dark veil */
-  backdrop-filter: blur(4px);          /* soft glass feel */
-  z-index: 9999;                       /* above everything */
-  pointer-events: none;                /* let card handle clicks */
-}
-
-/* show overlay only in landscape (default behavior) */
-@media (orientation: landscape) {
-  body:not([data-allow-landscape]) .rotate-blocker {
-    display: flex;                     /* reveal overlay */
-  }
-}
 
 /* message card */
 .rb-card {
@@ -518,6 +496,26 @@ body::before {
   opacity: var(--floor-opacity);        /* intensity */
 }
 
+/* -----------------------------------------------
+ Rotate overlay full-screen block,tells users to rotate back to portrait.
+  Hidden by default, Shown only on small screens in landscape.
+------------------------------------------------ */
+
+/* Rotate overlay: base (always hidden) */
+#rotateOverlay {
+  display: none;              /* hidden by default */
+  position: fixed;            /* pin to viewport */
+  inset: var(--topbar-h) 0 0 0; /* sit below sticky navbar */
+  background: rgba(10,10,30,0.95); /* dark veil */
+  color: #fff;                /* readable text */
+  z-index: 9999;              /* above everything */
+  justify-content: center;    /* center content X */
+  align-items: center;        /* center content Y */
+  text-align: center;         /* center text */
+  flex-direction: column;     /* vertical stack */
+  padding: 20px;              /* inner spacing */
+}
+
 /* media queries: grouped at end */
 
 /* ultra-narrow ≤ 393px: keep background/floor from “lifting up” */
@@ -568,6 +566,20 @@ body::before {
   }
 }
 
+/* Media query to show overlay only on mobile in landscape */
+@media (max-width: 768px) and (orientation: landscape) {
+  #rotateOverlay {
+    display: flex;            /* visible only in this case */
+  }
+
+  
+/* Hard guard: never show on larger screens */
+@media (min-width: 769px) {  
+  #rotateOverlay { 
+    display: none !important;          /* force hidden on desktop */
+  } 
+}
+}
 /* ≥ md: horizontal nav on one row, labels never wrap */
 @media (min-width: 768px) {
   .navbar-toggler.hamburger { display: none !important; } /* hide burger */

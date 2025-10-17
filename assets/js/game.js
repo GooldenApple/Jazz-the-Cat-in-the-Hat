@@ -244,39 +244,3 @@ document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
 });
 
 
-/* ----------------------------------------------
-   Landscape overlay control (session opt-out)
-   - Shows overlay in landscape
-   - "Try anyway" hides it (for this session)
-   ---------------------------------------------- */
-(() => {
-  const blocker = document.getElementById('rotateBlocker'); // overlay node
-  const btnTry  = blocker?.querySelector('.rb-try');        // continue button
-
-  // show/hide depending on orientation + user choice
-  const syncBlocker = () => {
-    const isLandscape = window.matchMedia('(orientation: landscape)').matches; // state
-    const allowed = sessionStorage.getItem('allowLandscape') === '1';          // user opt-out
-    blocker.style.display = (!allowed && isLandscape) ? 'flex' : 'none';       // toggle
-  };
-
-  // allow landscape for this tab/session
-  btnTry?.addEventListener('click', () => {
-    sessionStorage.setItem('allowLandscape', '1');           // remember choice
-    document.body.setAttribute('data-allow-landscape', '');  // CSS hook
-    syncBlocker();                                           // update view
-  });
-
-  // keep in sync on rotate/resize/load
-  window.addEventListener('orientationchange', syncBlocker); // device rotate
-  window.addEventListener('resize', syncBlocker);            // viewport changes
-  window.addEventListener('DOMContentLoaded', syncBlocker);  // initial
-})();
-
-/* Prevent pinch-zoom gestures on iOS Safari */
-(() => {
-  const block = (e) => e.preventDefault(); // stop default zoom
-  document.addEventListener('gesturestart', block, { passive: false });
-  document.addEventListener('gesturechange', block, { passive: false });
-  document.addEventListener('gestureend', block,   { passive: false });
-})();
