@@ -80,67 +80,96 @@ body {
 }
 .hidden { display: none !important; }    /* utility to hide elements */
 
-/* sticky navbar: single line, with safe-edge padding */
+/* keep the bar one line, left-aligned, never clipping the glow */
 .topbar {
-  position: sticky;                       /* stick to top */
-  top: 0; z-index: 30;                    /* layering */
-  min-height: var(--topbar-h);            /* fixed height */
-  display: flex;                          /* one row */
-  align-items: center;                    /* vertical center */
-  flex-wrap: nowrap;                      /* never wrap */
-  padding-left:  max(12px, env(safe-area-inset-left));   /* safe left */
-  padding-right: max(12px, env(safe-area-inset-right));  /* safe right */
+  position: relative;                  /* anchor for absolute dropdown */
+  top: 0;
+  z-index: 30;                         /* above stage */
+  min-height: var(--topbar-h);         /* fixed height */
+  display: flex;                       /* one row */
+  align-items: center;                 /* vertical center */
+  flex-wrap: nowrap;                   /* no wrap */
+  justify-content: flex-start;         /* brand stays left */
+  overflow: visible;                   /* never clip glow */
+  padding-left:  max(12px, env(safe-area-inset-left));   /* safe edges */
+  padding-right: max(12px, env(safe-area-inset-right));
   background: linear-gradient(to bottom, rgba(18,27,52,.92), rgba(18,27,52,.78)); /* glass */
-  border-bottom: 2px solid rgba(166,77,255,.35);         /* neon rim */
-  backdrop-filter: blur(6px);             /* glass blur */
+  border-bottom: 2px solid rgba(166,77,255,.35);          /* neon rim */
+  backdrop-filter: blur(6px);          /* blur glass */
 }
 
-/* brand text: gradient, shrink-safe with ellipsis */
+/* let the collapsing panel sit under the burger, never above it */
+.topbar .navbar-collapse {
+  position: relative;                  /* stacking context under burger */
+  z-index: 1;                          /* burger wins (z=50) */
+  padding-right: 56px;                 /* leave room under burger */
+  width: 100%;                         /* expand across bar */
+  display: none;                       /* closed by default on all widths */
+}
+
+.topbar .navbar-collapse.show {
+  display: block;                /* visible when opened */
+  position: absolute;            /* drop under the bar */
+  top: 100%;                     /* directly beneath topbar */
+  right: max(12px, env(safe-area-inset-right));
+  width: auto;                   /* fit content stack */
+}
+
+
+/* keep the wordmark left, allow ellipsis on tiny widths */
 .brand {
-  flex: 1 1 auto;                         /* allow shrink */
-  min-width: 0;                           /* required for flex shrink */
-  overflow: hidden;                       /* clip overflow */
-  text-overflow: ellipsis;                /* show … if too tight */
-  white-space: nowrap;                    /* no wrapping */
-  display: inline-flex; align-items: center;
-  justify-content: center;                /* keep centered */
-  line-height: 1;
-
-  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan));
-
+  margin-right: auto;                  /* push menu area right */
+  flex: 0 0 auto;                      /* do not shrink */
+  display: inline-flex;                /* emoji aligns with text */
+  align-items: center;                 /* vertical center */
+  justify-content: flex-start;         /* left inside brand box */
+  max-width: calc(100% - 72px);        /* reserve burger lane */
+  overflow: hidden;                    /* clip for ellipsis */
+  text-overflow: ellipsis;             /* show … when tight */
+  white-space: nowrap;                 /* single line */
+  padding-right: 56px;                 /* visual clearance under burger */
+   /* neon wordmark */
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan)); /* neon text */
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
-  font-weight: 800;
+  color: transparent;                  /* gradient text reveal */
+  font-weight: 800;                    /* arcade bold */
+  line-height: 1;                      /* tight line box */
   text-shadow:
     0 0 6px rgba(255,255,255,.65),
     0 0 18px rgba(166,77,255,.55),
-    0 0 28px rgba(0,255,213,.45);
+    0 0 28px rgba(0,255,213,.45);      /* soft haze */
 }
 
-/* hamburger: neon capsule, no hover, morphs to X when nav opens */
+
+/* neon burger; stays on top and morphs to X when open */
 .navbar-toggler.hamburger {
-  margin-left: auto;                     /* push to the right edge */
-  display: inline-grid;                  /* show in mobile */
-  place-content: center;                 /* center the bars */
-  gap: 4px;                              /* space between bars */
-  flex: 0 0 auto;                        /* fixed-size button */
-  line-height: 1;                        /* compact button box */
-  border: 2px solid var(--neon-purple);  /* neon frame */
-  border-radius: 10px;                   /* soft corners */
-  padding: 6px;                          /* touch target size */
-  background: rgba(10,14,28,0.55);      /* glass backdrop */
-  box-shadow: 0 0 6px rgba(166,77,255,0.55), inset 0 0 10px rgba(166,77,255,0.25); /* glow */
-  margin-right: 0;                        /* avoid extra push to the edge */
+  position: absolute;                             /* free from flex row */
+  top: 50%;                                       /* vertical center */
+  right: max(12px, env(safe-area-inset-right));   /* safe right */
+  transform: translateY(-50%);                    /* exact center */
+  display: inline-grid; 
+  place-content: center; 
+  gap: 4px;                                       /* tidy bars */
+  flex: 0 0 auto; 
+  line-height: 1;                                 /* compact box */
+  border: 2px solid var(--neon-purple);           /* neon frame */
+  border-radius: 10px; 
+  padding: 6px;                                   /* touch size */
+  background: rgba(10,14,28,0.55);                /* glass */
+  box-shadow: 0 0 6px rgba(166,77,255,.55), inset 0 0 10px rgba(166,77,255,.25); /* glow */
+  z-index: 50;                                    /* above dropdown */
 }
+
 .navbar-toggler.hamburger span {
-  display: block;                        /* render as bars */
-  width: 24px;                           /* bar length */
-  height: 2px;                           /* bar thickness */
-  background: #fff;                      /* bar color */
+  display: block; 
+  width: 24px; 
+  height: 2px;                          /* bar size */
+  background: #fff; 
   box-shadow: 0 0 6px rgba(255,255,255,.6); /* bar glow */
-  transition: transform .2s ease, opacity .2s ease; /* smooth morph */
+  transition: transform .2s ease, opacity .2s ease;           /* morph */
 }
+
 /* X-state toggled via body[data-nav-open] */
 body[data-nav-open] .hamburger span:nth-child(1) { transform: translateY(6px) rotate(45deg); } /* top to diag */
 body[data-nav-open] .hamburger span:nth-child(2) { opacity: 0; }                               /* hide middle */
@@ -152,7 +181,7 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   display: flex;                         /* flex container */
   flex-direction: column;                /* vertical stack */
   align-items: flex-end;                 /* right align items */
-  gap: 10px;                             /* spacing */
+  gap: 8px;                             /* spacing */
   padding: 10px 0;                       /* vertical padding */
   margin: 0;                             /* reset */
 }
@@ -295,6 +324,25 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   box-shadow: 0 0 8px rgba(166,77,255,.55);        /* glow */
 }
 
+/* -----------------------------------------------
+ Rotate overlay full-screen block,tells users to rotate back to portrait.
+  Hidden by default, Shown only on small screens in landscape.
+------------------------------------------------ */
+
+/* Rotate overlay: base (always hidden) */
+#rotateOverlay {
+  display: none;              /* hidden by default */
+  position: fixed;            /* pin to viewport */
+  inset: var(--topbar-h) 0 0 0; /* sit below sticky navbar */
+  background: rgba(10,10,30,0.95); /* dark veil */
+  color: #fff;                /* readable text */
+  z-index: 9999;              /* above everything */
+  justify-content: center;    /* center content X */
+  align-items: center;        /* center content Y */
+  text-align: center;         /* center text */
+  flex-direction: column;     /* vertical stack */
+  padding: 20px;              /* inner spacing */
+}
 
 /* stage: reserve space for HUD above and controls below */
 .stage {
@@ -496,107 +544,137 @@ body::before {
   opacity: var(--floor-opacity);        /* intensity */
 }
 
-/* -----------------------------------------------
- Rotate overlay full-screen block,tells users to rotate back to portrait.
-  Hidden by default, Shown only on small screens in landscape.
------------------------------------------------- */
 
-/* Rotate overlay: base (always hidden) */
-#rotateOverlay {
-  display: none;              /* hidden by default */
-  position: fixed;            /* pin to viewport */
-  inset: var(--topbar-h) 0 0 0; /* sit below sticky navbar */
-  background: rgba(10,10,30,0.95); /* dark veil */
-  color: #fff;                /* readable text */
-  z-index: 9999;              /* above everything */
-  justify-content: center;    /* center content X */
-  align-items: center;        /* center content Y */
-  text-align: center;         /* center text */
-  flex-direction: column;     /* vertical stack */
-  padding: 20px;              /* inner spacing */
-}
+/* ========== MEDIA QUERIES (clean breakpoints) ========== */
 
-/* media queries: grouped at end */
-
-/* ultra-narrow ≤ 393px: keep background/floor from “lifting up” */
+/* ≤393px — keep floor tight; brand a touch smaller */
 @media (max-width: 393px) {
   :root {
-    --floor-bottom: 1vh;                /* raise plane a touch more */
-    --floor-height: 48vh;               /* extend plane so no dark band shows */
+    --floor-bottom: 1vh;                 /* lift grid slightly */
+    --floor-height: 48vh;                /* extend grid plane */
   }
-    /* brand: one more step smaller to avoid clipping */
   .brand {
-    font-size: clamp(0.80rem, 3.4vw, 0.9rem);     /* a touch smaller */
-    letter-spacing: 0.45px;                       /* slightly tighter */
+    font-size: clamp(0.80rem, 3.4vw, 0.9rem); /* smaller wordmark */
+    letter-spacing: 0.45px;                    /* tighter tracking */
   }
 }
 
-/* small phones: ensure all four arrows fit with equal side gaps */
+/* ≤480px — arrows fit, equal edge gaps; brand leaves room for burger */
 @media (max-width: 480px) {
   :root {
-    --arrow-size: clamp(60px, 18vw, 84px); /* smaller so all four always fit */
-    --controls-gap: clamp(8px, 2.5vw, 14px);   /* tighter spacing */
-    --controls-bottom: 2.5vh;                 /* near the bottom edge */
-    --controls-side-pad: 10px;              /* equal edge padding left/right */
+    --arrow-size: clamp(60px, 18vw, 84px);    /* smaller arrows */
+    --controls-gap: clamp(8px, 2.5vw, 14px);  /* tighter spacing */
+    --controls-bottom: 2.5vh;                 /* near bottom */
+    --controls-side-pad: 10px;                /* symmetric edges */
   }
-
-  /* brand: shrink a bit and reserve space for the burger */
   .brand {
-    font-size: clamp(0.85rem, 3.6vw, 0.95rem);   /* responsive downscale */
-    letter-spacing: 0.5px;                        /* tighter tracking */
-    max-width: calc(100% - 64px);                 /* leave room for toggler */
-    overflow: hidden;                              /* hide spill */
-    text-overflow: ellipsis;                       /* add … if needed */
-    white-space: nowrap;                           /* keep one line */
+    font-size: clamp(0.85rem, 3.6vw, 0.95rem);/* responsive size */
+    letter-spacing: 0.5px;                    /* tighter tracking */
+    max-width: calc(100% - 64px);             /* leave room for burger */
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-
-  /* topbar: keep safe padding so nothing clips on the right */
   .topbar {
-    padding-right: max(12px, env(safe-area-inset-right)); /* right safe edge */
-    padding-left:  max(12px, env(safe-area-inset-left));  /* left safe edge  */
+    padding-right: max(12px, env(safe-area-inset-right)); /* safe right */
+    padding-left:  max(12px, env(safe-area-inset-left));  /* safe left  */
   }
 }
 
-/* tablets: comfortable scaling without changing layout */
+/* 481–767px — comfy arrow scale, a bit more HUD headroom */
 @media (min-width: 481px) and (max-width: 767px) {
   :root {
-    --arrow-size: clamp(88px, 16vw, 118px);   /* scale arrows */
+    --arrow-size: clamp(88px, 16vw, 118px);   /* scale up */
     --controls-gap: clamp(12px, 3vw, 24px);   /* spacing */
-    --hud-stack-h: 220px;                     /* extra HUD room */
+    --hud-stack-h: 220px;                     /* HUD room */
   }
 }
 
-/* Media query to show overlay only on mobile in landscape */
-@media (max-width: 768px) and (orientation: landscape) {
-  #rotateOverlay {
-    display: flex;            /* visible only in this case */
+/* ≤767px — burger mode (mobile): dropdown sits right under the X */
+@media (max-width: 767px) {
+  .navbar-toggler.hamburger { display: inline-grid; }        /* show burger */
+
+  .topbar .navbar-collapse:not(.show) {                      /* closed = hidden */
+    display: none !important;
   }
 
-  
-/* Hard guard: never show on larger screens */
-@media (min-width: 769px) {  
-  #rotateOverlay { 
-    display: none !important;          /* force hidden on desktop */
+  .topbar .navbar-collapse.show {                            /* open panel */
+    display: block !important;                               /* reveal */
+    position: absolute;                                      /* float below bar */
+    top: calc(var(--topbar-h) + 6px);                        /* just under bar/X */
+    right: max(12px, env(safe-area-inset-right));            /* align with X */
+    width: auto; padding: 0; margin: 0; background: transparent;
+    z-index: 30;                                             /* below burger (50) */
+    text-align: right;                                       /* right edge align */
+  }
+
+  .nav-list {                                                /* vertical menu */
+    display: flex;
+    flex-direction: column;                                  /* stack items */
+    align-items: flex-end;                                   /* right-aligned */
+    gap: 8px;
+    margin: 0; padding: 0; list-style: none;
+    white-space: nowrap;                                     /* single-line labels */
+  }
+
+  .nav-btn { white-space: nowrap; }                          /* avoid wrapping */
+}
+
+/* 768–980px — burger mode; dropdown stacks under the button (Bootstrap override) */
+@media (min-width: 768px) and (max-width: 980px) {
+  .navbar-toggler.hamburger { 
+    display: inline-grid;                           /* show burger */
   } 
-}
-}
-/* ≥ md: horizontal nav on one row, labels never wrap */
-@media (min-width: 768px) {
-  .navbar-toggler.hamburger { display: none !important; } /* hide burger */
-  .nav-list {
-    flex-direction: row;                  /* horizontal menu */
-    align-items: center;                  /* vertical centering */
-    flex-wrap: nowrap;                    /* no wrapping */
-    gap: 10px;                            /* spacing */
-    padding: 0;                           /* remove mobile padding */
+
+  /* collapse container floats under the topbar at the right edge */
+  .topbar .navbar-collapse {
+    position: absolute;                                      /* out of flow */
+    top: calc(var(--topbar-h) + 6px);                        /* right below bar */
+    right: max(12px, env(safe-area-inset-right));            /* align with burger */
+    width: auto; padding: 0; margin: 0; background: transparent;
+    z-index: 40;                                             /* below burger (50) */
+    display: none;                                           /* closed by default */
   }
-  .nav-btn { white-space: nowrap; }       /* keep “High Score” in one line */
+
+  .topbar .navbar-collapse.show { 
+    display: block !important;                           /* open state */
+  } /* open state */
+
+  /* FORCE vertical list even though Bootstrap flips to row at md */
+  .topbar.navbar.navbar-expand-md
+  .navbar-collapse .navbar-nav.nav-list {
+    display: flex;
+    flex-direction: column !important;                       /* stack */
+    align-items: flex-end;                                   /* right align */
+    gap: 8px; padding: 0; margin: 0; list-style: none;
+    white-space: nowrap;                                     /* single-line labels */
+  }
+
+  .nav-btn { white-space: nowrap; }                          /* keep labels intact */
 }
 
-/* larger desktops: tighten arrow group to match reference */
-@media (min-width: 1200px) {
-  :root { --controls-max-w: 640px; }      /* compact center group */
+/* ≥981px — desktop: full horizontal menu, burger hidden (Bootstrap override) */
+@media (min-width: 981px) {
+  .navbar-toggler.hamburger { display: none !important; }    /* hide burger */
+
+  .topbar .navbar-collapse {
+    position: static;                                        /* back in bar */
+    display: flex !important; width: auto; padding: 0; margin: 0;
+  }
+  .topbar .navbar-collapse .navbar-nav.nav-list {
+    display: flex;
+    flex-direction: row !important;                          /* one row */
+    align-items: center; flex-wrap: nowrap; gap: 10px; padding: 0; margin: 0;
+  }
+  .nav-btn { white-space: nowrap; }
 }
-@media (min-width: 1600px) {
-  :root { --controls-max-w: 600px; }      /* even tighter on ultra-wide */
+
+/* ≥1200 / ≥1600 — keep control group compact and centered */
+@media (min-width: 1200px) { :root { --controls-max-w: 640px; } }
+@media (min-width: 1600px) { :root { --controls-max-w: 600px; } }
+
+/* rotate overlay — only on small screens in landscape; never on desktop */
+@media (max-width: 768px) and (orientation: landscape) {
+  #rotateOverlay { display: flex; }
+}
+@media (min-width: 769px) {
+  #rotateOverlay { display: none !important; }
 }

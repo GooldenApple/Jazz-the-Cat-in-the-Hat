@@ -1,246 +1,198 @@
 /* =============================
    Jazz the Cat in the Hat – Base Skeleton JS
-   =============================
-*/
+   ============================= */
 
-// keeps track of all game values I need
+/* ----------------------------------------
+   Global game state
+---------------------------------------- */
 const state = {
-  running: false,   // game is running or not
-  score: 0,         // my score
-  lives: 3,         // how many hearts I have
-  level: 1,         // current level
-  partial: 0,       // how damaged the current heart is (0=full → 3=almost empty)
+  running: false,  // game is running or not
+  score: 0,        // current score
+  lives: 3,        // hearts left
+  level: 1,        // current level
+  partial: 0,      // damage on the active heart (0..3)
 };
 
-// quick refs so I don’t have to type getElementById all the time
+/* Quick HUD refs */
 const hud = {
   lives: document.getElementById('lives'),
   score: document.getElementById('score'),
-  best: document.getElementById('best'),
+  best:  document.getElementById('best'),
   level: document.getElementById('level'),
 };
 
-const overlay = document.getElementById('overlay');
-
-/* reset everything when game starts, Draws a fresh HUD with full lives, score 0, level 1.
-   example: calling init() will set score=0, lives=3, level=1, and draw full hearts
-*/
+/* ----------------------------------------
+   Game init + HUD rendering
+---------------------------------------- */
 function init() {
   state.running = false;
   state.score = 0;
   state.lives = 3;
   state.level = 1;
-  state.partial = 0; // hearts start full
-
-  updateHUD(); // make HUD match these values
+  state.partial = 0;
+  updateHUD();
 }
 
-/* 
-  Creates a single SVG heart element with a given state.
-  States: "full", "threequarter", "half", "quarter", "empty".
-  
-  Example:
-    const heart = createHeart("half");
-    hud.lives.appendChild(heart); 
-*/
+/* Build a single SVG heart with a given state class */
 function createHeart(stateClass) {
-  // create the <svg> element in the SVG namespace
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.classList.add("svg-heart", stateClass);
+  const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.classList.add('svg-heart', stateClass);
 
-  // path that makes the heart shape
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute(
-    "d",
-    "M12 21s-6.2-4.35-9.2-8.28C1 10.5 2.5 6 6.5 6c2.2 0 3.5 1.5 5.5 3.5C14 7.5 15.3 6 17.5 6c4 0 5.5 4.5 3.7 6.72C18.2 16.65 12 21 12 21z"
+    'd',
+    'M12 21s-6.2-4.35-9.2-8.28C1 10.5 2.5 6 6.5 6c2.2 0 3.5 1.5 5.5 3.5C14 7.5 15.3 6 17.5 6c4 0 5.5 4.5 3.7 6.72C18.2 16.65 12 21 12 21z'
   );
-
-  // attach the path into the svg
   svg.appendChild(path);
-
-  return svg; // return the finished <svg>
+  return svg;
 }
 
-/* 
-  Renders all hearts into the HUD container.
-
-  - container: the DOM node where hearts go (hud.lives).
-  - lives: how many total lives are left.
-  - partial: how damaged the current active heart is (0=full → 3=quarter).
-  - steps: how many depletion steps exist (default = 4).
-
-  Example:
-    renderLives(hud.lives, 3, 0)   → [full, full, full]
-    renderLives(hud.lives, 2, 1)   → [full, threequarter]
-    renderLives(hud.lives, 0, 0)   → [empty]
-*/
+/* Render the full lives row into the HUD */
 function renderLives(container, lives, partial = 0, steps = 4) {
-  // clear out any old hearts
-  container.innerHTML = "";
+  container.innerHTML = '';
 
-  // keep values safe
-  const safeLives = Math.max(0, lives);
+  const safeLives   = Math.max(0, lives);
   const safePartial = Math.min(Math.max(partial, 0), steps - 1);
 
-  // draw all full hearts except the active one
   for (let i = 0; i < Math.max(safeLives - 1, 0); i++) {
-    container.appendChild(createHeart("full"));
+    container.appendChild(createHeart('full'));
   }
 
-  // if at least one life remains → draw the active heart
   if (safeLives > 0) {
-    let stateClass = "full";
-    if (safePartial === 1) stateClass = "threequarter";
-    if (safePartial === 2) stateClass = "half";
-    if (safePartial === 3) stateClass = "quarter";
+    let stateClass = 'full';
+    if (safePartial === 1) stateClass = 'threequarter';
+    if (safePartial === 2) stateClass = 'half';
+    if (safePartial === 3) stateClass = 'quarter';
     container.appendChild(createHeart(stateClass));
   }
 
-  // if no lives left → show one faint empty heart
   if (safeLives <= 0) {
-    container.appendChild(createHeart("empty"));
+    container.appendChild(createHeart('empty'));
   }
 }
 
-/* 
-  Refreshes all HUD values so they match the state object.
-  Example:
-    state.score = 50;
-    updateHUD(); // HUD shows 50 in score box
-*/
+/* Sync all HUD values from state */
 function updateHUD() {
-  renderLives(hud.lives, state.lives, state.partial); // update hearts
-  hud.score.textContent = state.score;               // update score
-  hud.level.textContent = state.level;               // update level
-  // best + soundMode will be added later
+  renderLives(hud.lives, state.lives, state.partial);
+  hud.score.textContent = state.score;
+  hud.level.textContent = state.level;
+  // best / soundMode will be wired later
 }
 
-/* 
-  Placeholder function for connecting keyboard + touch controls.
-  Will be implemented later.
-*/
+/* Placeholder for input bindings (keyboard/touch) */
 function bindControls() {
-  // nothing here yet
+  // to be implemented
 }
 
-/* 
-  Damages the current heart step by step.
-  If the heart is fully damaged, removes one life.
-  
-  Example:
-    hit(); // reduces partial damage or removes a life
-*/
+/* Take damage step-by-step; consume a life when needed */
 function hit() {
-  if (state.lives <= 0) return; // no lives left
+  if (state.lives <= 0) return;
   if (state.partial < 3) {
-    state.partial += 1; // damage current heart more
+    state.partial += 1;
   } else {
-    state.lives -= 1;   // lose one full heart
-    state.partial = 0;  // reset partial for next heart
+    state.lives -= 1;
+    state.partial = 0;
   }
-  updateHUD(); // refresh HUD to show changes
+  updateHUD();
 }
 
-/* 
-  Adds one extra heart (life). New heart always starts full.
-  Example: heal(); // +1 full heart to lives
-*/
+/* Gain one full heart */
 function heal() {
-  state.lives += 1;     // add one heart
-  state.partial = 0;    // reset partial
-  updateHUD();          // refresh HUD
+  state.lives += 1;
+  state.partial = 0;
+  updateHUD();
 }
-
 
 /* =============================
    Overlay + Play Button Control
    ============================= */
 
-/* I want to cache these elements so I don't query them again */
 const overlayEl = document.getElementById('overlay');
-const playBtn = overlayEl.querySelector('.play-btn');
+const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null;
 
-/* showOverlay()
-   shows the overlay when game is not running
-   example: showOverlay() → overlay becomes visible */
+/* Show overlay when not running */
 function showOverlay() {
-  overlayEl.classList.remove('hidden');
+  overlayEl?.classList.remove('hidden');
 }
 
-/* show overlay on load so I can style the play button */
+/* Show overlay on initial load so the CTA is visible */
 window.addEventListener('DOMContentLoaded', () => {
-  const ov = document.getElementById('overlay');
-  if (ov) ov.classList.remove('hidden'); // reveal the play CTA
+  overlayEl?.classList.remove('hidden');
 });
 
-/* hideOverlay()
-   hides the overlay when game starts running
-   example: hideOverlay() → overlay disappears */
+/* Hide overlay when starting the game */
 function hideOverlay() {
-  overlayEl.classList.add('hidden');
+  overlayEl?.classList.add('hidden');
 }
 
-/* handle clicking the play button
-   example: user clicks → hide overlay and start game */
-playBtn.addEventListener('click', () => {
-  hideOverlay();
-  state.running = true;   // game is running now
-  // later I will call actual startGame() logic here
-});
-
-/* ----------------------------------------
-   Mobile nav toggle (hamburger)
-   ---------------------------------------- */
-(() => {
-  const btn = document.getElementById('navToggle');
-  const list = document.getElementById('primaryNav');
-  if (!btn || !list) return;
-
-  btn.addEventListener('click', () => {
-    const open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!open));
-    document.body.toggleAttribute('data-nav-open'); // CSS reads this
+/* Start button → hide overlay, mark running (hook real start later) */
+if (playBtn) {
+  playBtn.addEventListener('click', () => {
+    hideOverlay();
+    state.running = true;
+    // TODO: startGame();
   });
-})();
+}
 
+/* =============================
+   Navbar / Hamburger behavior
+   ============================= */
 
-
-
-/* 
-  DOMContentLoaded
-  Runs when the page is ready.
-  Calls init() to reset HUD and bindControls() (later).
-*/
+/* On page ready: init HUD and wire Bootstrap collapse events */
 window.addEventListener('DOMContentLoaded', () => {
   init();
   bindControls();
-  
-const nav = document.getElementById('mainNav'); // Get the collapsible nav element (Bootstrap controls this)
 
-// Safeguard: only if the collapse element exists (mobile/Bootstrap present)
-if (nav) {
-  // When the menu opens → mark <body> so CSS can morph bars into an "X"
-  nav.addEventListener('shown.bs.collapse', () => {
-    document.body.setAttribute('data-nav-open', '');
-  });
-
-  // When it closes, remove the flag so bars go back to hamburger
-  nav.addEventListener('hidden.bs.collapse', () => {
-    document.body.removeAttribute('data-nav-open');
-  });
-}
+  const navCollapse = document.getElementById('mainNav'); // Bootstrap .collapse
+  if (navCollapse) {
+    // When nav opens, mark <body> so CSS can morph burger into "X"
+    navCollapse.addEventListener('shown.bs.collapse', () => {
+      document.body.setAttribute('data-nav-open', '');
+    });
+    // When nav closes, remove the flag
+    navCollapse.addEventListener('hidden.bs.collapse', () => {
+      document.body.removeAttribute('data-nav-open');
+    });
+  }
 });
 
+/* Close the collapse when a nav button is clicked */
 document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const collapseEl = document.getElementById('mainNav');
     if (collapseEl && collapseEl.classList.contains('show')) {
-      
       const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
       collapse.hide();
     }
   });
 });
 
+/* ----------------------------------------
+   Breakpoint guard (≤980px burger band)
+   - Always start CLOSED when entering burger band
+   - Clean up stray inline styles / aria state
+   - Also clean up when leaving burger band
+---------------------------------------- */
+(() => {
+  const mq = window.matchMedia('(max-width: 980px)');
 
+  const syncCollapseOnBreakpoint = () => {
+    const collapseEl = document.getElementById('mainNav');
+    const toggler    = document.querySelector('.navbar-toggler.hamburger');
+    if (!collapseEl) return;
+
+    // Always reset to a clean, closed state on breakpoint flips
+    collapseEl.classList.remove('show');   // remove sticky open
+    collapseEl.style.height = '';          // clear inline height (Bootstrap may set it)
+    document.body.removeAttribute('data-nav-open');
+
+    // Keep ARIA in sync (prevents stuck "expanded" state)
+    if (toggler) toggler.setAttribute('aria-expanded', 'false');
+  };
+
+  // Run on load and whenever the max-width:980 match flips
+  window.addEventListener('load', syncCollapseOnBreakpoint);
+  mq.addEventListener('change', syncCollapseOnBreakpoint);
+  window.addEventListener('orientationchange', syncCollapseOnBreakpoint);
+})();
