@@ -179,6 +179,7 @@ function wirePlayButton() {
   playBtn.addEventListener('click', () => {      // on click
     hideOverlay();                               // hide CTA
     state.running = true;
+    startBeatSpawner();                          // start the test note spawner when play is pressed
     updatePlayMenuLabel();                        // sync navbar label to "⏸ Pause"
     // TODO: startGame();                        // hook real start here
   });
@@ -225,12 +226,14 @@ function wireMenuPlayToggle() {
     if (state.running) {
       /* Pause the game */
       state.running = false;
+      stopBeatSpawner();      // stop spawning notes when game is paused
       setOverlayLabel('Paused');      // show pause label
       showOverlay();                  // reuse existing overlay as pause screen
       updatePlayMenuLabel();          // swap to ▶ Play
     } else {
       /* Start/Resume the game */
       state.running = true;
+      startBeatSpawner();     // resume the note spawner when game starts again
       setOverlayLabel('Play');        // restore default label
       hideOverlay();                  // hide CTA when playing
       updatePlayMenuLabel();          // swap to ⏸ Pause
@@ -371,10 +374,10 @@ function wireMoveButtons() {
     btn.addEventListener('click', () => {
       const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // read data-dir
       if (!state.running) return;                                            // ignore when paused/stopped
-      if (dir === 'left')  doLeftMove();                                     // LEFT button
-      if (dir === 'right') doRightMove();                                    // RIGHT button
-      if (dir === 'up')    doUpMove();                                       // UP button
-      if (dir === 'down')  doDownMove();                                     // DOWN button
+      if (dir === 'left')  { doLeftMove();  attemptHit('left');  }           // LEFT button
+      if (dir === 'right') { doRightMove(); attemptHit('right'); }           // RIGHT button
+      if (dir === 'up')    { doUpMove();    attemptHit('up');    }           // UP button
+      if (dir === 'down')  { doDownMove();  attemptHit('down');  }           // DOWN button
     });
   });
 }
@@ -398,10 +401,10 @@ function wireMoveKeyboard() {
     if (!state.running) return;                        // ignore inputs when paused/stopped
 
     // Map Arrow keys to moves (WASD can be added later if needed)
-    if (e.key === 'ArrowLeft')  { doLeftMove();  return; }   // ← triggers left
-    if (e.key === 'ArrowRight') { doRightMove(); return; }   // → triggers right
-    if (e.key === 'ArrowUp')    { doUpMove();    return; }   // ↑ triggers up
-    if (e.key === 'ArrowDown')  { doDownMove();  return; }   // ↓ triggers down
+    if (e.key === 'ArrowLeft')  { doLeftMove();  attemptHit('left');  return; }   // ← triggers left + judge
+    if (e.key === 'ArrowRight') { doRightMove(); attemptHit('right'); return; }   // → triggers right + judge
+    if (e.key === 'ArrowUp')    { doUpMove();    attemptHit('up');    return; }   // ↑ triggers up + judge
+    if (e.key === 'ArrowDown')  { doDownMove();  attemptHit('down');  return; }   // ↓ triggers down + judge
   });
 }
 
@@ -430,6 +433,417 @@ function judgeFlash(type) {
     el.removeEventListener('animationend', onEnd);
   };
   el.addEventListener('animationend', onEnd);
+}
+
+/* =============================
+   Rails + Notes (falling prompts)
+   - Draws glowing orb notes in the right rail (Left/Up/Down/Right).
+   - Notes fall from the top of the rail down to the anchor/judge line.
+   - A test beat-spawner releases random notes in sync with BPM.
+============================= */
+
+/* ----------------------------------------
+   getRailsMap
+   - Collects references to each rail element.
+   - Returns an object with { left, up, down, right }.
+   Usage: const rails = getRailsMap();
+---------------------------------------- */
+function getRailsMap() {
+  const root = document.querySelector('.rails');   // find the main rails container
+  if (!root) return null;                          // guard: if rails missing, return null
+  return {
+    left:  root.querySelector('.rail-left'),       // left rail element
+    up:    root.querySelector('.rail-up'),         // up rail element
+    down:  root.querySelector('.rail-down'),       // down rail element
+    right: root.querySelector('.rail-right'),      // right rail element
+  };
+}
+
+/* ----------------------------------------
+   getDropDistancePx
+   - Calculates how many pixels a note should travel
+     from the top of the rail down to the judge line anchor.
+   Usage: const dist = getDropDistancePx(railEl);
+---------------------------------------- */
+function getDropDistancePx(railEl) {
+  if (!railEl) return 0;                                    // guard: if no rail, return 0
+  const stageTop = railEl.getBoundingClientRect().top;      // measure top position of rail
+  const judge    = document.querySelector('.judge-line');   // reference to judge line
+  if (!judge) return railEl.clientHeight - 16;              // fallback: almost full rail height
+  const targetY  = judge.getBoundingClientRect().top + 
+                   (judge.clientHeight / 2);                // Y coordinate of judge line center
+  const dist     = Math.max(0, targetY - stageTop - 9);     // subtract half note size to align center
+  return dist;                                              // return final pixel distance
+}
+
+/* ----------------------------------------
+   spawnNote
+   - Creates a glowing orb note in a given rail.
+   - Also records the expected arrival time at the judge line.
+   - Parameters:
+     dir: 'left'|'up'|'down'|'right'
+     travelBeats: beats until it reaches the judge line
+     bpm: tempo in beats per minute
+---------------------------------------- */
+function spawnNote(dir, travelBeats = 2, bpm = 120) {
+  const rails = getRailsMap();                              // fetch rails map
+  if (!rails || !rails[dir]) return;                        // guard: lane missing
+
+  const rail = rails[dir];                                  // chosen rail element
+
+  const note = document.createElement('div');               // create orb element
+  note.className = `note note--${dir}`;                     // set classes for color
+
+  const dropPx = getDropDistancePx(rail);                   // pixels to travel
+  note.style.setProperty('--drop-distance', `${dropPx}px`); // expose to CSS
+
+  const seconds = Math.max(0.16, travelBeats * (60 / bpm)); // beats → seconds
+  note.style.animationDuration = `${seconds}s`;             // control fall speed
+
+  const now = performance.now();                            // current time
+  const arrive = now + seconds * 1000;                      // time when it hits the line
+
+  // pack metadata for judging
+  const meta = { dir, arrive, el: note, hit: false };       // note info
+  note.__meta = meta;                                       // attach for the end handler
+  activeNotes[dir].push(meta);                              // queue for this lane
+
+  // remove on animation end: if not hit → it's a miss
+  note.addEventListener('animationend', () => {             // listen when fall finishes
+    if (meta.hit) return;                                   // already consumed by a hit
+    // Miss: the note passed the line without a valid hit
+    judgeFlash('miss');                                     // flash miss
+    setFeedback('MISS', '#fd0404');                         // red text
+    hit();                                                  // apply damage step
+    updateHUD();                                            // refresh HUD
+    // remove from DOM if still there
+    note.remove();                                          // cleanup element
+    // compact this lane queue
+    compactQueue(dir);                                      // prune queue
+  }, { once: true });
+
+  rail.appendChild(note);                                    // place orb inside the lane
+}
+
+/* =============================
+   Judging (timing windows + feedback)
+   - Tracks upcoming notes so we can grade user input against time.
+   - Adds a spawn wrapper that registers ETA per note.
+   - Exposes: spawnJudgedNote(dir, travelBeats?, bpm?), tryJudge(dir)
+============================= */
+
+/* ----------------------------------------
+   Config for timing judgement
+   - Keep bpm/travelBeats in sync with how notes are spawned.
+---------------------------------------- */
+const judge = {
+  bpm: 120,                    // tempo used to compute ETAs (keep in sync with your spawner)
+  travelBeats: 2.0,            // beats from spawn to the judge line (keep in sync with your spawner)
+  windows: {                   // hit windows in milliseconds (centered around the ETA)
+    perfect: 50,               // |Δt| ≤ 50ms  → Perfect
+    great:   90,               // |Δt| ≤ 90ms  → Great
+    good:   140                // |Δt| ≤ 140ms → Good
+    // > 140ms in either direction → Miss
+  }
+};
+
+/* ----------------------------------------
+   Runtime queue of upcoming notes
+   - Each entry = { dir: 'left'|'up'|'down'|'right', eta: Number, id: Number }
+---------------------------------------- */
+const activeNotes = [];               // holds all notes we can judge
+let _noteIdSeq = 0;                   // simple id counter for debugging/inspection
+
+/* ----------------------------------------
+   nowMs
+   - Returns high-resolution timestamp in ms.
+---------------------------------------- */
+function nowMs() {                    // function name describes intent
+  return performance.now();           // monotonic clock for gameplay timing
+}
+
+/* ----------------------------------------
+   setFeedback
+   - Writes "Perfect/Great/Good/Miss" into the feedback box and flashes the judge line.
+---------------------------------------- */
+function setFeedback(label, flash) {
+  const el = document.getElementById('feedback');          // grab feedback element
+  if (!el) return;                                          // guard if missing
+  el.textContent = label;                                   // show label
+  if (flash === 'good')  judgeFlash('good');                // cyan/green flash path you already have
+  if (flash === 'miss')  judgeFlash('miss');                // red flash path you already have
+}
+
+/* ----------------------------------------
+   compactQueue
+   - Drops any note whose ETA is way in the past (older than Good window).
+---------------------------------------- */
+function compactQueue(tNow) {
+  const maxLag = judge.windows.good;                        // allowed lateness threshold
+  for (let i = activeNotes.length - 1; i >= 0; i--) {       // iterate from tail so splice is cheap
+    if (tNow - activeNotes[i].eta > maxLag) {               // if note is too old to hit
+      activeNotes.splice(i, 1);                             // remove from queue
+    }
+  }
+}
+
+/* ----------------------------------------
+   registerNote
+   - Computes ETA for a note and pushes it to activeNotes.
+   - travelBeats/bpm default to judge config so caller can omit.
+---------------------------------------- */
+function registerNote(dir, travelBeats = judge.travelBeats, bpm = judge.bpm) {
+  const msPerBeat = 60000 / bpm;                            // convert beats → milliseconds
+  const eta = nowMs() + (travelBeats * msPerBeat);          // when it should cross the judge line
+  activeNotes.push({ dir, eta, id: ++_noteIdSeq });         // track for later judgement
+}
+
+/* ----------------------------------------
+   gradeHit
+   - Looks for the closest pending note in the requested direction.
+   - If its |Δt| fits a window → consume it and return a grade label.
+   - Otherwise returns 'Miss' without consuming anything.
+---------------------------------------- */
+function gradeHit(dir) {
+  const tNow = nowMs();                                     // current timestamp
+  compactQueue(tNow);                                       // purge stale notes first
+
+  // Find the closest ETA in the same direction
+  let bestIdx = -1;                                         // index of best candidate
+  let bestAbsDt = Infinity;                                 // absolute difference in ms
+
+  for (let i = 0; i < activeNotes.length; i++) {            // scan queue
+    const n = activeNotes[i];                               // current note
+    if (n.dir !== dir) continue;                            // must match direction
+    const dt = n.eta - tNow;                                // signed delta time (ms)
+    const adt = Math.abs(dt);                               // absolute |Δt|
+    if (adt < bestAbsDt) {                                  // keep the closest
+      bestAbsDt = adt;
+      bestIdx = i;
+    }
+  }
+
+  // No candidate in this direction → Miss
+  if (bestIdx === -1) return { label: 'Miss', hit: false };
+
+  // Decide window
+  const w = judge.windows;                                  // shorthand
+  let label = 'Miss';                                       // default outcome
+  if (bestAbsDt <= w.perfect) label = 'Perfect';
+  else if (bestAbsDt <= w.great) label = 'Great';
+  else if (bestAbsDt <= w.good) label = 'Good';
+  else label = 'Miss';
+
+  if (label !== 'Miss') {                                   // successful timing
+    activeNotes.splice(bestIdx, 1);                         // consume the note so it can’t be hit again
+    return { label, hit: true };                            // return success
+  }
+
+  return { label: 'Miss', hit: false };                     // outside windows
+}
+
+/* ----------------------------------------
+   tryJudge
+   - Public entry for inputs.
+   - Grades the hit for a given direction and triggers visual feedback.
+---------------------------------------- */
+function tryJudge(dir) {
+  if (!state.running) return;                               // ignore if game is paused
+  const res = gradeHit(dir);                                // compute timing grade
+  setFeedback(res.label, res.hit ? 'good' : 'miss');        // write label + flash
+}
+
+/* ----------------------------------------
+   spawnJudgedNote
+   - Wrapper around your existing spawnNote().
+   - Spawns the visual orb AND registers its ETA for judging.
+   - Use this instead of spawnNote wherever you schedule notes (e.g., your test spawner).
+---------------------------------------- */
+function spawnJudgedNote(dir, travelBeats = judge.travelBeats, bpm = judge.bpm) {
+  registerNote(dir, travelBeats, bpm);                      // record ETA for judgement
+  spawnNote(dir, travelBeats, bpm);                         // keep your current visual spawn behavior
+}
+
+
+
+/* ----------------------------------------
+   spawnNote
+   - Creates a glowing orb note in a given rail.
+   - Parameters:
+     dir: 'left'|'up'|'down'|'right' → rail direction
+     travelBeats: how many beats until the note reaches the anchor
+     bpm: tempo in beats per minute
+   Usage: spawnNote('left', 2, 120);
+---------------------------------------- */
+function spawnNote(dir, travelBeats = 2, bpm = 120) {
+  const rails = getRailsMap();                              // get rails map
+  if (!rails || !rails[dir]) return;                        // guard: skip if missing rail
+
+  const rail = rails[dir];                                  // select the right rail
+
+  const note = document.createElement('div');               // create a new div for the note
+  note.className = `note note-${dir} note--${dir}`;         // add both class styles for safety (CSS uses note--dir)
+
+  const dropPx = getDropDistancePx(rail);                   // calculate drop distance in pixels
+  note.style.setProperty('--drop-distance', `${dropPx}px`); // set CSS variable for animation (if used by CSS)
+
+  const seconds = Math.max(0.16, travelBeats * (60 / bpm)); // convert beats → seconds (min 0.16s)
+  note.style.animationDuration = `${seconds}s`;             // apply animation speed (used if CSS keyframes present)
+
+  note.dataset.state = 'alive';                             // mark the note as alive (not hit yet)
+
+  note.addEventListener('animationend', () => {             // when animation finishes
+    if (note.dataset.state === 'alive') {                   // if still alive, it was a Miss
+      judgeFlash('miss');                                   // visual miss flash
+      // Optional: apply damage/score penalty here
+    }
+    note.remove();                                          // remove note from DOM either way
+  }, { once: true });
+
+  rail.appendChild(note);                                   // insert note into the rail
+}
+
+/* ----------------------------------------
+   startBeatSpawner
+   - Starts a simple interval that spawns random notes
+     on every beat or sub-beat, based on BPM settings.
+   Usage: startBeatSpawner();
+---------------------------------------- */
+let _beatTimer = null;                                      // private reference to the interval
+const rhythm = {
+  bpm: 120,             // tempo (beats per minute)
+  stepDiv: 1,           // tick frequency: 1 = each beat, 2 = 1/2 beat, 4 = 1/4 beat etc.
+  travelBeats: 2.0,     // how many beats a note should take to travel to anchor
+};
+
+function startBeatSpawner() {
+  if (_beatTimer) return;                                   // guard: already running
+
+  const msPerBeat = 60000 / rhythm.bpm;                     // duration of one beat in ms
+  const tickMs    = msPerBeat / rhythm.stepDiv;             // interval time per step
+
+  _beatTimer = setInterval(() => {                          // create repeating interval
+    if (!state.running) return;                             // spawn only if game is running
+
+    const dirs = ['left', 'up', 'down', 'right'];           // possible directions
+    const dir  = dirs[(Math.random() * dirs.length) | 0];   // pick random direction
+    spawnNote(dir, rhythm.travelBeats, rhythm.bpm);         // spawn note in chosen rail
+  }, Math.max(80, tickMs));                                 // run interval, min 80ms safe cap
+}
+
+/* ----------------------------------------
+   stopBeatSpawner
+   - Stops the interval that spawns notes.
+   Usage: stopBeatSpawner();
+---------------------------------------- */
+function stopBeatSpawner() {
+  if (_beatTimer) {                                         // if interval exists
+    clearInterval(_beatTimer);                              // clear interval
+    _beatTimer = null;                                      // reset reference
+  }
+}
+
+/* ----------------------------------------
+   clearAllNotes
+   - Utility to remove all active notes from DOM.
+   Usage: clearAllNotes();
+---------------------------------------- */
+function clearAllNotes() {
+  document.querySelectorAll('.rail .note')                  // select all notes
+    .forEach(n => n.remove());                              // remove each
+}
+
+/* ----------------------------------------
+   getJudgeCenterY
+   - Returns the vertical center (in px) of the judge line.
+   Usage: const y = getJudgeCenterY();
+---------------------------------------- */
+function getJudgeCenterY() {
+  const line = document.querySelector('.judge-line');     // find judge line element
+  if (!line) return 0;                                    // guard if missing
+  const r = line.getBoundingClientRect();                 // get DOMRect for judge
+  return r.top + r.height / 2;                            // compute center Y
+}
+
+/* ----------------------------------------
+   getNoteCenterY
+   - Returns the vertical center (in px) of a note element.
+   Usage: const y = getNoteCenterY(note);
+---------------------------------------- */
+function getNoteCenterY(note) {
+  const r = note.getBoundingClientRect();                 // get DOMRect for note
+  return r.top + r.height / 2;                            // compute center Y
+}
+
+/* ----------------------------------------
+   findBestNoteInWindow
+   - Returns the closest note (by |ΔY|) in the given dir
+     if it is within the largest timing window; else null.
+   Usage: const hit = findBestNoteInWindow('left');
+---------------------------------------- */
+function findBestNoteInWindow(dir) {
+  const rails = getRailsMap();                                         // get rails
+  if (!rails || !rails[dir]) return null;                              // guard
+  const rail = rails[dir];                                             // pick rail
+
+  const notes = Array.from(rail.querySelectorAll('.note'));            // gather notes in this rail
+  if (!notes.length) return null;                                      // nothing to hit
+
+  const judgeY = getJudgeCenterY();                                    // judge Y center
+  // map to distances with element reference
+  const scored = notes.map(n => ({ el: n, dy: Math.abs(getNoteCenterY(n) - judgeY) })); // calc |ΔY|
+  // sort by closest to judge
+  scored.sort((a, b) => a.dy - b.dy);                                  // nearest first
+
+  // define windows (px): tweak as you like
+  const WINDOW_PERFECT = 14;                                           // <= 14px → Perfect
+  const WINDOW_GREAT   = 26;                                           // <= 26px → Great
+  const WINDOW_GOOD    = 42;                                           // <= 42px → Good
+
+  const best = scored[0];                                              // closest note
+  if (!best) return null;                                              // safety
+
+  // attach rank for later scoring feedback
+  if (best.dy <= WINDOW_PERFECT) { best.rank = 'Perfect'; return best; }
+  if (best.dy <= WINDOW_GREAT)   { best.rank = 'Great';   return best; }
+  if (best.dy <= WINDOW_GOOD)    { best.rank = 'Good';    return best; }
+  return null;                                                         // outside window → no hit
+}
+
+/* ----------------------------------------
+   applyScoreForRank
+   - Adds points based on rank and flashes judge line.
+   Usage: applyScoreForRank('Great');
+---------------------------------------- */
+function applyScoreForRank(rank) {
+  // basic scoring; adjust values as you like
+  if (rank === 'Perfect') state.score += 100;          // add points
+  else if (rank === 'Great') state.score += 70;        // add points
+  else if (rank === 'Good') state.score += 50;         // add points
+  updateHUD();                                         // refresh HUD
+
+  // use the existing judge flash as positive feedback
+  judgeFlash('good');                                  // flash green-ish
+}
+
+/* ----------------------------------------
+   attemptHit
+   - Tries to hit the nearest note in the given direction;
+     if inside a judgment window → remove note immediately.
+   - Returns the hit result {hit: boolean, rank?: 'Perfect'|'Great'|'Good'}
+     or {hit:false} if nothing was hittable.
+   Usage: attemptHit('left');
+---------------------------------------- */
+function attemptHit(dir) {
+  if (!state.running) return { hit: false };                     // ignore while paused
+
+  const best = findBestNoteInWindow(dir);                        // find closest note within windows
+  if (!best) return { hit: false };                              // no note to hit
+
+  best.el.dataset.state = 'hit';                                 // mark as hit to avoid miss logic on animationend
+  best.el.remove();                                              // remove the note immediately
+  applyScoreForRank(best.rank);                                  // apply points + feedback
+  return { hit: true, rank: best.rank };                         // return info (could be used for combo UI)
 }
 
 /* =============================
@@ -558,4 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.doRightMove = doRightMove;  // call in Console: doRightMove()
   window.doUpMove    = doUpMove;     // call in Console: doUpMove()
   window.doDownMove  = doDownMove;   // call in Console: doDownMove()
+
+  // expose judge attempt for quick testing too (optional)
+  window.attemptHit  = attemptHit;   // call: attemptHit('left')
 })();

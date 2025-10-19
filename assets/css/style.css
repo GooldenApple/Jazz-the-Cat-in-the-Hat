@@ -39,6 +39,8 @@
   --floor-opacity: 0.6;                 /* grid intensity */
   --floor-height: 44vh;                 /* grid height */
   --floor-bottom: 0vh;                 /* grid offset from viewport bottom */
+
+  --judge-y: 55%;                          /* vertical position of the judge line AND targets */
 }
 
 /* base setup: lock viewport, apply bg, global type */
@@ -366,35 +368,27 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
    - Small center tick
    - Mobile-first width with clamp
 ---------------------------------------- */
+/* Judge line that shows the timing zone */
 .judge-line {
-  position: absolute;                               /* within .stage */
-   top: calc(var(--topbar-h) + var(--overlay-y) + 6px); /* below navbar + same band as Play CTA */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80vw;                                      /* responsive width */
-  height: 2px;                                      /* thin line */
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(0,255,213,.75) 20%,
-    rgba(255,255,255,.95) 50%,
-    rgba(0,255,213,.75) 80%,
-    transparent 100%);                              /* neon center pop */
-  box-shadow: 0 0 10px rgba(0,255,213,.28);         /* subtle glow */
-   z-index: 15;                                       /* higher than #dancer (12) */
-  pointer-events: none;                              /* purely visual */
+  position: absolute;           /* positions the line inside the game area */
+  top: var(--judge-y);          /* moves the line slightly lower on the screen */
+  left: 50%;                    /* centers horizontally */
+  transform: translateX(-50%);  /* perfectly centers the line */
+  width: 80%;                   /* makes the line long across the play area */
+  height: 2px;                  /* thin horizontal line */
+  background: linear-gradient(
+    to right,
+    rgba(0, 255, 213, 0) 0%,      /* fully transparent at far left */
+    rgba(0, 255, 213, 0.6) 10%,   /* soft glow appears */
+    cyan 30%,                     /* strong cyan before the center */
+    cyan 70%,                     /* strong cyan across center */
+    rgba(0, 255, 213, 0.6) 90%,   /* soft glow fades */
+    rgba(0, 255, 213, 0) 100%     /* fully transparent at far right */
+  );
+  box-shadow: 0 0 12px cyan, 0 0 24px cyan; /* glow effect for the line */
+  z-index: 10;                  /* keeps the line above background elements */
 }
 
-.judge-line .tick {
-  position: absolute;
-  left: 50%;
-  top: -5px;                                        /* little vertical pin crossing the bar */
-  transform: translateX(-50%);
-  width: 2px;
-  height: 12px;
-  background: var(--neon-cyan);
-  box-shadow: 0 0 6px var(--neon-cyan);
-  border-radius: 1px;
-}
 
 /* Flash feedback states (optional visual confirmation) */
 @keyframes judgeFlashGood {
@@ -408,14 +402,182 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   100% { box-shadow: 0 0 10px rgba(253,4,4,.35); }
 }
 
-.judge-line.flash-good { animation: judgeFlashGood .28s ease-out; }
-.judge-line.flash-miss { animation: judgeFlashMiss .28s ease-out; }
+.judge-line.flash-good { animation: judgeFlashGood .28s ease-out; } /* green flash on good */
+.judge-line.flash-miss { animation: judgeFlashMiss .28s ease-out; } /* red flash on miss */
 
 /* Reduced motion: disable flashing */
 @media (prefers-reduced-motion: reduce) {
   .judge-line.flash-good,
-  .judge-line.flash-miss { animation: none; }
+  .judge-line.flash-miss { animation: none; } /* removes flashes for reduced motion */
 }
+
+/* Judge target: base circle + 2 extra concentric rings via pseudo-elements
+   - Border   = Perfect (inner, sharp)
+   - ::before = Great   (middle, softer)
+   - ::after  = Good    (outer, soft)
+*/
+.judge-target {
+  position: absolute;                  /* anchors the rings to the base circle */
+  left: 50%;                         /* center horizontally within the rail */
+  top: var(--judge-y);               /* same Y as the judge line */
+  width: 26px;                         /* inner hit circle diameter */
+  height: 26px;                        /* inner hit circle diameter */
+  border-radius: 999px;                /* round base shape */
+  background: rgba(255,255,255,0.04);  /* faint fill for readability */
+  border: 2px solid currentColor;      /* Perfect timing ring */
+  box-shadow:
+    0 0 8px  currentColor,             /* inner glow */
+    0 0 18px currentColor;             /* medium bloom */
+  pointer-events: none;                /* purely visual; ignores input */
+  --r0: 26px;   /* Perfect circle diameter */
+  --r1: 40px;   /* Great ring diameter */
+  --r2: 56px;   /* Good ring diameter */
+  transform: translate(-50%, 360%);  /* center the circle on its anchor point */
+  z-index: 15;                       /* above the judge line (10) and rail-line, below notes (16) */
+}
+
+/* Great ring (middle) */
+.judge-target::before {
+  content: "";
+  position: absolute; top: 50%; left: 50%;  /* centers the ring on the base */
+  width: var(--r1); height: var(--r1);      /* ring size */
+  transform: translate(-50%, -50%);         /* exact centering */
+  border-radius: 999px;                     /* circular ring */
+  border: 2px solid color-mix(in srgb, currentColor 85%, white 15%); /* softer hue */
+  opacity: .65;                             /* dimmer than the inner ring */
+  box-shadow:
+    0 0 10px currentColor,
+    0 0 22px color-mix(in srgb, currentColor 85%, white 15%); /* gentle bloom */
+}
+
+/* Good ring (outer) */
+.judge-target::after {
+  content: "";
+  position: absolute; top: 50%; left: 50%;  /* centers the outer ring */
+  width: var(--r2); height: var(--r2);      /* ring size */
+  transform: translate(-50%, -50%);         /* exact centering */
+  border-radius: 999px;                     /* circular ring */
+  border: 2px solid color-mix(in srgb, currentColor 70%, white 30%); /* lightest hue */
+  opacity: .40;                             /* softest visibility */
+  box-shadow:
+    0 0 12px currentColor,
+    0 0 28px color-mix(in srgb, currentColor 70%, white 30%); /* wide bloom */
+}
+
+/* Direction colors for targets (reuse note hues) */
+.jt-left  { color: var(--label-left); }   /* green hue for LEFT lane */
+.jt-up    { color: var(--label-up); }     /* mint/cyan hue for UP lane */
+.jt-down  { color: var(--label-down); }   /* orange hue for DOWN lane */
+.jt-right { color: var(--label-right); }  /* pink hue for RIGHT lane */
+
+/* ─────────────────────────────────────────────────────────
+   Judge ticks container
+   - Positions four judge-target circles precisely at the
+     intersection where each vertical rail crosses the judge line.
+   - Uses the same width, horizontal centering and vertical
+     position as .judge-line to guarantee alignment.
+   ───────────────────────────────────────────────────────── */
+.judge-ticks {
+  position: absolute;                  /* locks the container to the playfield */
+  top: 55%;                            /* aligns vertically with the judge line */
+  left: 50%;                           /* centers the container horizontally */
+  transform: translate(-50%, -50%);    /* centers both axes to the line center */
+  width: 80%;                          /* matches .judge-line width for perfect x-alignment */
+  height: 0;                           /* no height needed; the targets are centered */
+  display: grid;                       /* creates four equal columns */
+  grid-template-columns: repeat(4, 1fr); /* one column per rail */
+  pointer-events: none;                /* prevents the container from eating input */
+  z-index: 11;                         /* renders above the judge line but below notes */
+}
+
+/* Centers each judge-target within its rail column cell */
+.judge-ticks .judge-target {
+  justify-self: center;                /* centers horizontally inside the grid cell */
+  align-self: center;                  /* centers vertically on the judge line baseline */
+}
+
+/* =============================
+   Rails + Notes
+   - Four vertical lanes (left, up, down, right) anchored to controls.
+   - Each rail stays white; notes (orbs) carry the direction color.
+============================= */
+
+/* Rails container: spans the playfield above the controls */
+.stage .rails {
+  position: absolute;                    /* positions rails inside .stage */
+  left: 0; right: 0;                     /* full width */
+  top: calc(var(--topbar-h) + 8px);      /* starts below navbar */
+  bottom: calc(var(--controls-zone-h) + 120px); /* leaves space above controls */
+  display: grid;                         /* four equal columns for rails */
+  grid-template-columns: repeat(4, 1fr);
+  align-items: stretch;                  /* rails fill available height */
+  max-width: var(--controls-max-w);      /* aligns with arrow group width */
+  margin: 0 auto;                        /* centers the rails grid */
+  pointer-events: none;                  /* visual only; no hit testing */
+  z-index: 14;                           /* under judge line (15) and notes (16) */
+}
+
+/* Rail column: provides positioning context for line + notes */
+.rail {
+  position: relative;                    /* anchor for absolute children */
+  display: flex;                         /* layout helper */
+  justify-content: center;               /* centers the vertical line */
+}
+
+/* Rail line: thin white neon running full height */
+.rail-line {
+  width: 2px;                            /* line thickness */
+  height: 100%;                          /* fills rail height */
+  background: rgba(255,255,255,.9);      /* white neon core */
+  box-shadow:
+    0 0 8px  rgba(255,255,255,.75),      /* inner white glow */
+    0 0 16px rgba(0,255,213,.25);        /* soft cyan halo */
+  border-radius: 1px;                    /* smooth edges */
+  z-index: 5;                            /* behind falling notes */
+}
+
+/* ----------------------------------------
+   Notes (orbs) – colored, constant size & glow
+   - Positioned at the rail center; JS animates fall distance via --drop-distance.
+---------------------------------------- */
+.note {
+  position: absolute;                    /* positioned inside .rail */
+  top: 0;                                /* animation controls vertical travel */
+  left: 50%;                             /* horizontally centered in rail */
+  transform: translate(-50%, 0);         /* centers orb relative to its own width */
+  width: 40px;                           /* constant orb size */
+  height: 40px;                          /* constant orb size */
+  border-radius: 999px;                  /* circular shape */
+  background: currentColor;              /* color comes from direction class */
+  opacity: 0.98;                         /* crisp but not fully opaque */
+  z-index: 16;                           /* above rails and judge line */
+  pointer-events: none;                  /* decorative, not interactive */
+  box-shadow:                             /* stable strong glow at all times */
+    0 0 10px currentColor,               /* core glow */
+    0 0 24px currentColor,               /* mid glow */
+    0 0 40px color-mix(in srgb, currentColor 80%, white 20%); /* outer bloom */
+
+  animation-name: fallNote;              /* uses transform to fall */
+  animation-timing-function: linear;     /* steady speed */
+  animation-fill-mode: forwards;         /* stays at end position */
+}
+
+/* Color mapping for notes (rails stay white) */
+.note-left  { color: var(--label-left);  } /* left = neon green */
+.note-up    { color: var(--label-up);    } /* up   = mint/cyan */
+.note-down  { color: var(--label-down);  } /* down = neon orange */
+.note-right { color: var(--label-right); } /* right= neon pink */
+
+/* Falling animation for notes – run all the way to the bottom of the rail */
+@keyframes fallNote {
+  from {
+    top: -60px;                           /* start above the rail */
+  }
+  to {
+    top: calc(100% - 40px);               /* stop at rail bottom (40px = note height) */
+  }
+}
+
 
 
 /* dancer: lock the cat just above the control labels */
