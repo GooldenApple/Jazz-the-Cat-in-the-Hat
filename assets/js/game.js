@@ -161,6 +161,15 @@ function hideOverlay() {
 }
 
 /* ----------------------------------------
+   Overlay label helper
+   - Updates the overlay label text without changing structure
+---------------------------------------- */
+function setOverlayLabel(text) {
+  const label = document.querySelector('#overlay .play-label');
+  if (label) label.textContent = text;
+}
+
+/* ----------------------------------------
    wirePlayButton
    - Hides overlay and marks game running when clicked
    Usage: call once on DOMContentLoaded
@@ -216,13 +225,15 @@ function wireMenuPlayToggle() {
     if (state.running) {
       /* Pause the game */
       state.running = false;
-      showOverlay();                 /* reuse existing overlay as pause screen */
-      updatePlayMenuLabel();         /* swap to ▶ Play */
+      setOverlayLabel('Paused');      // show pause label
+      showOverlay();                  // reuse existing overlay as pause screen
+      updatePlayMenuLabel();          // swap to ▶ Play
     } else {
       /* Start/Resume the game */
       state.running = true;
-      hideOverlay();                 /* hide CTA when playing */
-      updatePlayMenuLabel();         /* swap to ⏸ Pause */
+      setOverlayLabel('Play');        // restore default label
+      hideOverlay();                  // hide CTA when playing
+      updatePlayMenuLabel();          // swap to ⏸ Pause
       // TODO: startGame();           /* hook real loop here if needed */
     }
   });
@@ -255,6 +266,7 @@ function removeAllMoveClasses(dancer) {
    Usage: applyMove('move-left')
 ---------------------------------------- */
 function applyMove(moveClass) {
+  if (!state.running) return;                      // ignore moves when paused/stopped
   const dancer = document.getElementById('dancer'); // reference to the cat wrapper
   if (!dancer) return;                               // guard if missing
 
@@ -323,6 +335,7 @@ function wireMoveButtons() {
   document.querySelectorAll('.ctrl-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // read data-dir
+      if (!state.running) return;                                            // ignore when paused/stopped
       if (dir === 'left')  doLeftMove();                                     // LEFT button
       if (dir === 'right') doRightMove();                                    // RIGHT button
       if (dir === 'up')    doUpMove();                                       // UP button
@@ -339,6 +352,15 @@ function wireMoveButtons() {
 function wireMoveKeyboard() {
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;                              // ignore held-down repeats
+
+    const isArrow =
+      e.key === 'ArrowLeft' ||
+      e.key === 'ArrowRight' ||
+      e.key === 'ArrowUp' ||
+      e.key === 'ArrowDown';
+
+    if (isArrow) e.preventDefault();                   // avoid browser scroll
+    if (!state.running) return;                        // ignore inputs when paused/stopped
 
     // Map Arrow keys to moves (WASD can be added later if needed)
     if (e.key === 'ArrowLeft')  { doLeftMove();  return; }   // ← triggers left
@@ -472,6 +494,7 @@ function initMoveControls() {
 ============================= */
 document.addEventListener('DOMContentLoaded', () => {
   init();                          // reset game + HUD
+  setOverlayLabel('Play');         // ensure initial overlay label says "Play"
   updatePlayMenuLabel();           // set initial label based on state.running (false → ▶ Play)
   bindControls();                  // (placeholder) input setup
   showOverlay();                   // show Play CTA on first load
