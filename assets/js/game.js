@@ -26,7 +26,6 @@ const hud = {
   level: document.getElementById('level'), // element that shows current level
 };
 
-
 /* ----------------------------------------
    init
    - Resets base game state
@@ -140,7 +139,6 @@ function heal() {
 /* =============================
    Overlay + Play Button Control
    ============================= */
-
 const overlayEl = document.getElementById('overlay');                     // play overlay container
 const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // play button inside
 
@@ -163,9 +161,9 @@ function hideOverlay() {
 }
 
 /* ----------------------------------------
-   Start button handler
-   - Hides overlay and marks game running
-   Usage: wired on DOMContentLoaded
+   wirePlayButton
+   - Hides overlay and marks game running when clicked
+   Usage: call once on DOMContentLoaded
 ---------------------------------------- */
 function wirePlayButton() {
   if (!playBtn) return;                          // skip if button missing
@@ -199,7 +197,7 @@ function removeAllMoveClasses(dancer) {
 /* ----------------------------------------
    applyMove
    - Cancels any current move and applies the requested class
-   - Automatically removes the class after the animation ends
+   - Automatically removes the class after the first animation end
    Usage: applyMove('move-left')
 ---------------------------------------- */
 function applyMove(moveClass) {
@@ -215,13 +213,20 @@ function applyMove(moveClass) {
 
   dancer.classList.add(moveClass);                   // apply the requested move
 
-  /* Handle animation end: remove the class so we can retrigger next time */
-  const onEnd = (e) => {
-    if (e.target !== dancer) return;                 // ignore bubbling from children
+  /* ------------------------------------------------------
+     Cleanup after animation:
+     - We listen on the wrapper and accept the FIRST event
+       bubbling from any animated child (svg, #pose-down, etc.)
+     - This works for LEFT/RIGHT/UP (anim on <svg>) and
+       for DOWN (anim on #pose-down).
+  ------------------------------------------------------ */
+  const onEnd = () => {
     dancer.classList.remove(moveClass);              // cleanup move class
     dancer.removeEventListener('animationend', onEnd);// detach listener
+    dancer.removeEventListener('animationcancel', onEnd);// safety: cancel also cleans
   };
-  dancer.addEventListener('animationend', onEnd);    // listen once per run
+  dancer.addEventListener('animationend', onEnd, { once: false });
+  dancer.addEventListener('animationcancel', onEnd, { once: false });
 }
 
 /* ----------------------------------------
@@ -250,7 +255,7 @@ function doUpMove() {
 
 /* ----------------------------------------
    doDownMove
-   - Triggers the DOWN animation (squat + twerk + tail wag + belly hide)
+   - Triggers the DOWN animation (switch to back pose + twerk)
 ---------------------------------------- */
 function doDownMove() {
   applyMove('move-down');                            // play down move
@@ -297,7 +302,6 @@ function initMoveControls() {
   wireMoveButtons();      // enable on-screen buttons
   wireMoveKeyboard();     // enable keyboard arrows
 }
-
 
 /* =============================
    Navbar / Hamburger behavior
@@ -417,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindControls();                  // (placeholder) input setup
   showOverlay();                   // show Play CTA on first load
   wirePlayButton();                // hook play button
+  initMoveControls();              // wire buttons + keyboard for moves
 
   const navCollapse = document.getElementById('mainNav'); // Bootstrap collapse root
   if (navCollapse) {
@@ -441,8 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
-
-
 
 /* ----------------------------------------
    DEV test hooks (Console helpers)

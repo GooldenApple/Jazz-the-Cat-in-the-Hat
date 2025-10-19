@@ -609,6 +609,28 @@ body::before {
   transform-origin: center;             /* default pivot = center */
 }
 
+/* ----------------------------------------
+   Pose switch (front ↔ back for DOWN)
+   - Default: show front pose
+   - When .move-down is active: fade to back/twerk pose
+---------------------------------------- */
+#dancer svg #pose-front { 
+  opacity: 1; 
+  transition: opacity .12s linear; 
+}
+#dancer svg #pose-down  { 
+  opacity: 0; 
+  transition: opacity .12s linear; 
+  pointer-events: none; 
+}
+
+#dancer.move-down svg #pose-front { 
+  opacity: 0; 
+}
+#dancer.move-down svg #pose-down  { 
+  opacity: 1; 
+}
+
 /* =============================
    DANCER MOVES – LEFT / RIGHT (v2)
    - Stronger slide distance
@@ -647,16 +669,28 @@ body::before {
 
 /* left arm reaches up toward the hat */
 @keyframes armReachLeftK {
-  0%   { transform: rotate(0deg) scaleY(1.00); }   
-  60%  { transform: rotate(95deg) scaleY(1.06); }  
-  100% { transform: rotate(80deg) scaleY(1.00); }  
+  0%   { 
+    transform: rotate(0deg) scaleY(1.00); 
+  }   
+  60%  { 
+    transform: rotate(95deg) scaleY(1.06); 
+  }  
+  100% { 
+    transform: rotate(80deg) scaleY(1.00); 
+  }  
 }
 
 /* RIGHT arm: tuck in toward belly  */
 @keyframes armTuckRightK {
-  0%   { transform: rotate(0deg) scaleY(1.00); }  
-  60%  { transform: rotate(95deg) scaleY(1.06); }   
-  100% { transform: rotate(80deg) scaleY(1.00); }   
+  0%   { 
+    transform: rotate(0deg) scaleY(1.00); 
+  }  
+  60%  { 
+    transform: rotate(95deg) scaleY(1.06); 
+  }   
+  100% { 
+    transform: rotate(80deg) scaleY(1.00); 
+  }   
 }
 
 /* hat tips up-left (stronger) */
@@ -723,9 +757,15 @@ body::before {
 
 /* RIGHT move: make right arm reach UP-RIGHT (counter-clockwise = negative in SVG) */
 @keyframes armReachRightK {
-  0%   { transform: rotate(0deg) scaleY(1); }      /* down by the side */
-  60%  { transform: rotate(-95deg) scaleY(1.06); } /* strong reach upward-right */
-  100% { transform: rotate(-80deg) scaleY(1); }    /* hold slightly below max */
+  0%   { 
+    transform: rotate(0deg) scaleY(1);          /* down by the side */
+  }
+  60%  { 
+    transform: rotate(-95deg) scaleY(1.06);    /* strong reach upward-right */
+  }
+  100% { 
+    transform: rotate(-80deg) scaleY(1);        /* hold slightly below max */
+  }
 }
 
 /* Apply on RIGHT move */
@@ -820,16 +860,28 @@ body::before {
 
 /* Left arm: up-left (mirror of LEFT-reach) */
 @keyframes armUpLeftK {
-  0%   { transform: rotate(0deg)   scaleY(1.00); }  /* down at side */
-  60%  { transform: rotate(95deg)  scaleY(1.06); }  /* strong reach up-left */
-  100% { transform: rotate(80deg)  scaleY(1.00); }  /* hold slightly below max */
+  0%   {
+    transform: rotate(0deg)   scaleY(1.00);                     /* down at side */
+  }
+  60%  { 
+    transform: rotate(95deg)  scaleY(1.06);                     /* strong reach up-left */
+  }
+  100% { 
+    transform: rotate(80deg)  scaleY(1.00);                     /* hold slightly below max */
+  }
 }
 
 /* Right arm: up-right (mirror of RIGHT-reach) */
 @keyframes armUpRightK {
-  0%   { transform: rotate(0deg)   scaleY(1.00); }  /* down at side */
-  60%  { transform: rotate(-95deg) scaleY(1.06); }  /* strong reach up-right */
-  100% { transform: rotate(-80deg) scaleY(1.00); }  /* hold slightly below max */
+  0%   { 
+    transform: rotate(0deg)   scaleY(1.00);                   /* down at side */
+  } 
+  60%  { 
+    transform: rotate(-95deg) scaleY(1.06);                   /* strong reach up-right */
+  }
+  100% { 
+    transform: rotate(-80deg) scaleY(1.00);                  /* hold slightly below max */
+  }
 }
 
 #dancer.move-up svg {
@@ -843,86 +895,108 @@ body::before {
 }
 
 /* ========================================
-   DOWN: squat + twerk + tail wag + hide belly
+   DOWN MOVE (Back Pose)
+   - Switches from front → back pose
+   - Adds squat, twerk, and tail wag
 ======================================== */
+
+/* ---------------------------
+   Pose visibility (default)
+   - Show FRONT by default
+   - Hide BACK by default
+--------------------------- */
+#dancer #pose-front {
+  opacity: 1;                 /* fully visible */
+  pointer-events: auto;       /* clickable if needed */
+  transition: opacity 120ms ease; /* smooth fade */
+}
+#dancer #pose-down {
+  opacity: 0;                 /* hidden */
+  pointer-events: none;       /* disabled */
+  transition: opacity 120ms ease; /* smooth fade */
+}
+
+/* ---------------------------
+   Active DOWN state
+   - Hide FRONT pose
+   - Show BACK pose
+--------------------------- */
+#dancer.move-down #pose-front {
+  opacity: 0;                 /* fade out front */
+  pointer-events: none;       /* disable */
+}
+#dancer.move-down #pose-down {
+  opacity: 1;                 /* fade in back */
+  pointer-events: auto;       /* enable */
+}
+
+/* ---------------------------
+   Squat animation
+   - Applies to entire SVG
+   - Creates squat + rebound
+--------------------------- */
 @keyframes squatDownK {
-  0% {
-    transform: translateY(0) scale(1) rotate(0deg);    /* neutral */
-  }
-  35% {
-    transform: translateY(18px) scale(0.96) rotate(-2deg); /* squat down */
-  }
-  70% {
-    transform: translateY(10px) scale(1.02) rotate(2deg);  /* rebound */
-  }
-  100% {
-    transform: translateY(0) scale(1) rotate(0deg);        /* back */
-  }
+  0%   { transform: translateY(0) scale(1) rotate(0deg); }       /* neutral */
+  35%  { transform: translateY(18px) scale(0.96) rotate(-2deg); }/* squat down */
+  70%  { transform: translateY(10px) scale(1.02) rotate(2deg); } /* rebound */
+  100% { transform: translateY(0) scale(1) rotate(0deg); }       /* settle */
 }
+
+/* ---------------------------
+   Twerk animation
+   - Applies to back body (#butt-back)
+   - Wiggles hip left-right
+--------------------------- */
 @keyframes twerkK {
-  0% {
-    transform: rotate(0deg) translateY(0);                 /* center */
-  }
-  25% {
-    transform: rotate(4deg) translateY(2px);               /* push right hip */
-  }
-  50% {
-    transform: rotate(-4deg) translateY(-1px);             /* push left hip */
-  }
-  75% {
-    transform: rotate(3deg) translateY(1px);               /* small rebound */
-  }
-  100% {
-    transform: rotate(0deg) translateY(0);                 /* settle */
-  }
+  0%   { transform: rotate(0deg) translateY(0); }
+  20%  { transform: rotate(10deg) translateY(2px); }   /* push right harder */
+  40%  { transform: rotate(-10deg) translateY(-2px); } /* push left harder */
+  60%  { transform: rotate(8deg) translateY(2px); }    /* rebound right */
+  80%  { transform: rotate(-8deg) translateY(-2px); }  /* rebound left */
+  100% { transform: rotate(0deg) translateY(0); }      /* settle */
 }
+
+/* ---------------------------
+   Tail wag animation
+   - Applies to #tail-back
+   - Swings tail side-to-side
+--------------------------- */
 @keyframes tailWagK {
-  0% {
-    transform-origin: 0% 50%;                              /* hinge at root */
-    transform: rotate(0deg);                                /* center */
-  }
-  25% {
-    transform-origin: 0% 50%;
-    transform: rotate(20deg);                               /* wag right */
-  }
-  50% {
-    transform-origin: 0% 50%;
-    transform: rotate(-16deg);                              /* wag left */
-  }
-  75% {
-    transform-origin: 0% 50%;
-    transform: rotate(12deg);                               /* small right */
-  }
-  100% {
-    transform-origin: 0% 50%;
-    transform: rotate(0deg);                                /* center */
-  }
+  0%   { transform-origin: 0% 50%; transform: rotate(0deg); }   /* center */
+  25%  { transform-origin: 0% 50%; transform: rotate(20deg); }  /* wag right */
+  50%  { transform-origin: 0% 50%; transform: rotate(-16deg);}  /* wag left */
+  75%  { transform-origin: 0% 50%; transform: rotate(12deg); }  /* rebound */
+  100% { transform-origin: 0% 50%; transform: rotate(0deg); }   /* settle */
 }
+
+/* ---------------------------
+   Apply animations when DOWN is active, Synced durations 
+--------------------------- */
 #dancer.move-down svg {
-  animation: squatDownK 0.34s ease-out;                    /* squat on the SVG */
+  animation: squatDownK 0.8s ease-out;            /* squat */
 }
-#dancer.move-down #belly {
-  opacity: 0;                                              /* hide belly during twerk */
-  transition: opacity 80ms linear;                         /* quick hide/show */
+
+/* Back body animations */
+#dancer.move-down #butt-back {
+  animation: twerkK 0.8s 0.7s ease-in-out;      /* but-wiggle */
 }
-#dancer.move-down #body {
-  animation: twerkK 0.38s ease-in-out 20ms 1;              /* hip wiggle */
+#dancer.move-down #tail-back {
+  animation: tailWagK 0.8s ease-in-out 0ms 1;     /* tail-wiggle */
 }
-#dancer.move-down #tail {
-  animation: tailWagK 0.38s ease-in-out 0ms 1;             /* tail wag */
-}
+
 
 /* ----------------------------------------
-   Reduced motion
+   Reduced motion (accessibility)
 ---------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  #dancer.move-left svg,
+  /* Disable body slide/jump animations */
+  #dancer.move-left  svg,
   #dancer.move-right svg,
-  #dancer.move-up svg,
-  #dancer.move-down svg {
-    animation: none;                                       /* disable main SVG moves */
+  #dancer.move-up    svg {
+    animation: none;
   }
 
+  /* Disable arm + hat animations for LEFT/RIGHT/UP */
   #dancer.move-left  #hat-top,
   #dancer.move-left  #hat-band,
   #dancer.move-left  #hat-brim,
@@ -930,20 +1004,26 @@ body::before {
   #dancer.move-right #hat-band,
   #dancer.move-right #hat-brim,
   #dancer.move-up    #arm-left,
-  #dancer.move-up    #arm-right,
-  #dancer.move-down  #body,
-  #dancer.move-down  #tail {
-    animation: none;                                       /* disable sub-animations */
+  #dancer.move-up    #arm-right {
+    animation: none;
   }
 
+  /* Disable animations for DOWN back pose + tail */
+  #dancer.move-down svg #pose-down,
+  #dancer.move-down svg #tail-back {
+    animation: none;
+  }
+
+  /* Visual feedback only: brighten dancer slightly */
   #dancer {
-    filter: brightness(1.0);                               /* base brightness */
-    transition: filter 120ms linear;                       /* smooth flash */
+    filter: brightness(1.0);              /* normal brightness */
+    transition: filter 120ms linear;      /* smooth brightness change */
   }
   #dancer[class*="move-"] {
-    filter: brightness(1.15);                              /* subtle flash on move */
+    filter: brightness(1.15);             /* brighten during any move */
   }
 }
+
 
 
 /* ========== MEDIA QUERIES  ========== */
