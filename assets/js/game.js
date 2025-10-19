@@ -177,6 +177,129 @@ function wirePlayButton() {
 }
 
 /* =============================
+   MOVE CONTROLLER (directional dance)
+   - Adds/removes CSS classes to play animations:
+     .move-left / .move-right / .move-up / .move-down
+   - Exposes one function per move for clarity:
+     doLeftMove(), doRightMove(), doUpMove(), doDownMove()
+   - Wires both on-screen buttons and keyboard arrows
+============================= */
+
+/* ----------------------------------------
+   removeAllMoveClasses
+   - Ensures we start clean before applying a new move
+---------------------------------------- */
+function removeAllMoveClasses(dancer) {
+  dancer.classList.remove('move-left');  // remove left class if present
+  dancer.classList.remove('move-right'); // remove right class if present
+  dancer.classList.remove('move-up');    // remove up class if present
+  dancer.classList.remove('move-down');  // remove down class if present
+}
+
+/* ----------------------------------------
+   applyMove
+   - Cancels any current move and applies the requested class
+   - Automatically removes the class after the animation ends
+   Usage: applyMove('move-left')
+---------------------------------------- */
+function applyMove(moveClass) {
+  const dancer = document.getElementById('dancer'); // reference to the cat wrapper
+  if (!dancer) return;                               // guard if missing
+
+  removeAllMoveClasses(dancer);                      // clear previous move classes
+
+  // Force a reflow so re-adding a class restarts the CSS animation cleanly
+  // (reading offsetWidth is a common way to flush styles)
+  // eslint-disable-next-line no-unused-expressions
+  dancer.offsetWidth;                                // trigger reflow
+
+  dancer.classList.add(moveClass);                   // apply the requested move
+
+  /* Handle animation end: remove the class so we can retrigger next time */
+  const onEnd = (e) => {
+    if (e.target !== dancer) return;                 // ignore bubbling from children
+    dancer.classList.remove(moveClass);              // cleanup move class
+    dancer.removeEventListener('animationend', onEnd);// detach listener
+  };
+  dancer.addEventListener('animationend', onEnd);    // listen once per run
+}
+
+/* ----------------------------------------
+   doLeftMove
+   - Triggers the LEFT animation (slide + tilt + hat tip)
+---------------------------------------- */
+function doLeftMove() {
+  applyMove('move-left');                            // play left move
+}
+
+/* ----------------------------------------
+   doRightMove
+   - Triggers the RIGHT animation (slide + tilt + hat tip)
+---------------------------------------- */
+function doRightMove() {
+  applyMove('move-right');                           // play right move
+}
+
+/* ----------------------------------------
+   doUpMove
+   - Triggers the UP animation (jump + arms up + micro shake)
+---------------------------------------- */
+function doUpMove() {
+  applyMove('move-up');                              // play up move
+}
+
+/* ----------------------------------------
+   doDownMove
+   - Triggers the DOWN animation (squat + twerk + tail wag + belly hide)
+---------------------------------------- */
+function doDownMove() {
+  applyMove('move-down');                            // play down move
+}
+
+/* ----------------------------------------
+   wireMoveButtons
+   - Hooks on-screen arrow buttons to the corresponding moves
+---------------------------------------- */
+function wireMoveButtons() {
+  document.querySelectorAll('.ctrl-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // read data-dir
+      if (dir === 'left')  doLeftMove();                                     // LEFT button
+      if (dir === 'right') doRightMove();                                    // RIGHT button
+      if (dir === 'up')    doUpMove();                                       // UP button
+      if (dir === 'down')  doDownMove();                                     // DOWN button
+    });
+  });
+}
+
+/* ----------------------------------------
+   wireMoveKeyboard
+   - Hooks keyboard arrow keys to the corresponding moves
+   - Ignores repeated keydown events to avoid spam
+---------------------------------------- */
+function wireMoveKeyboard() {
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;                              // ignore held-down repeats
+
+    // Map Arrow keys to moves (WASD can be added later if needed)
+    if (e.key === 'ArrowLeft')  { doLeftMove();  return; }   // ← triggers left
+    if (e.key === 'ArrowRight') { doRightMove(); return; }   // → triggers right
+    if (e.key === 'ArrowUp')    { doUpMove();    return; }   // ↑ triggers up
+    if (e.key === 'ArrowDown')  { doDownMove();  return; }   // ↓ triggers down
+  });
+}
+
+/* ----------------------------------------
+   initMoveControls
+   - Public setup to call once after DOM is ready
+---------------------------------------- */
+function initMoveControls() {
+  wireMoveButtons();      // enable on-screen buttons
+  wireMoveKeyboard();     // enable keyboard arrows
+}
+
+
+/* =============================
    Navbar / Hamburger behavior
    ============================= */
 
@@ -212,7 +335,7 @@ function wirePlayButton() {
 })();
 
 /* =============================
-   Rotate Overlay Controller (Recommendation A)
+   Rotate Overlay Controller 
    - Shows the rotate overlay by CSS when:
        (max-width: 980px) AND (orientation: landscape)
        OR (max-width: 980px) AND (max-height: 480px)
@@ -318,3 +441,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+
+
+/* ----------------------------------------
+   DEV test hooks (Console helpers)
+   - Expose move functions on window so you can call them in DevTools
+   - Safe in production; only attaches references
+---------------------------------------- */
+(function exposeDevHooks() {
+  // guard: make sure window exists (it does in browsers)
+  if (typeof window === 'undefined') return;
+
+  // map our internal functions to global names for quick testing
+  window.doLeftMove  = doLeftMove;   // call in Console: doLeftMove()
+  window.doRightMove = doRightMove;  // call in Console: doRightMove()
+  window.doUpMove    = doUpMove;     // call in Console: doUpMove()
+  window.doDownMove  = doDownMove;   // call in Console: doDownMove()
+})();

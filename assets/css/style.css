@@ -593,6 +593,362 @@ body::before {
   opacity: var(--floor-opacity);        /* intensity */
 }
 
+/* =========================================================
+   DANCER MOVES (GPU-only transforms)
+   - JS toggles: .move-left / .move-right / .move-up / .move-down on #dancer
+   - Animate the inner SVG, not #dancer (to preserve base centering transform)
+   - Sub-elements by ID: #hat-top, #hat-band, #hat-brim, #arm-left, #arm-right, #body, #belly, #tail
+========================================================= */
+
+/* ----------------------------------------
+   SVG transform helpers
+   - Keep transforms local and predictable
+---------------------------------------- */
+#dancer svg * {
+  transform-box: fill-box;              /* compute transforms relative to element’s own box */
+  transform-origin: center;             /* default pivot = center */
+}
+
+/* =============================
+   DANCER MOVES – LEFT / RIGHT (v2)
+   - Stronger slide distance
+   - Arm pivots fixed at shoulder
+   - Deeper hat tip
+   - Synced timings
+============================= */
+
+/* --- Arm pivots (static) ---
+   Put the hinge at the shoulder (top inner corner of each arm)
+---------------------------------------- */
+#dancer svg #arm-left {
+  transform-origin: 100% 0%;           /* left arm: top-right corner as pivot */
+}
+
+#dancer svg #arm-right {
+  transform-origin: 0% 0%;             /* right arm: top-left corner as pivot */
+}
+
+/* ----------------------------------------
+   LEFT: long slide + left-arm reach + deep hat tip
+---------------------------------------- */
+
+/* slide body (animate inner SVG, not wrapper) */
+@keyframes moveLeftK {
+  0% {
+    transform: translateX(0) rotate(0deg);              /* neutral */
+  }
+  60% {
+    transform: translateX(-140px) rotate(-9deg);        /* deep slide to left line + subtle body tilt */
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);              /* return to neutral */
+  }
+}
+
+/* left arm reaches up toward the hat */
+@keyframes armReachLeftK {
+  0%   { transform: rotate(0deg) scaleY(1.00); }   
+  60%  { transform: rotate(95deg) scaleY(1.06); }  
+  100% { transform: rotate(80deg) scaleY(1.00); }  
+}
+
+/* RIGHT arm: tuck in toward belly  */
+@keyframes armTuckRightK {
+  0%   { transform: rotate(0deg) scaleY(1.00); }  
+  60%  { transform: rotate(95deg) scaleY(1.06); }   
+  100% { transform: rotate(80deg) scaleY(1.00); }   
+}
+
+/* hat tips up-left (stronger) */
+@keyframes hatTipLeftK {
+  0% {
+    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+  }
+  50% {
+    transform: translate(-24px, -14px) rotate(-28deg);  /* deeper tip up-left */
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);            /* settle */
+  }
+}
+
+/* apply LEFT animations (synced, gentle delay on hat) */
+#dancer.move-left svg {
+  animation: moveLeftK 0.65s ease-in-out both;          /* main slide */
+}
+
+#dancer.move-left #arm-left {
+  animation: armReachLeftK 0.65s ease-in-out both;      /* arm reach */
+}
+
+#dancer.move-left #arm-right {
+  animation: armTuckRightK 0.65s ease-in-out both;  /* tuck mot magen */
+}
+
+#dancer.move-left #hat-top,
+#dancer.move-left #hat-band,
+#dancer.move-left #hat-brim {
+  animation: hatTipLeftK 0.68s ease-in-out 0.06s both;  /* tiny delay so hand gets there first */
+}
+
+
+/* ----------------------------------------
+   RIGHT: long slide + right-arm reach + deep hat tip
+---------------------------------------- */
+
+/* slide body (mirror) */
+@keyframes moveRightK {
+  0% {
+    transform: translateX(0) rotate(0deg);              /* neutral */
+  }
+  60% {
+    transform: translateX(140px) rotate(9deg);          /* deep slide right + subtle body tilt */
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);              /* return to neutral */
+  }
+}
+
+/* Shoulder pivot for the right arm (once, static) */
+#dancer svg #arm-right {
+  transform-box: fill-box;     /* use the element’s own bbox for transforms */
+  transform-origin: 0% 0%;     /* top-left of the arm’s box ≈ shoulder */
+}
+
+/* Shoulder pivot for the left arm */
+#dancer svg #arm-left {
+  transform-box: fill-box;
+  transform-origin: 100% 0%;   /* pivot in the shoulder */
+}
+
+/* RIGHT move: make right arm reach UP-RIGHT (counter-clockwise = negative in SVG) */
+@keyframes armReachRightK {
+  0%   { transform: rotate(0deg) scaleY(1); }      /* down by the side */
+  60%  { transform: rotate(-95deg) scaleY(1.06); } /* strong reach upward-right */
+  100% { transform: rotate(-80deg) scaleY(1); }    /* hold slightly below max */
+}
+
+/* Apply on RIGHT move */
+#dancer.move-right #arm-right {
+  animation: armReachRightK 0.65s ease-in-out both; /* synced with your slide */
+}
+
+/* LEFT arm: pivot in shoulder (once) */
+#dancer svg #arm-left {
+  transform-box: fill-box;
+  transform-origin: 100% 0%; /* shoulder: max-x, min-y */
+}
+
+/* RIGHT move: LEFT arm tucks clearly over belly
+   - small clockwise rotate (+deg)
+   - strong translate inward (+x) and up (-y) */
+@keyframes armTuckLeftK {
+  0% {
+    transform: rotate(0deg) scaleY(1.00);               /* down by side */
+  }
+  60% {
+    transform: rotate(-95deg) scaleY(1.06);             /* strong reach upward-left */
+  }
+  100% {
+    transform: rotate(-80deg) scaleY(1.00);             /* hold slightly below max */
+  }
+}
+
+/* apply on RIGHT move (high specificity to win) */
+#dancer.move-right svg #arm-left {
+  animation: armTuckLeftK 0.65s ease-in-out both;
+}
+
+
+
+
+
+/* hat tips up-right (stronger) */
+@keyframes hatTipRightK {
+  0% {
+    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+  }
+  50% {
+    transform: translate(24px, -14px) rotate(28deg);    /* deeper tip up-right */
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);            /* settle */
+  }
+}
+
+/* apply RIGHT animations (synced, gentle delay on hat) */
+#dancer.move-right svg {
+  animation: moveRightK 0.65s ease-in-out both;         /* main slide */
+}
+
+#dancer.move-right #arm-right {
+  animation: armReachRightK 0.65s ease-in-out both;     /* arm reach */
+}
+
+#dancer.move-right #hat-top,
+#dancer.move-right #hat-band,
+#dancer.move-right #hat-brim {
+  animation: hatTipRightK 0.68s ease-in-out 0.06s both; /* tiny delay on hat */
+}
+
+
+/* ========================================
+   UP: jump + arms up + micro wobble
+   - Arms rotate ~90–100° with shoulder-ish pivots
+======================================== */
+@keyframes jumpUpK { 
+  0% {
+    transform: translateY(0) scaleY(1) rotate(0deg); /* neutral */
+  }
+  30% {
+    transform: translateY(-22px) scaleY(0.92) rotate(0.6deg); /* lift + squash */
+  }
+  60% {
+    transform: translateY(-8px) scaleY(1.04) rotate(-0.6deg); /* settle */
+  }
+  100% {
+    transform: translateY(0) scaleY(1) rotate(0deg);          /* back */
+  }
+}
+@keyframes armRaiseLeftK {
+  0% {
+    transform-origin: 85% 10%;               /* pivot near inner shoulder */
+  }
+  60% {
+    transform-origin: 85% 10%;
+    transform: rotate(-95deg) scaleY(1.06);  /* raise up ~95° */
+  }
+  100% {
+    transform-origin: 85% 10%;
+    transform: rotate(-75deg) scaleY(1.0);   /* relax a bit */
+  }
+}
+@keyframes armRaiseRightK {
+  0% {
+    transform-origin: 15% 10%;               /* mirror pivot for right arm */
+  }
+  60% {
+    transform-origin: 15% 10%;
+    transform: rotate(95deg) scaleY(1.06);   /* raise up ~95° */
+  }
+  100% {
+    transform-origin: 15% 10%;
+    transform: rotate(75deg) scaleY(1.0);    /* relax a bit */
+  }
+}
+#dancer.move-up svg {
+  animation: jumpUpK 0.30s cubic-bezier(.25,.9,.3,1.0); /* jump on the SVG */
+}
+#dancer.move-up #arm-left {
+  animation: armRaiseLeftK 0.30s ease-out;             /* raise left arm */
+}
+#dancer.move-up #arm-right {
+  animation: armRaiseRightK 0.30s ease-out;            /* raise right arm */
+}
+
+/* ========================================
+   DOWN: squat + twerk + tail wag + hide belly
+======================================== */
+@keyframes squatDownK {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);    /* neutral */
+  }
+  35% {
+    transform: translateY(18px) scale(0.96) rotate(-2deg); /* squat down */
+  }
+  70% {
+    transform: translateY(10px) scale(1.02) rotate(2deg);  /* rebound */
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);        /* back */
+  }
+}
+@keyframes twerkK {
+  0% {
+    transform: rotate(0deg) translateY(0);                 /* center */
+  }
+  25% {
+    transform: rotate(4deg) translateY(2px);               /* push right hip */
+  }
+  50% {
+    transform: rotate(-4deg) translateY(-1px);             /* push left hip */
+  }
+  75% {
+    transform: rotate(3deg) translateY(1px);               /* small rebound */
+  }
+  100% {
+    transform: rotate(0deg) translateY(0);                 /* settle */
+  }
+}
+@keyframes tailWagK {
+  0% {
+    transform-origin: 0% 50%;                              /* hinge at root */
+    transform: rotate(0deg);                                /* center */
+  }
+  25% {
+    transform-origin: 0% 50%;
+    transform: rotate(20deg);                               /* wag right */
+  }
+  50% {
+    transform-origin: 0% 50%;
+    transform: rotate(-16deg);                              /* wag left */
+  }
+  75% {
+    transform-origin: 0% 50%;
+    transform: rotate(12deg);                               /* small right */
+  }
+  100% {
+    transform-origin: 0% 50%;
+    transform: rotate(0deg);                                /* center */
+  }
+}
+#dancer.move-down svg {
+  animation: squatDownK 0.34s ease-out;                    /* squat on the SVG */
+}
+#dancer.move-down #belly {
+  opacity: 0;                                              /* hide belly during twerk */
+  transition: opacity 80ms linear;                         /* quick hide/show */
+}
+#dancer.move-down #body {
+  animation: twerkK 0.38s ease-in-out 20ms 1;              /* hip wiggle */
+}
+#dancer.move-down #tail {
+  animation: tailWagK 0.38s ease-in-out 0ms 1;             /* tail wag */
+}
+
+/* ----------------------------------------
+   Reduced motion
+---------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  #dancer.move-left svg,
+  #dancer.move-right svg,
+  #dancer.move-up svg,
+  #dancer.move-down svg {
+    animation: none;                                       /* disable main SVG moves */
+  }
+
+  #dancer.move-left  #hat-top,
+  #dancer.move-left  #hat-band,
+  #dancer.move-left  #hat-brim,
+  #dancer.move-right #hat-top,
+  #dancer.move-right #hat-band,
+  #dancer.move-right #hat-brim,
+  #dancer.move-up    #arm-left,
+  #dancer.move-up    #arm-right,
+  #dancer.move-down  #body,
+  #dancer.move-down  #tail {
+    animation: none;                                       /* disable sub-animations */
+  }
+
+  #dancer {
+    filter: brightness(1.0);                               /* base brightness */
+    transition: filter 120ms linear;                       /* smooth flash */
+  }
+  #dancer[class*="move-"] {
+    filter: brightness(1.15);                              /* subtle flash on move */
+  }
+}
+
 
 /* ========== MEDIA QUERIES  ========== */
 
