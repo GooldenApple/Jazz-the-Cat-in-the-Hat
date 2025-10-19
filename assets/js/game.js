@@ -169,8 +169,62 @@ function wirePlayButton() {
   if (!playBtn) return;                          // skip if button missing
   playBtn.addEventListener('click', () => {      // on click
     hideOverlay();                               // hide CTA
-    state.running = true;                        // mark running
+    state.running = true;
+    updatePlayMenuLabel();                        // sync navbar label to "⏸ Pause"
     // TODO: startGame();                        // hook real start here
+  });
+}
+
+/* ----------------------------------------
+   Play/Pause menu toggle
+   - Keeps the navbar Play/Pause label in sync with state.running
+   - Minimal coupling: uses showOverlay()/hideOverlay() only
+   Usage:
+     - updatePlayMenuLabel() after init / on start/stop
+     - wireMenuPlayToggle() once on DOM ready
+---------------------------------------- */
+function getMenuPlayToggle() {
+  return document.getElementById('menuPlayToggle'); // query late to avoid null pre-DOM
+}
+
+function setMenuLabelToPlay() {
+  const btn = getMenuPlayToggle();
+  if (!btn) return;
+  btn.textContent = '▶ Play';        /* label: Play */
+  btn.setAttribute('aria-pressed', 'false');
+}
+
+function setMenuLabelToPause() {
+  const btn = getMenuPlayToggle();
+  if (!btn) return;
+  btn.textContent = '⏸ Pause';       /* label: Pause */
+  btn.setAttribute('aria-pressed', 'true');
+}
+
+function updatePlayMenuLabel() {
+  if (state.running) {
+    setMenuLabelToPause();           /* running → show Pause */
+  } else {
+    setMenuLabelToPlay();            /* stopped/paused → show Play */
+  }
+}
+
+function wireMenuPlayToggle() {
+  const btn = getMenuPlayToggle();
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (state.running) {
+      /* Pause the game */
+      state.running = false;
+      showOverlay();                 /* reuse existing overlay as pause screen */
+      updatePlayMenuLabel();         /* swap to ▶ Play */
+    } else {
+      /* Start/Resume the game */
+      state.running = true;
+      hideOverlay();                 /* hide CTA when playing */
+      updatePlayMenuLabel();         /* swap to ⏸ Pause */
+      // TODO: startGame();           /* hook real loop here if needed */
+    }
   });
 }
 
@@ -418,10 +472,12 @@ function initMoveControls() {
 ============================= */
 document.addEventListener('DOMContentLoaded', () => {
   init();                          // reset game + HUD
+  updatePlayMenuLabel();           // set initial label based on state.running (false → ▶ Play)
   bindControls();                  // (placeholder) input setup
   showOverlay();                   // show Play CTA on first load
   wirePlayButton();                // hook play button
   initMoveControls();              // wire buttons + keyboard for moves
+  wireMenuPlayToggle();            // enable navbar toggle click handler
 
   const navCollapse = document.getElementById('mainNav'); // Bootstrap collapse root
   if (navCollapse) {

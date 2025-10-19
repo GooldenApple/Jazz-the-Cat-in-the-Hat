@@ -614,21 +614,23 @@ body::before {
    - Default: show front pose
    - When .move-down is active: fade to back/twerk pose
 ---------------------------------------- */
-#dancer svg #pose-front { 
-  opacity: 1; 
-  transition: opacity .12s linear; 
+#dancer #pose-front {
+  opacity: 1;                            /* fully visible */
+  pointer-events: auto;                  /* clickable if needed */
+  transition: opacity 120ms ease;        /* smooth fade */
 }
-#dancer svg #pose-down  { 
-  opacity: 0; 
-  transition: opacity .12s linear; 
-  pointer-events: none; 
+#dancer #pose-down  {
+  opacity: 0;                            /* hidden */
+  pointer-events: none;                  /* disabled */
+  transition: opacity 120ms ease;        /* smooth fade */
 }
-
-#dancer.move-down svg #pose-front { 
-  opacity: 0; 
+#dancer.move-down #pose-front {
+  opacity: 0;                            /* fade out front */
+  pointer-events: none;                  /* disable */
 }
-#dancer.move-down svg #pose-down  { 
-  opacity: 1; 
+#dancer.move-down #pose-down  {
+  opacity: 1;                            /* fade in back */
+  pointer-events: auto;                  /* enable */
 }
 
 /* =============================
@@ -642,12 +644,15 @@ body::before {
 /* --- Arm pivots (static) ---
    Put the hinge at the shoulder (top inner corner of each arm)
 ---------------------------------------- */
-#dancer svg #arm-left {
-  transform-origin: 100% 0%;           /* left arm: top-right corner as pivot */
-}
-
+#dancer svg #arm-left,
 #dancer svg #arm-right {
-  transform-origin: 0% 0%;             /* right arm: top-left corner as pivot */
+  transform-box: fill-box;               /* use element’s own bbox for transforms */
+}
+#dancer svg #arm-left {
+  transform-origin: 100% 0%;             /* left arm: top-right corner as pivot */
+}
+#dancer svg #arm-right {
+  transform-origin: 0% 0%;               /* right arm: top-left corner as pivot */
 }
 
 /* ----------------------------------------
@@ -743,18 +748,6 @@ body::before {
   }
 }
 
-/* Shoulder pivot for the right arm (once, static) */
-#dancer svg #arm-right {
-  transform-box: fill-box;     /* use the element’s own bbox for transforms */
-  transform-origin: 0% 0%;     /* top-left of the arm’s box ≈ shoulder */
-}
-
-/* Shoulder pivot for the left arm */
-#dancer svg #arm-left {
-  transform-box: fill-box;
-  transform-origin: 100% 0%;   /* pivot in the shoulder */
-}
-
 /* RIGHT move: make right arm reach UP-RIGHT (counter-clockwise = negative in SVG) */
 @keyframes armReachRightK {
   0%   { 
@@ -771,12 +764,6 @@ body::before {
 /* Apply on RIGHT move */
 #dancer.move-right #arm-right {
   animation: armReachRightK 0.65s ease-in-out both; /* synced with your slide */
-}
-
-/* LEFT arm: pivot in shoulder (once) */
-#dancer svg #arm-left {
-  transform-box: fill-box;
-  transform-origin: 100% 0%; /* shoulder: max-x, min-y */
 }
 
 /* RIGHT move: LEFT arm tucks clearly over belly
@@ -798,10 +785,6 @@ body::before {
 #dancer.move-right svg #arm-left {
   animation: armTuckLeftK 0.65s ease-in-out both;
 }
-
-
-
-
 
 /* hat tips up-right (stronger) */
 @keyframes hatTipRightK {
@@ -901,36 +884,6 @@ body::before {
 ======================================== */
 
 /* ---------------------------
-   Pose visibility (default)
-   - Show FRONT by default
-   - Hide BACK by default
---------------------------- */
-#dancer #pose-front {
-  opacity: 1;                 /* fully visible */
-  pointer-events: auto;       /* clickable if needed */
-  transition: opacity 120ms ease; /* smooth fade */
-}
-#dancer #pose-down {
-  opacity: 0;                 /* hidden */
-  pointer-events: none;       /* disabled */
-  transition: opacity 120ms ease; /* smooth fade */
-}
-
-/* ---------------------------
-   Active DOWN state
-   - Hide FRONT pose
-   - Show BACK pose
---------------------------- */
-#dancer.move-down #pose-front {
-  opacity: 0;                 /* fade out front */
-  pointer-events: none;       /* disable */
-}
-#dancer.move-down #pose-down {
-  opacity: 1;                 /* fade in back */
-  pointer-events: auto;       /* enable */
-}
-
-/* ---------------------------
    Squat animation
    - Applies to entire SVG
    - Creates squat + rebound
@@ -983,7 +936,6 @@ body::before {
 #dancer.move-down #tail-back {
   animation: tailWagK 0.8s ease-in-out 0ms 1;     /* tail-wiggle */
 }
-
 
 /* ----------------------------------------
    Reduced motion (accessibility)
