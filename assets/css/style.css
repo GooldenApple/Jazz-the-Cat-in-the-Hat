@@ -796,54 +796,50 @@ body::before {
    UP: jump + arms up + micro wobble
    - Arms rotate ~90–100° with shoulder-ish pivots
 ======================================== */
+/* Jump up with squash + shake wobble */
 @keyframes jumpUpK { 
   0% {
-    transform: translateY(0) scaleY(1) rotate(0deg); /* neutral */
+    transform: translateY(0) scaleY(1) rotate(0deg);         /* neutral */
   }
-  30% {
-    transform: translateY(-22px) scaleY(0.92) rotate(0.6deg); /* lift + squash */
+  20% {
+    transform: translateY(-28px) scaleY(0.90) rotate(3deg);  /* strong lift + tilt right */
   }
-  60% {
-    transform: translateY(-8px) scaleY(1.04) rotate(-0.6deg); /* settle */
-  }
-  100% {
-    transform: translateY(0) scaleY(1) rotate(0deg);          /* back */
-  }
-}
-@keyframes armRaiseLeftK {
-  0% {
-    transform-origin: 85% 10%;               /* pivot near inner shoulder */
+  40% {
+    transform: translateY(-18px) scaleY(1.04) rotate(-3deg); /* wobble left */
   }
   60% {
-    transform-origin: 85% 10%;
-    transform: rotate(-95deg) scaleY(1.06);  /* raise up ~95° */
+    transform: translateY(-10px) scaleY(0.98) rotate(2deg);  /* rebound tilt */
+  }
+  80% {
+    transform: translateY(-4px) scaleY(1.02) rotate(-2deg);  /* micro shake */
   }
   100% {
-    transform-origin: 85% 10%;
-    transform: rotate(-75deg) scaleY(1.0);   /* relax a bit */
+    transform: translateY(0) scaleY(1) rotate(0deg);         /* settle */
   }
 }
-@keyframes armRaiseRightK {
-  0% {
-    transform-origin: 15% 10%;               /* mirror pivot for right arm */
-  }
-  60% {
-    transform-origin: 15% 10%;
-    transform: rotate(95deg) scaleY(1.06);   /* raise up ~95° */
-  }
-  100% {
-    transform-origin: 15% 10%;
-    transform: rotate(75deg) scaleY(1.0);    /* relax a bit */
-  }
+
+/* Left arm: up-left (mirror of LEFT-reach) */
+@keyframes armUpLeftK {
+  0%   { transform: rotate(0deg)   scaleY(1.00); }  /* down at side */
+  60%  { transform: rotate(95deg)  scaleY(1.06); }  /* strong reach up-left */
+  100% { transform: rotate(80deg)  scaleY(1.00); }  /* hold slightly below max */
 }
+
+/* Right arm: up-right (mirror of RIGHT-reach) */
+@keyframes armUpRightK {
+  0%   { transform: rotate(0deg)   scaleY(1.00); }  /* down at side */
+  60%  { transform: rotate(-95deg) scaleY(1.06); }  /* strong reach up-right */
+  100% { transform: rotate(-80deg) scaleY(1.00); }  /* hold slightly below max */
+}
+
 #dancer.move-up svg {
-  animation: jumpUpK 0.30s cubic-bezier(.25,.9,.3,1.0); /* jump on the SVG */
+  animation: jumpUpK 0.70s cubic-bezier(.25,.9,.3,1.0); /* jump on the SVG */
 }
 #dancer.move-up #arm-left {
-  animation: armRaiseLeftK 0.30s ease-out;             /* raise left arm */
+  animation: armUpLeftK 0.7s ease-out;             /* raise left arm */
 }
 #dancer.move-up #arm-right {
-  animation: armRaiseRightK 0.30s ease-out;            /* raise right arm */
+  animation: armUpRightK 0.7s ease-out;            /* raise right arm */
 }
 
 /* ========================================
