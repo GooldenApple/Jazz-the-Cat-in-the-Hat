@@ -13,125 +13,166 @@ const state = {
   partial: 0,      // damage on the active heart (0..3)
 };
 
-/* Quick HUD refs */
+/* ----------------------------------------
+   Quick HUD refs
+   - Stores references to key HUD elements
+   - Lets us update lives, score, best, and level quickly
+   Usage: hud.score.textContent = 10;
+---------------------------------------- */
 const hud = {
-  lives: document.getElementById('lives'),
-  score: document.getElementById('score'),
-  best:  document.getElementById('best'),
-  level: document.getElementById('level'),
+  lives: document.getElementById('lives'), // container that holds heart icons
+  score: document.getElementById('score'), // span/div that shows current score
+  best:  document.getElementById('best'),  // element for best/high score display
+  level: document.getElementById('level'), // element that shows current level
 };
 
+
 /* ----------------------------------------
-   Game init + HUD rendering
+   init
+   - Resets base game state
+   - Renders HUD once
+   Usage: call once on DOMContentLoaded
 ---------------------------------------- */
 function init() {
-  state.running = false;
-  state.score = 0;
-  state.lives = 3;
-  state.level = 1;
-  state.partial = 0;
-  updateHUD();
+  state.running = false; // ensure stopped
+  state.score = 0;       // reset score
+  state.lives = 3;       // default lives
+  state.level = 1;       // default level
+  state.partial = 0;     // no partial damage
+  updateHUD();           // sync HUD
 }
 
-/* Build a single SVG heart with a given state class */
+/* ----------------------------------------
+   createHeart
+   - Builds one SVG heart with a given state class
+   Usage: container.appendChild(createHeart('full'))
+---------------------------------------- */
 function createHeart(stateClass) {
-  const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.classList.add('svg-heart', stateClass);
+  const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); // create SVG root
+  svg.setAttribute('viewBox', '0 0 24 24');                                     // fixed viewbox
+  svg.classList.add('svg-heart', stateClass);                                   // shape state
 
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); // heart path
   path.setAttribute(
     'd',
     'M12 21s-6.2-4.35-9.2-8.28C1 10.5 2.5 6 6.5 6c2.2 0 3.5 1.5 5.5 3.5C14 7.5 15.3 6 17.5 6c4 0 5.5 4.5 3.7 6.72C18.2 16.65 12 21 12 21z'
   );
-  svg.appendChild(path);
-  return svg;
+  svg.appendChild(path);                                                        // attach path
+  return svg;                                                                   // return node
 }
 
-/* Render the full lives row into the HUD */
+/* ----------------------------------------
+   renderLives
+   - Rebuilds the heart row based on lives + partial
+   Usage: renderLives(hud.lives, state.lives, state.partial)
+---------------------------------------- */
 function renderLives(container, lives, partial = 0, steps = 4) {
-  container.innerHTML = '';
+  container.innerHTML = '';                                       // clear row
 
-  const safeLives   = Math.max(0, lives);
-  const safePartial = Math.min(Math.max(partial, 0), steps - 1);
+  const safeLives   = Math.max(0, lives);                         // clamp lives
+  const safePartial = Math.min(Math.max(partial, 0), steps - 1);  // clamp partial
 
   for (let i = 0; i < Math.max(safeLives - 1, 0); i++) {
-    container.appendChild(createHeart('full'));
+    container.appendChild(createHeart('full'));                   // full hearts
   }
 
   if (safeLives > 0) {
-    let stateClass = 'full';
-    if (safePartial === 1) stateClass = 'threequarter';
-    if (safePartial === 2) stateClass = 'half';
-    if (safePartial === 3) stateClass = 'quarter';
-    container.appendChild(createHeart(stateClass));
+    let stateClass = 'full';                                      // default full
+    if (safePartial === 1) stateClass = 'threequarter';           // degrade 3/4
+    if (safePartial === 2) stateClass = 'half';                   // degrade 1/2
+    if (safePartial === 3) stateClass = 'quarter';                // degrade 1/4
+    container.appendChild(createHeart(stateClass));               // append partial
   }
 
   if (safeLives <= 0) {
-    container.appendChild(createHeart('empty'));
+    container.appendChild(createHeart('empty'));                  // at least one empty
   }
 }
 
-/* Sync all HUD values from state */
+/* ----------------------------------------
+   updateHUD
+   - Syncs HUD numbers and lives from state
+   Usage: updateHUD()
+---------------------------------------- */
 function updateHUD() {
-  renderLives(hud.lives, state.lives, state.partial);
-  hud.score.textContent = state.score;
-  hud.level.textContent = state.level;
-  // best / soundMode will be wired later
+  renderLives(hud.lives, state.lives, state.partial); // hearts row
+  hud.score.textContent = state.score;                // score text
+  hud.level.textContent = state.level;                // level text
+  // best / soundMode will be wired later               // reserved
 }
 
-/* Placeholder for input bindings (keyboard/touch) */
+/* ----------------------------------------
+   bindControls
+   - Placeholder for keyboard/touch bindings
+   Usage: bindControls()
+---------------------------------------- */
 function bindControls() {
   // to be implemented
 }
 
-/* Take damage step-by-step; consume a life when needed */
+/* ----------------------------------------
+   hit
+   - Applies damage in steps; consumes a life after 4 hits
+   Usage: hit()
+---------------------------------------- */
 function hit() {
-  if (state.lives <= 0) return;
-  if (state.partial < 3) {
-    state.partial += 1;
+  if (state.lives <= 0) return;      // no-op if dead
+  if (state.partial < 3) {           // step partial damage
+    state.partial += 1;              // next notch
   } else {
-    state.lives -= 1;
-    state.partial = 0;
+    state.lives -= 1;                // consume heart
+    state.partial = 0;               // reset partial
   }
-  updateHUD();
+  updateHUD();                       // refresh HUD
 }
 
-/* Gain one full heart */
+/* ----------------------------------------
+   heal
+   - Restores one full heart and clears partial damage
+   Usage: heal()
+---------------------------------------- */
 function heal() {
-  state.lives += 1;
-  state.partial = 0;
-  updateHUD();
+  state.lives += 1;  // add life
+  state.partial = 0; // clear partial
+  updateHUD();       // refresh HUD
 }
 
 /* =============================
    Overlay + Play Button Control
    ============================= */
 
-const overlayEl = document.getElementById('overlay');
-const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null;
+const overlayEl = document.getElementById('overlay');                     // play overlay container
+const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // play button inside
 
-/* Show overlay when not running */
+/* ----------------------------------------
+   showOverlay
+   - Reveals the play overlay
+   Usage: showOverlay()
+---------------------------------------- */
 function showOverlay() {
-  overlayEl?.classList.remove('hidden');
+  overlayEl?.classList.remove('hidden'); // remove hidden flag
 }
 
-/* Show overlay on initial load so the CTA is visible */
-window.addEventListener('DOMContentLoaded', () => {
-  overlayEl?.classList.remove('hidden');
-});
-
-/* Hide overlay when starting the game */
+/* ----------------------------------------
+   hideOverlay
+   - Hides the play overlay
+   Usage: hideOverlay()
+---------------------------------------- */
 function hideOverlay() {
-  overlayEl?.classList.add('hidden');
+  overlayEl?.classList.add('hidden');    // add hidden flag
 }
 
-/* Start button → hide overlay, mark running (hook real start later) */
-if (playBtn) {
-  playBtn.addEventListener('click', () => {
-    hideOverlay();
-    state.running = true;
-    // TODO: startGame();
+/* ----------------------------------------
+   Start button handler
+   - Hides overlay and marks game running
+   Usage: wired on DOMContentLoaded
+---------------------------------------- */
+function wirePlayButton() {
+  if (!playBtn) return;                          // skip if button missing
+  playBtn.addEventListener('click', () => {      // on click
+    hideOverlay();                               // hide CTA
+    state.running = true;                        // mark running
+    // TODO: startGame();                        // hook real start here
   });
 }
 
@@ -139,60 +180,141 @@ if (playBtn) {
    Navbar / Hamburger behavior
    ============================= */
 
-/* On page ready: init HUD and wire Bootstrap collapse events */
-window.addEventListener('DOMContentLoaded', () => {
-  init();
-  bindControls();
+/* ----------------------------------------
+   syncCollapseOnBreakpoint (IIFE context below)
+   - Ensures nav is closed and aria cleaned when
+     entering/leaving burger band (≤980px)
+   Usage: registered on load + matchMedia + orientationchange
+---------------------------------------- */
+(() => {
+  const mq = window.matchMedia('(max-width: 980px)');  // burger band media query
 
-  const navCollapse = document.getElementById('mainNav'); // Bootstrap .collapse
+  /* ---------------------------------------------------------
+     syncCollapseOnBreakpoint
+     - Resets collapse state and ARIA when breakpoint flips
+     Usage: internal only
+  --------------------------------------------------------- */
+  function syncCollapseOnBreakpoint() {
+    const collapseEl = document.getElementById('mainNav');         // collapse root
+    const toggler    = document.querySelector('.navbar-toggler.hamburger'); // burger button
+    if (!collapseEl) return;                                       // nothing to do
+
+    collapseEl.classList.remove('show');                           // force closed
+    collapseEl.style.height = '';                                  // clear inline height
+    document.body.removeAttribute('data-nav-open');                // clear body flag
+
+    if (toggler) toggler.setAttribute('aria-expanded', 'false');   // aria sync
+  }
+
+  window.addEventListener('load', syncCollapseOnBreakpoint);       // run on load
+  mq.addEventListener('change', syncCollapseOnBreakpoint);         // on MQ change
+  window.addEventListener('orientationchange', syncCollapseOnBreakpoint); // on rotate
+})();
+
+/* =============================
+   Rotate Overlay Controller (Recommendation A)
+   - Shows the rotate overlay by CSS when:
+       (max-width: 980px) AND (orientation: landscape)
+       OR (max-width: 980px) AND (max-height: 480px)
+   - Close button hides overlay UNTIL we return to portrait.
+   - ARIA kept in sync with visual state.
+   Usage:
+   - Requires CSS final override (placed last in CSS file):
+     body[data-rotate-dismissed="true"] #rotateOverlay { display: none !important; }
+============================= */
+(() => {
+  const body = document.body;                                              // <body> to store dismissal flag
+  const rotateOverlay = document.getElementById('rotateOverlay');          // rotate blocker container
+  const closeBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; // close button inside
+
+  const mqLandscape = window.matchMedia('(orientation: landscape)');       // true if landscape
+  const mqBurgerMax = window.matchMedia('(max-width: 980px)');             // true if ≤980px
+
+  /* ---------------------------------------------------------
+     updateRotateOverlayAria
+     - Syncs aria-hidden to reflect whether overlay SHOULD show
+     Usage: call on load / resize / MQ change
+  --------------------------------------------------------- */
+  function updateRotateOverlayAria() {
+    const dismissed = body.getAttribute('data-rotate-dismissed') === 'true';     // has user dismissed?
+    const visibleByCSS = mqLandscape.matches && mqBurgerMax.matches;             // CSS would show now?
+    const shouldBeVisible = visibleByCSS && !dismissed;                          // final visibility
+
+    if (rotateOverlay) {
+      rotateOverlay.setAttribute('aria-hidden', shouldBeVisible ? 'false' : 'true'); // sync aria
+    }
+  }
+
+  /* ---------------------------------------------------------
+     dismissRotateUntilPortrait
+     - Hides rotate overlay by setting a data-flag on <body>
+     - Overlay stays hidden until we switch back to portrait
+     Usage: bound to close button
+  --------------------------------------------------------- */
+  function dismissRotateUntilPortrait() {
+    body.setAttribute('data-rotate-dismissed', 'true'); // mark dismissed
+    updateRotateOverlayAria();                           // refresh aria
+  }
+
+  /* ---------------------------------------------------------
+     resetDismissalIfPortrait
+     - Clears dismissal flag after leaving landscape (portrait)
+     - Allows overlay to appear again next time in landscape
+     Usage: bound to orientation MQ change
+  --------------------------------------------------------- */
+  function resetDismissalIfPortrait() {
+    if (!mqLandscape.matches) {
+      body.removeAttribute('data-rotate-dismissed');     // clear flag on portrait
+    }
+    updateRotateOverlayAria();                           // refresh aria
+  }
+
+  // Wire events if overlay exists in DOM
+  if (rotateOverlay && closeBtn) {
+    closeBtn.addEventListener('click', (e) => {          // handle close click
+      e.preventDefault();                                // prevent default
+      dismissRotateUntilPortrait();                      // hide until portrait
+    });
+
+    mqLandscape.addEventListener('change', resetDismissalIfPortrait); // orientation changes
+    mqBurgerMax.addEventListener('change', updateRotateOverlayAria);  // width changes
+    window.addEventListener('resize', updateRotateOverlayAria);       // safety on resize
+
+    updateRotateOverlayAria();                           // initial sync on load
+  }
+})();
+
+/* =============================
+   DOM Ready bootstrap
+   - Initializes HUD, shows Play CTA, wires nav collapse flags,
+     and binds nav button close + play button handler.
+============================= */
+document.addEventListener('DOMContentLoaded', () => {
+  init();                          // reset game + HUD
+  bindControls();                  // (placeholder) input setup
+  showOverlay();                   // show Play CTA on first load
+  wirePlayButton();                // hook play button
+
+  const navCollapse = document.getElementById('mainNav'); // Bootstrap collapse root
   if (navCollapse) {
     // When nav opens, mark <body> so CSS can morph burger into "X"
     navCollapse.addEventListener('shown.bs.collapse', () => {
-      document.body.setAttribute('data-nav-open', '');
+      document.body.setAttribute('data-nav-open', '');    // set open flag
     });
-    // When nav closes, remove the flag
+    // When nav closes, remove the body flag
     navCollapse.addEventListener('hidden.bs.collapse', () => {
-      document.body.removeAttribute('data-nav-open');
+      document.body.removeAttribute('data-nav-open');     // clear flag
     });
   }
-});
 
-/* Close the collapse when a nav button is clicked */
-document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const collapseEl = document.getElementById('mainNav');
-    if (collapseEl && collapseEl.classList.contains('show')) {
-      const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
-      collapse.hide();
-    }
+  // Close collapse when a nav button is clicked (mobile UX)
+  document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const collapseEl = document.getElementById('mainNav');                 // collapse root
+      if (collapseEl && collapseEl.classList.contains('show')) {             // only if open
+        const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl); // get instance
+        collapse.hide();                                                     // close
+      }
+    });
   });
 });
-
-/* ----------------------------------------
-   Breakpoint guard (≤980px burger band)
-   - Always start CLOSED when entering burger band
-   - Clean up stray inline styles / aria state
-   - Also clean up when leaving burger band
----------------------------------------- */
-(() => {
-  const mq = window.matchMedia('(max-width: 980px)');
-
-  const syncCollapseOnBreakpoint = () => {
-    const collapseEl = document.getElementById('mainNav');
-    const toggler    = document.querySelector('.navbar-toggler.hamburger');
-    if (!collapseEl) return;
-
-    // Always reset to a clean, closed state on breakpoint flips
-    collapseEl.classList.remove('show');   // remove sticky open
-    collapseEl.style.height = '';          // clear inline height (Bootstrap may set it)
-    document.body.removeAttribute('data-nav-open');
-
-    // Keep ARIA in sync (prevents stuck "expanded" state)
-    if (toggler) toggler.setAttribute('aria-expanded', 'false');
-  };
-
-  // Run on load and whenever the max-width:980 match flips
-  window.addEventListener('load', syncCollapseOnBreakpoint);
-  mq.addEventListener('change', syncCollapseOnBreakpoint);
-  window.addEventListener('orientationchange', syncCollapseOnBreakpoint);
-})();
