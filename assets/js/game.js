@@ -240,6 +240,41 @@ function wireMenuPlayToggle() {
 }
 
 /* =============================
+   Navbar / Hamburger behavior
+   ============================= */
+
+/* ----------------------------------------
+   syncCollapseOnBreakpoint (IIFE context below)
+   - Ensures nav is closed and aria cleaned when
+     entering/leaving burger band (≤980px)
+   Usage: registered on load + matchMedia + orientationchange
+---------------------------------------- */
+(() => {
+  const mq = window.matchMedia('(max-width: 980px)');  // burger band media query
+
+  /* ---------------------------------------------------------
+     syncCollapseOnBreakpoint
+     - Resets collapse state and ARIA when breakpoint flips
+     Usage: internal only
+  --------------------------------------------------------- */
+  function syncCollapseOnBreakpoint() {
+    const collapseEl = document.getElementById('mainNav');         // collapse root
+    const toggler    = document.querySelector('.navbar-toggler.hamburger'); // burger button
+    if (!collapseEl) return;                                       // nothing to do
+
+    collapseEl.classList.remove('show');                           // force closed
+    collapseEl.style.height = '';                                  // clear inline height
+    document.body.removeAttribute('data-nav-open');                // clear body flag
+
+    if (toggler) toggler.setAttribute('aria-expanded', 'false');   // aria sync
+  }
+
+  window.addEventListener('load', syncCollapseOnBreakpoint);       // run on load
+  mq.addEventListener('change', syncCollapseOnBreakpoint);         // on MQ change
+  window.addEventListener('orientationchange', syncCollapseOnBreakpoint); // on rotate
+})();
+
+/* =============================
    MOVE CONTROLLER (directional dance)
    - Adds/removes CSS classes to play animations:
      .move-left / .move-right / .move-up / .move-down
@@ -379,40 +414,23 @@ function initMoveControls() {
   wireMoveKeyboard();     // enable keyboard arrows
 }
 
-/* =============================
-   Navbar / Hamburger behavior
-   ============================= */
-
 /* ----------------------------------------
-   syncCollapseOnBreakpoint (IIFE context below)
-   - Ensures nav is closed and aria cleaned when
-     entering/leaving burger band (≤980px)
-   Usage: registered on load + matchMedia + orientationchange
+   Judge line helpers (optional visual flash)
+   - Call judgeFlash('good') or judgeFlash('miss') on scoring
 ---------------------------------------- */
-(() => {
-  const mq = window.matchMedia('(max-width: 980px)');  // burger band media query
-
-  /* ---------------------------------------------------------
-     syncCollapseOnBreakpoint
-     - Resets collapse state and ARIA when breakpoint flips
-     Usage: internal only
-  --------------------------------------------------------- */
-  function syncCollapseOnBreakpoint() {
-    const collapseEl = document.getElementById('mainNav');         // collapse root
-    const toggler    = document.querySelector('.navbar-toggler.hamburger'); // burger button
-    if (!collapseEl) return;                                       // nothing to do
-
-    collapseEl.classList.remove('show');                           // force closed
-    collapseEl.style.height = '';                                  // clear inline height
-    document.body.removeAttribute('data-nav-open');                // clear body flag
-
-    if (toggler) toggler.setAttribute('aria-expanded', 'false');   // aria sync
-  }
-
-  window.addEventListener('load', syncCollapseOnBreakpoint);       // run on load
-  mq.addEventListener('change', syncCollapseOnBreakpoint);         // on MQ change
-  window.addEventListener('orientationchange', syncCollapseOnBreakpoint); // on rotate
-})();
+function judgeFlash(type) {
+  const el = document.querySelector('.judge-line');
+  if (!el) return;
+  el.classList.remove('flash-good', 'flash-miss');   // reset any previous flash
+  if (type === 'good') el.classList.add('flash-good');
+  if (type === 'miss') el.classList.add('flash-miss');
+  // auto clean after animation end (no side effects)
+  const onEnd = () => {
+    el.classList.remove('flash-good', 'flash-miss');
+    el.removeEventListener('animationend', onEnd);
+  };
+  el.addEventListener('animationend', onEnd);
+}
 
 /* =============================
    Rotate Overlay Controller 
@@ -490,7 +508,7 @@ function initMoveControls() {
 /* =============================
    DOM Ready bootstrap
    - Initializes HUD, shows Play CTA, wires nav collapse flags,
-     and binds nav button close + play button handler.
+   - and binds nav button close + play button handler.
 ============================= */
 document.addEventListener('DOMContentLoaded', () => {
   init();                          // reset game + HUD

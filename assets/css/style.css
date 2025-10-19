@@ -360,6 +360,64 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 /* prompt lane: reserved height above the dancer */
 .prompt-lane { min-height: 24px; text-align: center; } /* prompt slot */
 
+/* ----------------------------------------
+   Judge line (timing bar) – sits above dancer
+   - Thin neon bar centered in stage
+   - Small center tick
+   - Mobile-first width with clamp
+---------------------------------------- */
+.judge-line {
+  position: absolute;                               /* within .stage */
+   top: calc(var(--topbar-h) + var(--overlay-y) + 6px); /* below navbar + same band as Play CTA */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;                                      /* responsive width */
+  height: 2px;                                      /* thin line */
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,255,213,.75) 20%,
+    rgba(255,255,255,.95) 50%,
+    rgba(0,255,213,.75) 80%,
+    transparent 100%);                              /* neon center pop */
+  box-shadow: 0 0 10px rgba(0,255,213,.28);         /* subtle glow */
+   z-index: 15;                                       /* higher than #dancer (12) */
+  pointer-events: none;                              /* purely visual */
+}
+
+.judge-line .tick {
+  position: absolute;
+  left: 50%;
+  top: -5px;                                        /* little vertical pin crossing the bar */
+  transform: translateX(-50%);
+  width: 2px;
+  height: 12px;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 6px var(--neon-cyan);
+  border-radius: 1px;
+}
+
+/* Flash feedback states (optional visual confirmation) */
+@keyframes judgeFlashGood {
+  0%   { box-shadow: 0 0 10px rgba(57,255,20,.35); }
+  50%  { box-shadow: 0 0 24px rgba(57,255,20,.85); }
+  100% { box-shadow: 0 0 10px rgba(57,255,20,.35); }
+}
+@keyframes judgeFlashMiss {
+  0%   { box-shadow: 0 0 10px rgba(253,4,4,.35); }
+  50%  { box-shadow: 0 0 24px rgba(253,4,4,.85); }
+  100% { box-shadow: 0 0 10px rgba(253,4,4,.35); }
+}
+
+.judge-line.flash-good { animation: judgeFlashGood .28s ease-out; }
+.judge-line.flash-miss { animation: judgeFlashMiss .28s ease-out; }
+
+/* Reduced motion: disable flashing */
+@media (prefers-reduced-motion: reduce) {
+  .judge-line.flash-good,
+  .judge-line.flash-miss { animation: none; }
+}
+
+
 /* dancer: lock the cat just above the control labels */
 .dancer {
   position: fixed;                              /* anchor to the viewport */

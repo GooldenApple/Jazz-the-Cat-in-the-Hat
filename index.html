@@ -92,10 +92,15 @@
 
 </section>
 
-        <!-- Game Stage: prompt lane + dancer + feedback -->
+ <!-- Game Stage: prompt lane + dancer + feedback -->
 <section class="stage" aria-label="Game stage">
-        <!-- Lane where prompts will appear (SR-friendly updates) -->
+    <!-- Lane where prompts will appear (SR-friendly updates) -->
     <div id="promptLane" class="prompt-lane" aria-live="polite" aria-atomic="true"></div>
+    <!-- Judge line: timing bar where prompts should be hit -->
+    <div class="judge-line" aria-hidden="true">
+      <!-- Center tick mark -->
+      <span class="tick" aria-hidden="true"></span>
+    </div>
 
     <!-- Dancer: wrapper around the cat SVG -->
 <div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
