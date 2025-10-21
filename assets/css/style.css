@@ -1198,79 +1198,96 @@ body::before {
 
 
 
-/* ========== MEDIA QUERIES  ========== */
-
-/* ≤480px — small phones (merges previous ≤393 and ≤480 tweaks) */
+/* =========================================
+   ≤480px — Small phones (fine-tuning)
+   Extra adjustments for very small screens.
+========================================= */
 @media (max-width: 480px) {
   :root {
-    /* grid plane tweaks from ≤393 */
-    --floor-bottom: 1vh;                 /* lift grid slightly */
-    --floor-height: 48vh;                /* extend grid plane */
+    /* Adjust floor position slightly higher on tiny screens */
+    --floor-bottom: 1vh;                 
+    /* Make floor taller so it covers more of the screen */
+    --floor-height: 48vh;                
 
-    /* controls sizing from ≤480 */
+    /* Arrow button size smaller, scaled with viewport width */
     --arrow-size: clamp(60px, 18vw, 84px);
+    /* Gap between arrow buttons smaller */
     --controls-gap: clamp(8px, 2.5vw, 14px);
+    /* Raise controls a bit from bottom edge */
     --controls-bottom: 2.5vh;
+    /* Add side padding for arrows */
     --controls-side-pad: 10px;
   }
 
   .brand {
-    /* merge of ≤393 + ≤480 brand sizing */
+    /* Brand text smaller font on tiny screens */
     font-size: clamp(0.80rem, 3.6vw, 0.95rem);
+    /* Reduce letter spacing for compact look */
     letter-spacing: 0.5px;
-    max-width: calc(100% - 64px); /* leave room for burger */
+    /* Prevent brand from overlapping burger menu */
+    max-width: calc(100% - 64px); 
+    /* Hide overflow text */
     overflow: hidden;
+    /* Add ellipsis (…) if text is cut off */
     text-overflow: ellipsis;
+    /* Keep text on a single line */
     white-space: nowrap;
   }
 
   .topbar {
-    /* safe edges */
+    /* Add safe padding on right for notches */
     padding-right: max(12px, env(safe-area-inset-right));
+    /* Add safe padding on left for notches */
     padding-left:  max(12px, env(safe-area-inset-left));
   }
 }
 
-/* ≤980px — unified BURGER MODE (replaces previous ≤767 and 768–980 blocks) */
-@media (max-width: 980px) {
-  /* show burger button */
+/* =========================================
+   <992px — BURGER MODE (Bootstrap lg breakpoint)
+   Mobile-first: Burger menu is visible below 992px.
+========================================= */
+@media (max-width: 991.98px) {
+  /* Show the burger button */
   .navbar-toggler.hamburger { 
     display: inline-grid;
   }
 
-  /* collapse: closed = hidden */
+  /* Hide collapsed menu when not active */
   .topbar .navbar-collapse:not(.show) {
     display: none !important;
   }
 
-  /* collapse: open panel floats below the bar, right-aligned under the X */
+  /* When menu is open, position panel below topbar */
   .topbar .navbar-collapse {
-    position: absolute;                                
-    top: calc(var(--topbar-h) + 6px);                 
-    right: max(12px, env(safe-area-inset-right));      
-    width: auto;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    z-index: 40;                                       /* below burger (50) */
+    position: absolute;                               /* float under topbar */
+    top: calc(var(--topbar-h) + 6px);                 /* just below bar */
+    right: max(12px, env(safe-area-inset-right));     /* align right edge */
+    width: auto;                                      /* adjust width to content */
+    padding: 0;                                       /* reset padding */
+    margin: 0;                                        /* reset margin */
+    background: transparent;                          /* no background */
+    z-index: 40;                                      /* under burger (50) */
   }
+
+  /* Force menu visible when .show class is applied */
   .topbar .navbar-collapse.show { 
     display: block !important;
   }
 
-  /* force vertical nav list (Bootstrap would go row at md otherwise) */
+  /* Stack nav items vertically when collapsed */
   .topbar .navbar-collapse .navbar-nav.nav-list {
-    display: flex;
-    flex-direction: column !important;  /* stack */
-    align-items: flex-end;              /* right align */
-    gap: 8px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    white-space: nowrap;                /* single-line labels */
+    display: flex;                                    /* flex container */
+    flex-direction: column !important;                /* vertical stack */
+    align-items: flex-end;                            /* align items right */
+    gap: 8px;                                         /* space between links */
+    padding: 0;                                       /* remove padding */
+    margin: 0;                                        /* remove margin */
+    list-style: none;                                 /* no list bullets */
+    white-space: nowrap;                              /* single-line labels */
   }
 
-  .nav-list {                           /* ensure vertical even if class moves */
+  /* Make sure nav-list stays vertical even outside collapse */
+  .nav-list {                           
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -1281,61 +1298,89 @@ body::before {
     white-space: nowrap;
   }
 
-  .nav-btn { white-space: nowrap; }
+  /* Prevent nav buttons from wrapping text */
+  .nav-btn { 
+    white-space: nowrap; 
+  }
 
-  /* Optional: give HUD a touch more room on phablets/tablets via clamp
-     (replaces 481–767 bump without a dedicated MQ) */
+  /* Adjust HUD height for phablets/tablets */
   :root {
     --hud-stack-h: clamp(200px, 24vw, 220px);
   }
 }
 
-/* ≥981px — DESKTOP: full horizontal menu, burger hidden */
-@media (min-width: 981px) {
+/* =========================================
+   ≥992px — DESKTOP MENU (Bootstrap lg+)
+   Normal horizontal navigation.
+========================================= */
+@media (min-width: 992px) {
+  /* Hide burger icon completely */
   .navbar-toggler.hamburger { 
-    display: none !important;           /* hide burger */
+    display: none !important; 
   }
 
+  /* Show nav items inline inside the bar */
   .topbar .navbar-collapse {
     position: static;                    /* back in bar */
-    display: flex !important;
-    width: auto;
-    padding: 0;
-    margin: 0;
+    display: flex !important;            /* always visible */
+    width: auto;                         /* auto width */
+    padding: 0;                          /* no extra padding */
+    margin: 0;                           /* no extra margin */
   }
 
+  /* Horizontal nav list for desktop */
   .topbar .navbar-collapse .navbar-nav.nav-list {
-    display: flex;
-    flex-direction: row !important;      /* one row */
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 10px;
-    padding: 0;
-    margin: 0;
+    display: flex;                        /* flex container */
+    flex-direction: row !important;       /* row layout */
+    align-items: center;                  /* center vertically */
+    flex-wrap: nowrap;                    /* keep in one row */
+    gap: 10px;                            /* space between links */
+    padding: 0;                           /* reset padding */
+    margin: 0;                            /* reset margin */
   }
 
-  .nav-btn { white-space: nowrap; }
+  /* Prevent nav buttons from wrapping */
+  .nav-btn { 
+    white-space: nowrap; 
+  }
 }
 
-/* ≥1200 / ≥1600 — keep control group compact and centered (wide desktop) */
+/* =========================================
+   ≥1200px — Bootstrap xl
+   Adjust controls for wider screens.
+========================================= */
 @media (min-width: 1200px) { 
-  :root { --controls-max-w: 640px; }
-}
-@media (min-width: 1600px) { 
-  :root { --controls-max-w: 600px; }
-}
-
-/* Rotate overlay — consolidated:
-   Show in landscape on small/tablet widths OR in very short viewports.
-   Hard-hide on desktop and wider. */
-@media (max-width: 980px) and (orientation: landscape),
-       (max-width: 980px) and (max-height: 480px) {
-  #rotateOverlay { 
-    display: flex;
+  :root { 
+    --controls-max-w: 640px;             /* max width for controls */
   }
 }
-@media (min-width: 981px) {
-  #rotateOverlay { display: none !important; }
+
+/* =========================================
+   ≥1400px — Bootstrap xxl
+   Migrated your ≥1600px rule to 1400px.
+========================================= */
+@media (min-width: 1400px) { 
+  :root { 
+    --controls-max-w: 600px;             /* slightly smaller max width */
+  }
+}
+
+/* =========================================
+   Rotate overlay — synced to burger boundary
+   Visible only when phone/tablet is in landscape OR very short height.
+   Hidden completely on desktop.
+========================================= */
+@media (max-width: 991.98px) and (orientation: landscape),
+       (max-width: 991.98px) and (max-height: 480px) {
+  #rotateOverlay { 
+    display: flex;                        /* show overlay in these cases */
+  }
+}
+
+@media (min-width: 992px) {
+  #rotateOverlay { 
+    display: none !important;             /* hide overlay on desktop */
+  }
 }
 
 
