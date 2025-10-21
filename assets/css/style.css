@@ -209,7 +209,7 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   box-shadow: 0 0 10px rgba(0,255,213,0.35); /* halo */
 }
 
-/* HUD container: fixed block under navbar (two rows) */
+/* ---------------- HUD: overall container ---------------- */
 .hud {
   position: fixed;                       /* pin HUD */
   top: var(--topbar-h);                  /* below navbar */
@@ -219,21 +219,22 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   gap: var(--hud-gap);                   /* row spacing */
   padding-inline: var(--hud-pad-x);      /* side padding */
   z-index: 20;                           /* above stage */
-  pointer-events: none;                  /* let clicks through */
+  pointer-events: none;                  /* inert by default; opt-in below */
+  z-index: 2300;                         /* above overlay base */
 }
 
-/* lives row: centered and wrap-friendly */
+/* ---------------- HUD: bottom row (Lives) ---------------- */
 .hud-bottom {
   order: 0;                              /* first row */
   display: flex;                         /* layout row */
   justify-content: center;               /* center group */
   width: 100%;                           /* full width row */
-  pointer-events: none;                  /* row inert */
+  pointer-events: none;                  /* keep inert */
 }
 
-/* lives block: plain container so hearts can expand */
+/* plain lives container */
 .hud-item.hud-item--plain {
-  pointer-events: auto;                  /* allow inner events */
+  pointer-events: auto;                  /* allow inner events if needed */
   border: none;                          /* no frame */
   background: transparent;               /* no background */
   box-shadow: none;                      /* no glow box */
@@ -241,30 +242,36 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   text-align: center;                    /* center label+hearts */
 }
 .hud-item.hud-item--plain .hud-label {
-  display: block;                        /* own line for label */
+  display: block;                        /* own line */
   margin-bottom: 6px;                    /* gap above hearts */
   color: var(--neon-pink);               /* label color */
 }
 
-/* hearts row: centered layout with wrap */
+/* hearts row */
 .lives {
   display: flex;                         /* horizontal row */
   flex-wrap: wrap;                       /* wrap when many */
-  gap: 10px;                             /* spacing between hearts */
+  gap: 10px;                             /* spacing */
   justify-content: center;               /* center group */
-  align-items: center;                   /* align vertically */
-  padding: 2px;                          /* small breathing room */
+  align-items: center;                   /* vertical align */
+  padding: 2px;                          /* breathing room */
 }
 
-/* hearts visuals: neon look + depletion states */
-.svg-heart { width: 28px; height: 28px; fill: var(--neon-red); filter: drop-shadow(0 0 4px var(--neon-red)) drop-shadow(0 0 10px var(--neon-pink)); transition: opacity .25s ease, fill .25s ease; } /* base heart */
-.svg-heart.full         { opacity: 1;   fill: var(--neon-red); }  /* full */
-.svg-heart.threequarter { opacity: .85; fill: var(--neon-red); }  /* 3/4 */
-.svg-heart.half         { opacity: .65; fill: var(--neon-red); }  /* 1/2 */
-.svg-heart.quarter      { opacity: .4;  fill: var(--neon-red); }  /* 1/4 */
-.svg-heart.empty        { opacity: .15; fill: var(--muted); filter: none; } /* empty */
+/* heart visuals */
+.svg-heart {
+  width: 28px; height: 28px;             /* size */
+  fill: var(--neon-red);                 /* base color */
+  filter: drop-shadow(0 0 4px var(--neon-red)) 
+          drop-shadow(0 0 10px var(--neon-pink)); /* glow */
+  transition: opacity .25s ease, fill .25s ease;  /* smooth change */
+}
+.svg-heart.full         { opacity: 1;   fill: var(--neon-red); }
+.svg-heart.threequarter { opacity: .85; fill: var(--neon-red); }
+.svg-heart.half         { opacity: .65; fill: var(--neon-red); }
+.svg-heart.quarter      { opacity: .4;  fill: var(--neon-red); }
+.svg-heart.empty        { opacity: .15; fill: var(--muted); filter: none; }
 
-/* metric pills: stacked left under lives */
+/* ---------------- HUD: top row (metrics + toggle) ---------------- */
 .hud-top {
   order: 1;                              /* second row */
   display: flex;                         /* vertical layout */
@@ -272,9 +279,95 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   align-items: flex-start;               /* left align */
   gap: 8px;                              /* spacing */
   width: 100%;                           /* full row */
-  pointer-events: none;                  /* row inert */
+  pointer-events: auto;                  /* re-enable interaction */
 }
-.hud-top .hud-item { pointer-events: auto; } /* re-enable inside pills */
+
+/* -------- HUD: toggle button (icon + text) -------- */
+
+
+/* HUD toggle: neon icon + text */
+.hud-toggle {
+  display: inline-flex;                       
+  align-items: center;                        
+  gap: 6px;                                   /* space between icon + text */
+  padding: 4px 8px;                           /* compact button size */
+  border: 2px solid var(--neon-purple);       /* neon frame */
+  border-radius: 4px;                         /* soft corners */
+  background: rgba(12,18,36,0.75);            /* dark glass background */
+  color: var(--neon-cyan);                    /* default text color */
+  font-size: 14px;                            /* compact font size */
+  font-family: var(--font-score);             /* keep HUD font */
+  text-shadow: 0 0 5px var(--neon-cyan);      /* glowing text */
+  box-shadow: 0 0 8px var(--neon-purple);     /* neon halo */
+  cursor: pointer;                            /* pointer cursor */
+  pointer-events: auto;                       /* ensure clickable */
+  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
+}
+
+/* little arrow icon inside the button */
+.hud-toggle__icon {
+  font-size: 28px;
+  margin-left: 6px; 
+  display: inline-block; 
+  line-height: 1;           
+  transition: transform .25s ease;  /* smooth rotation */
+}
+
+/* collapsed: arrow points right (►) */
+body[data-hud="collapsed"] .hud-toggle__icon {
+  transform: rotate(0deg);
+}
+
+/* expanded: arrow points down (▼) */
+body[data-hud="expanded"] .hud-toggle__icon {
+  transform: rotate(90deg);  /* rotate to down */
+}
+
+/* hover and focus: brighter and pink glow */
+.hud-toggle:hover,
+.hud-toggle:focus-visible {
+  background: rgba(24,36,72,0.9);             
+  color: var(--neon-pink);                    
+  text-shadow: 0 0 6px var(--neon-pink);      
+  box-shadow: 0 0 10px var(--neon-pink), 0 0 18px var(--neon-purple);
+  outline: none;
+}
+
+.hud-toggle:focus-visible { 
+  outline: 2px solid var(--neon-cyan);   /* focus ring */
+  outline-offset: 2px; 
+}
+
+/* collapsed = icon points right (▸); expanded = down (▾)
+   (glyphs by JS, transforms left neutral here) */
+body[data-hud="collapsed"] .hud-toggle__icon { transform: rotate(0deg); }
+body[data-hud="expanded"]  .hud-toggle__icon { transform: rotate(0deg); }
+
+/* -------- HUD: collapsible stack (Score/Best/Level) -------- */
+/* base (expanded) state */
+.hud-stack {
+  display: flex;                         /* vertical list of pills */
+  flex-direction: column;                /* stack */
+  gap: 8px;                              /* spacing between pills */
+  overflow: hidden;                      /* clip when collapsed */
+  max-height: 520px;                     /* tall enough to show all */
+  opacity: 1;                            /* visible */
+  transition: max-height .25s ease, opacity .2s ease; /* smooth open/close */
+  pointer-events: auto;                  /* interactive when visible */
+}
+
+/* collapsed visual state (driven by body[data-hud]) */
+body[data-hud="collapsed"] .hud-stack {
+  max-height: 0;                         /* closed height */
+  opacity: 0;                            /* fade out */
+  pointer-events: none;                  /* inert when hidden */
+}
+
+/* -------- HUD: metric pills (appearance) -------- */
+.hud-top .hud-item { 
+  pointer-events: auto;                  /* interactive pills */
+}
+
 .hud-item {
   min-width: 100px;                      /* minimum pill width */
   padding: 8px 12px;                     /* pill padding */
@@ -283,11 +376,13 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   background: rgba(18,27,52,0.8);        /* glass panel */
   box-shadow: 0 0 12px var(--neon-purple); /* glow */
 }
+
 .hud-label {
   font-size: 12px;                       /* label size */
   color: var(--neon-pink);               /* label color */
   margin-bottom: 4px;                    /* gap to metric */
 }
+
 .metric {
   font-family: var(--font-score);        /* digits font */
   font-size: 24px;                       /* digits size */
@@ -295,7 +390,7 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink); /* digits glow */
 }
 
-
+/* ==== rotate overlay ==== */
 
 /* message card */
 .rb-card {
@@ -357,6 +452,18 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 #rotateOverlay[aria-hidden="true"]  { display: none !important; }
 #rotateOverlay[aria-hidden="false"] { display: flex; }
 
+/* --- Overlay: let clicks pass through everywhere --- */
+.overlay {
+  pointer-events: none;   /* clicks go through overlay */
+  z-index: 2200;          /* visual layer stays high */
+}
+
+/* Keep the Play CTA clickable and on top */
+.overlay .play-cta {
+  pointer-events: auto;   /* clickable area restored */
+  position: relative;     /* create stacking context */
+  z-index: 2301;          /* above HUD and overlay */
+}
 
 
 /* stage: reserve space for HUD above and controls below */
@@ -378,13 +485,17 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 /* ===========
    Judge line
   =========== */
-/* judge line is drawn by .rails::after so the baseline matches rails height */
+/* judge line: invisible measurement hook for JS (same baseline as ::after) */
 .judge-line {
   position: absolute;
-  inset: 0;          /* keep element alive for JS hooks, but it's visually hidden */
-  height: 0;
-  width: 0;
-  overflow: hidden;
+  left: 0;
+  right: 0;
+  height: 2px;                 /* must have height so center != top */
+  top: var(--judge-rel);        /* same vertical baseline as the visual line */
+  transform: translateY(-1px);  /* center a 2px line on the baseline */
+  opacity: 0;                   /* invisible */
+  pointer-events: none;         /* inert */
+  z-index: 13;                  /* same layer as the visual line */
 }
 
 /* real neon line, anchored to rails coordinate system */
@@ -573,15 +684,12 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 }
 
 
-/* ----------------------------------------
-   Notes (orbs) – colored, constant size & glow
-   - Positioned at the rail center; JS animates fall distance via --drop-distance.
----------------------------------------- */
+/* Notes (orbs) – fall using GPU transform all the way to rail bottom */
 .note {
   position: absolute;                    /* positioned inside .rail */
-  top: 0;                                /* animation controls vertical travel */
+  top: 0;                                /* anchor at rail top (not animated) */
   left: 50%;                             /* horizontally centered in rail */
-  transform: translate(-50%, 0);         /* centers orb relative to its own width */
+  transform: translate(-50%, 0);         /* baseline; animation overrides transform */
   width: 40px;                           /* constant orb size */
   height: 40px;                          /* constant orb size */
   border-radius: 999px;                  /* circular shape */
@@ -589,31 +697,33 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   opacity: 0.98;                         /* crisp but not fully opaque */
   z-index: 16;                           /* above rails and judge line */
   pointer-events: none;                  /* decorative, not interactive */
-  box-shadow:                             /* stable strong glow at all times */
+  box-shadow:
     0 0 10px currentColor,               /* core glow */
     0 0 24px currentColor,               /* mid glow */
     0 0 40px color-mix(in srgb, currentColor 80%, white 20%); /* outer bloom */
 
+  /* runtime vars set by JS */
+  --drop-distance-judge: 0px;            /* Y to judgeline center */
+  --drop-distance-bottom: 0px;           /* Y to rail bottom (note TOP at bottom) */
+
   animation-name: fallNote;              /* uses transform to fall */
   animation-timing-function: linear;     /* steady speed */
   animation-fill-mode: forwards;         /* stays at end position */
+  will-change: transform;                /* hint compositor */
 }
 
-/* Color mapping for notes (rails stay white) */
-.note-left  { color: var(--label-left);  } /* left = neon green */
-.note-up    { color: var(--label-up);    } /* up   = mint/cyan */
-.note-down  { color: var(--label-down);  } /* down = neon orange */
-.note-right { color: var(--label-right); } /* right= neon pink */
+/* Direction color mapping (keep neon hues) */
+.note-left  { color: var(--label-left);  } /* neon green */
+.note-up    { color: var(--label-up);    } /* mint/cyan */
+.note-down  { color: var(--label-down);  } /* neon orange */
+.note-right { color: var(--label-right); } /* neon pink */
 
-/* Falling animation for notes – run all the way to the bottom of the rail */
+/* Falling animation – go all the way to rail bottom */
 @keyframes fallNote {
-  from {
-    top: -60px;                           /* start above the rail */
-  }
-  to {
-    top: calc(100% - 40px);               /* stop at rail bottom (40px = note height) */
-  }
+  from { transform: translate(-50%, -60px); }
+  to   { transform: translate(-50%, var(--drop-distance-bottom)); }
 }
+
 
 
 
@@ -1240,6 +1350,8 @@ body::before {
 /*  ≤575.98px — small phones */
 @media (max-width: 575.98px) {
   :root {
+
+    
     /* lift grid slightly for tiny screens */
     --floor-bottom: 1vh;        /* raise the floor a bit */
     --floor-height: 48vh;       /* extend floor height   */

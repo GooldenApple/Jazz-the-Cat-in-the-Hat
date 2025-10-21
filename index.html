@@ -63,8 +63,17 @@
       <!-- HUD: lives, score, best, level, mode -->
 <section class="hud" aria-label="Heads-up display">
 
-  <!-- Top row of HUD: Score / Best / Level / Mode, Spread evenly across the full width, Boxed neon chips-->
-  <div class="hud-top">
+ <!-- HUD left stack: toggle + collapsible pills (Score/Best/Level) -->
+<div class="hud-top">
+  <!-- small toggle chip that sits where Score used to be -->
+<button id="hudToggle" class="hud-toggle" aria-controls="hudStackPanel" aria-expanded="true" aria-label="Collapse HUD" type="button">
+  <span class="hud-toggle__icon" aria-hidden="true">►</span> <!-- visual chevron -->
+  <span class="hud-toggle__text">HUD</span>          <!-- readable label -->
+</button>
+
+
+  <!-- collapsible panel that contains the three metric pills -->
+  <div id="hudStackPanel" class="hud-stack">
     <div class="hud-item">
       <span class="hud-label">Score</span>
       <div id="score" class="metric" aria-live="polite">0</div>
@@ -79,8 +88,9 @@
       <span class="hud-label">Level</span>
       <div id="level" class="metric" aria-live="polite">1</div>
     </div>
-
   </div>
+</div>
+
 
   <!-- Bottom row just for livesm Centered block, Label above the hearts,  Hearts can wrap as they grow -->
   <div class="hud-bottom">
@@ -116,6 +126,8 @@
         <div class="rail-line"></div>
         <div class="judge-target jt-right"></div>
       </div>
+      <!-- judge line hook for JS (visually hidden; CSS draws the real line via ::after) -->
+      <div class="judge-line" aria-hidden="true"></div>
     </div>
 
     <!-- Dancer: wrapper around the cat SVG -->

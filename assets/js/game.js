@@ -176,6 +176,70 @@ function wirePlayButton() {
 }
 
 /* ----------------------------------------
+   HUD inline collapse (Score/Best/Level)
+   Purpose: Toggle left HUD column near Score; keep lives row untouched.
+   Behavior: body[data-hud="expanded" | "collapsed"]; persists to localStorage.
+---------------------------------------- */
+const HUD_MODE_KEY = 'hudInlineMode';                      // storage key
+
+function getHudInlineMode() {                              // read current/last mode
+  const attr = document.body.getAttribute('data-hud');     // body attribute if set
+  const saved = localStorage.getItem(HUD_MODE_KEY);        // persisted value
+  return (attr || saved || 'expanded');                    // default expanded
+}
+
+/* ----------------------------------------
+   setHudInlineMode
+   Purpose: Apply mode to DOM + persist + update toggle visuals/a11y.
+---------------------------------------- */
+function setHudInlineMode(mode) {
+  const v = (mode === 'collapsed') ? 'collapsed' : 'expanded';        // clamp value
+  document.body.setAttribute('data-hud', v);                           // drive CSS state
+  localStorage.setItem(HUD_MODE_KEY, v);                               // persist choice
+
+  const btn  = document.getElementById('hudToggle');                   // toggle chip
+  const icon = btn ? btn.querySelector('.hud-toggle__icon') : null;    // icon span
+  const text = btn ? btn.querySelector('.hud-toggle__text') : null;    // text span
+
+  if (!btn || !icon || !text) return;                                  // guard: markup missing
+
+  // a11y: reflect expanded/collapsed
+  btn.setAttribute('aria-expanded', String(v === 'expanded'));         // true when open
+  btn.setAttribute('aria-label', (v === 'expanded') ? 'Collapse HUD' : 'Expand HUD'); // SR label
+
+  // visible text + icon glyph
+  if (v === 'expanded') {                                              // expanded → show "collapse"
+    icon.textContent = '▾';                                            // down chevron
+    text.textContent = 'Collapse HUD';                                 // button text
+  } else {                                                             // collapsed → show "expand"
+    icon.textContent = '▸';                                            // right chevron
+    text.textContent = 'Expand HUD';                                   // button text
+  }
+}
+
+function toggleHudInline() {                               // flip state
+  setHudInlineMode(getHudInlineMode() === 'expanded' ? 'collapsed' : 'expanded');
+}
+
+function wireHudInlineToggle() {                           // wire chip + (optional) hotkey
+  const btn = document.getElementById('hudToggle');        // toggle chip
+  if (btn && btn.dataset.wired !== 'true') {
+    btn.dataset.wired = 'true';                            // avoid duplicate listener
+    btn.addEventListener('click', toggleHudInline);        // click toggles
+  }
+
+  // Optional: hotkey 'H' to toggle while testing
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;                                  // no repeats
+    if ((e.key || '').toLowerCase() === 'h') {             // press H
+      e.preventDefault();
+      toggleHudInline();
+    }
+  });
+}
+
+
+/* ----------------------------------------
    Navbar Play/Pause toggle
    Purpose: Keep navbar button in sync with game state.
    Usage: wireMenuPlayToggle() on DOM ready; call updatePlayMenuLabel() on state change.
@@ -253,10 +317,10 @@ function applyMove(moveClass) {
    Convenience move triggers
    Purpose: Small wrappers for clarity (used by inputs).
 ---------------------------------------- */
-function doLeftMove()  { applyMove('move-left');  }
-function doRightMove() { applyMove('move-right'); }
-function doUpMove()    { applyMove('move-up');    }
-function doDownMove()  { applyMove('move-down');  }
+function doLeftMove()  { applyMove('move-left');  } // trigger left move
+function doRightMove() { applyMove('move-right'); } // trigger right move
+function doUpMove()    { applyMove('move-up');    } // trigger up move
+function doDownMove()  { applyMove('move-down');  } // trigger down move
 
 /* ----------------------------------------
    wireMoveButtons
@@ -304,20 +368,20 @@ function initMoveControls() {
   wireMoveKeyboard();  // keyboard
 }
 
-/* =============================
-   Visual judge flash (migrated)
-   ============================= */
-/* Flash is now applied to .rails (the element that owns the visual line via ::after) */
+/* ====================
+   Visual judge flash 
+   =================== */
+
 function judgeFlash(type) {
-  const rails = document.querySelector('.rails');
-  if (!rails) return;
-  rails.classList.remove('flash-good','flash-miss');
-  if (type === 'good') rails.classList.add('flash-good');
-  if (type === 'miss') rails.classList.add('flash-miss');
+  const rails = document.querySelector('.rails');        // rails root
+  if (!rails) return;                                    // guard
+  rails.classList.remove('flash-good','flash-miss');     // clear previous state
+  if (type === 'good') rails.classList.add('flash-good'); // success flash
+  if (type === 'miss') rails.classList.add('flash-miss'); // miss flash
 
   // Remove class after animation window (can't listen to ::after reliably)
   setTimeout(() => {
-    rails.classList.remove('flash-good','flash-miss');
+    rails.classList.remove('flash-good','flash-miss');   // cleanup
   }, 320);
 }
 
@@ -355,43 +419,71 @@ function getRailsMap() {
 }
 
 /* ----------------------------------------
-   getDropDistancePx
-   Purpose: Compute pixel distance from rail top to judge line center.
+   getJudgeDistancePx
+   Purpose: Pixel distance from rail top to judge-line center.
+   Notes: Uses a hidden .judge-line hook; falls back to an approximation.
 ---------------------------------------- */
-function getDropDistancePx(railEl) {
-  if (!railEl) return 0;                                   // guard
-  const stageTop = railEl.getBoundingClientRect().top;     // rail top Y
-  const judge    = document.querySelector('.judge-line');  // judge bar
-  if (!judge) return railEl.clientHeight - 16;             // fallback distance
-  const targetY  = judge.getBoundingClientRect().top + (judge.clientHeight / 2); // judge center Y
-  const dist     = Math.max(0, targetY - stageTop - 9);    // note center align (40px note)
-  return dist;                                             // pixels
+function getJudgeDistancePx(railEl) {
+  if (!railEl) return 0;                                        // guard
+  const stageTop = railEl.getBoundingClientRect().top;          // rail top Y (viewport)
+  const judge = document.querySelector('.judge-line');          // measurement hook
+  if (!judge) {                                                 // no hook → approximate
+    return Math.max(0, railEl.clientHeight * 0.62 - 20);        // crude approx to --judge-rel
+  }
+  const targetY = judge.getBoundingClientRect().top + (judge.clientHeight / 2); // center Y
+  const dist = Math.max(0, targetY - stageTop - 9);             // align note center reasonably
+  return dist;                                                  // pixels to judge line
+}
+
+/* ----------------------------------------
+   getBottomDistancePx
+   Purpose: Pixel distance from rail top to where the note stops at bottom.
+   Notes: NOTE_H must match CSS .note height.
+---------------------------------------- */
+function getBottomDistancePx(railEl) {
+  if (!railEl) return 0;                        // guard
+  const NOTE_H = 40;                            // must match CSS
+  return Math.max(0, railEl.clientHeight - NOTE_H); // top of note touches rail bottom
 }
 
 /* ----------------------------------------
    spawnNote
-   Purpose: Create one visual orb in a rail and animate it down.
-   Returns: the DOM element (so judging can link to it).
+   Purpose: Create one falling orb (note) inside the given rail.
+   - It sets CSS variables for judge distance and bottom distance.
+   - It computes animation duration so that the orb passes the judge line
+     exactly at the desired ETA (travelBeats @ bpm).
+   - On hit: removed at judge line by gradeHit().
+   - On miss: continues falling to the rail bottom and disappears on animationend.
+   Usage: spawnNote('left', 2, 120)
 ---------------------------------------- */
 function spawnNote(dir, travelBeats = 2, bpm = 120) {
-  const rails = getRailsMap();                             // get rails
-  if (!rails || !rails[dir]) return null;                  // guard
-  const rail = rails[dir];                                 // target rail
+  const rails = getRailsMap();                                  // get all rail refs
+  if (!rails || !rails[dir]) return null;                       // guard: missing lane
+  const rail = rails[dir];                                      // pick the correct lane
 
-  const note = document.createElement('div');              // create note element
-  note.className = `note note-${dir} note--${dir}`;        // classes for color/glow
+  const note = document.createElement('div');                   // make a new orb div
+  note.className = `note note-${dir} note--${dir}`;             // add base + direction classes
 
-  const dropPx = getDropDistancePx(rail);                  // compute drop distance
-  note.style.setProperty('--drop-distance', `${dropPx}px`);// feed CSS var
+  const judgePx  = getJudgeDistancePx(rail);                    // pixels to judge line
+  const bottomPx = getBottomDistancePx(rail);                   // pixels to rail bottom
 
-  const seconds = Math.max(0.16, travelBeats * (60 / bpm)); // beats→seconds
-  note.style.animationDuration = `${seconds}s`;            // set fall speed
+  note.style.setProperty('--drop-distance-judge',  `${judgePx}px`);   // feed CSS var for judge
+  note.style.setProperty('--drop-distance-bottom', `${bottomPx}px`);  // feed CSS var for bottom
 
-  note.dataset.state = 'alive';                            // mark as alive
+  const msPerBeat = 60000 / bpm;                                // how long one beat is
+  const secondsToJudge = Math.max(0.08, travelBeats * (msPerBeat / 1000)); // time until judge
+  const safeJudge = Math.max(1, judgePx);                       // avoid divide by zero
+  const safeBottom = Math.max(safeJudge + 1, bottomPx);         // ensure > judge distance
 
-  rail.appendChild(note);                                  // append to DOM
-  return note;                                             // return node
+  const totalSeconds = secondsToJudge * (safeBottom / safeJudge); // scale so ETA = judge
+  note.style.animationDuration = `${totalSeconds}s`;            // assign fall duration
+
+  note.dataset.state = 'alive';                                 // mark as active note
+  rail.appendChild(note);                                       // attach note to DOM
+  return note;                                                  // return reference
 }
+
+
 
 /* =============================
    TIME-BASED JUDGING (ETA queue)
@@ -572,79 +664,74 @@ function clearAllNotes() {
    - Blurs focused element before hiding to avoid ARIA warning
 ---------------------------------------- */
 (() => {
-  const body = document.body;
-  const rotateOverlay = document.getElementById('rotateOverlay');
-  const closeBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null;
+  const body = document.body;                                                   // root body
+  const rotateOverlay = document.getElementById('rotateOverlay');               // overlay element
+  const closeBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; // close button
 
   // Match our CSS media queries: show on ≤767.98px & landscape, or ≤480px height
-  const mqTinyLandscape = window.matchMedia('(max-width: 767.98px) and (orientation: landscape)');
-  const mqShortHeight   = window.matchMedia('(max-height: 480px)');
+  const mqTinyLandscape = window.matchMedia('(max-width: 767.98px) and (orientation: landscape)'); // MQ 1
+  const mqShortHeight   = window.matchMedia('(max-height: 480px)');                                 // MQ 2
 
   /** Update ARIA + inert to reflect current visibility */
   function updateRotateOverlayAria() {
-    const dismissed = body.getAttribute('data-rotate-dismissed') === 'true';
-    const visibleByMQ = (mqTinyLandscape.matches || mqShortHeight.matches);
-    const shouldShow = visibleByMQ && !dismissed;
+    const dismissed = body.getAttribute('data-rotate-dismissed') === 'true'; // user dismissed?
+    const visibleByMQ = (mqTinyLandscape.matches || mqShortHeight.matches);  // matches either MQ
+    const shouldShow = visibleByMQ && !dismissed;                             // final decision
 
-    if (!rotateOverlay) return;
+    if (!rotateOverlay) return;                                               // guard
 
     if (shouldShow) {
-      rotateOverlay.removeAttribute('inert');          // allow interaction
-      rotateOverlay.setAttribute('aria-hidden', 'false');
-      // put focus inside so screen readers don't land behind it
-      if (closeBtn) closeBtn.focus();
+      rotateOverlay.removeAttribute('inert');                                 // allow interaction
+      rotateOverlay.setAttribute('aria-hidden', 'false');                     // visible for a11y
+      if (closeBtn) closeBtn.focus();                                         // focus inside
     } else {
-      // If something inside had focus, blur it before hiding to avoid warnings
-      if (rotateOverlay.contains(document.activeElement)) {
+      if (rotateOverlay.contains(document.activeElement)) {                   // focus cleanup
         document.activeElement.blur?.();
       }
-      rotateOverlay.setAttribute('inert', '');         // block focus
-      rotateOverlay.setAttribute('aria-hidden', 'true');
+      rotateOverlay.setAttribute('inert', '');                                // block focus
+      rotateOverlay.setAttribute('aria-hidden', 'true');                      // hide for a11y
     }
   }
 
   /** User clicked "Close window": hide until we go back to portrait/taller */
   function dismissRotateUntilPortrait() {
-    // Remove focus first to avoid the ARIA warning
-    if (rotateOverlay.contains(document.activeElement)) {
+    if (rotateOverlay.contains(document.activeElement)) { // defocus first
       document.activeElement.blur?.();
     }
-    body.setAttribute('data-rotate-dismissed', 'true');
-    updateRotateOverlayAria();
+    body.setAttribute('data-rotate-dismissed', 'true');   // remember dismissal
+    updateRotateOverlayAria();                             // apply state
   }
 
   /** When leaving landscape, clear the dismissal so it can show next time */
   function resetDismissalIfPortrait() {
-    // Portrait = no landscape; also tall enough resets naturally via MQ
-    if (!mqTinyLandscape.matches) {
-      body.removeAttribute('data-rotate-dismissed');
+    if (!mqTinyLandscape.matches) {                        // portrait or wide
+      body.removeAttribute('data-rotate-dismissed');       // clear dismissal
     }
-    updateRotateOverlayAria();
+    updateRotateOverlayAria();                             // resync
   }
 
-  if (rotateOverlay && closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      dismissRotateUntilPortrait();
+  if (rotateOverlay && closeBtn) {                         // wire only if present
+    closeBtn.addEventListener('click', (e) => {            // on click
+      e.preventDefault();                                  // prevent default button behavior
+      dismissRotateUntilPortrait();                        // hide overlay
     });
 
     // Re-evaluate when MQs flip or on resize
-    mqTinyLandscape.addEventListener('change', updateRotateOverlayAria);
-    mqShortHeight.addEventListener('change', updateRotateOverlayAria);
-    window.addEventListener('resize', updateRotateOverlayAria);
+    mqTinyLandscape.addEventListener('change', updateRotateOverlayAria); // MQ1 change
+    mqShortHeight.addEventListener('change', updateRotateOverlayAria);   // MQ2 change
+    window.addEventListener('resize', updateRotateOverlayAria);          // generic resize
 
     // Also watch orientation to reset dismissal when returning to portrait
     window.matchMedia('(orientation: landscape)')
-      .addEventListener('change', resetDismissalIfPortrait);
+      .addEventListener('change', resetDismissalIfPortrait);             // orientation watcher
 
     // Initial sync
-    updateRotateOverlayAria();
+    updateRotateOverlayAria();                                           // first run
   }
 
   // TODO: Add fade/animation when overlay appears/disappears for smoother UX
   // TODO: Maybe store dismissal in localStorage if i want it remembered between sessions
 })();
-
 
 
 
@@ -686,7 +773,6 @@ function initNavbarCollapseSync() {
   mqLgUp.addEventListener('change', normalizeForViewport);               // keep consistent
 }
 
-
 /* =============================
    DOMContentLoaded bootstrap
    ============================= */
@@ -695,36 +781,60 @@ function initNavbarCollapseSync() {
 ---------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    init();                                  // reset state + HUD
-    setOverlayLabel('Play');                 // overlay label
+    init();                                  // reset core state + render HUD once
+    setOverlayLabel('Play');                 // set initial overlay label
     updatePlayMenuLabel();                   // navbar shows ▶ Play initially
 
-    const overlay = document.getElementById('overlay');   // ensure overlay is visible on first load
-    if (overlay) overlay.classList.remove('hidden');      // unhide if hidden by default
+    const overlay = document.getElementById('overlay'); // grab overlay node
+    if (overlay) overlay.classList.remove('hidden');    // ensure overlay is visible on first load
 
-    wirePlayButton();                        // CTA
-    initMoveControls();                      // inputs → tryJudge()
-    wireMenuPlayToggle();                    // navbar toggle
-    initNavbarCollapseSync();                // burger/collapse sync
-    bindControls();                          // reserved placeholder
+    wirePlayButton();                        // hook up CTA play button
+    initMoveControls();                      // map buttons + keyboard → tryJudge()
+    wireMenuPlayToggle();                    // navbar ▶ Play / ⏸ Pause toggle
+    initNavbarCollapseSync();                // keep burger/collapse correct across breakpoints
+    bindControls();                          // placeholder for future settings, etc.
 
-    // Close collapse when a nav button is clicked (mobile UX)
-    document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const collapseEl = document.getElementById('mainNav');                 // collapse root
-        if (collapseEl && collapseEl.classList.contains('show')) {             // only if open
-          const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl); // instance
-          collapse.hide();                                                     // close
+    /* ----- Inline HUD collapse (Score/Best/Level) ----- */
+    const savedHud = localStorage.getItem(HUD_MODE_KEY);                  // fetch persisted mode
+    const prefersCollapsed = window.matchMedia('(max-width: 732px)').matches; // breakpoint check
+    setHudInlineMode(                                                      // apply initial mode
+      savedHud ? savedHud : (prefersCollapsed ? 'collapsed' : 'expanded')
+    );
+
+    wireHudInlineToggle();                                                // wire the HUD toggle chip (+ hotkey 'H')
+
+    // Auto-collapse on resize when under 732px,
+    // but only if user has not chosen a mode (no savedHud).
+    const mqHud = window.matchMedia('(max-width: 732px)');                // watch breakpoint
+    mqHud.addEventListener('change', (e) => {                             // when crossing threshold
+      if (localStorage.getItem(HUD_MODE_KEY)) return;                     // user preference exists → skip
+      if (e.matches) {                                                    // now under 732px
+        setHudInlineMode('collapsed');                                    // collapse HUD
+      } else {                                                            // above 732px
+        setHudInlineMode('expanded');                                     // expand HUD
+      }
+    });
+
+    /* ----- Mobile UX: close navbar collapse after clicking a nav button ----- */
+    document.querySelectorAll('#primaryNav .nav-btn').forEach(btn => {   // get all nav buttons
+      btn.addEventListener('click', () => {                               // on any nav button click
+        const collapseEl = document.getElementById('mainNav');            // collapse root
+        if (collapseEl && collapseEl.classList.contains('show')) {        // only if currently open
+          const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl); // get instance
+          collapse.hide();                                                // close the panel
         }
       });
     });
 
   } catch (err) {
-    console.error('[INIT ERROR]', err);                 // log failure
-    const overlay = document.getElementById('overlay'); // best-effort: show overlay
-    if (overlay) overlay.classList.remove('hidden');
+    console.error('[INIT ERROR]', err);           // log any failure
+    const overlay = document.getElementById('overlay'); // best-effort: show overlay so user can recover
+    if (overlay) overlay.classList.remove('hidden');    // unhide overlay on error
   }
 });
+
+
+
 
 
 /* =============================
