@@ -263,28 +263,31 @@ function wireMenuPlayToggle() {
   btn.addEventListener('click', () => { // on click
     if (state.running) {
       // ----- PAUSE -----
-      state.running = false;                 // mark paused
-      stopBeatSpawner();                     // stop random spawner (existing fn)
-      setOverlayLabel('Paused');             // overlay label
-      showOverlay();                         // show overlay
-      btn.setAttribute('aria-pressed', 'false'); // a11y state
-      btn.setAttribute('aria-label', 'Play');    // a11y label
+      state.running = false;                      // mark paused
+      stopBeatSpawner();                          // stop random spawner (existing fn)
+      setOverlayLabel('Paused');                  // overlay label
+      showOverlay();                              // show overlay
+      document.body.setAttribute('data-paused', 'true');   /* freeze notes in place */
+      btn.setAttribute('aria-pressed', 'false');  // a11y state
+      btn.setAttribute('aria-label', 'Play');     // a11y label
       // (optional) if your quick button shows text/icon, update it here
       // btn.textContent = '▶ Play';
     } else {
       // ----- START/RESUME -----
-      state.running = true;                  // mark running
-      startBeatSpawner();                    // start random spawner (existing fn)
-      setOverlayLabel('Play');               // normalize overlay label
-      hideOverlay();                         // hide overlay
-      btn.setAttribute('aria-pressed', 'true');  // a11y state
-      btn.setAttribute('aria-label', 'Pause');   // a11y label
+      state.running = true;                       // mark running
+      startBeatSpawner();                         // start random spawner (existing fn)
+      setOverlayLabel('Play');                    // normalize overlay label
+      hideOverlay();                              // hide overlay
+      document.body.removeAttribute('data-paused');        /* unfreeze notes */
+      btn.setAttribute('aria-pressed', 'true');   // a11y state
+      btn.setAttribute('aria-label', 'Pause');    // a11y label
       // (optional) if your quick button shows text/icon, update it here
       // btn.textContent = '⏸ Pause';
       // TODO: resumeGameLoop() if/when you add a real loop
     }
   });
 }
+
 
 
 
