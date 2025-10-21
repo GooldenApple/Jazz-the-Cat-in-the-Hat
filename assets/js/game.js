@@ -304,22 +304,21 @@ function initMoveControls() {
   wireMoveKeyboard();  // keyboard
 }
 
-/* ----------------------------------------
-   judgeFlash
-   Purpose: Visual confirmation on judge line (success/miss).
-   Usage: judgeFlash('good'|'miss')
----------------------------------------- */
+/* =============================
+   Visual judge flash (migrated)
+   ============================= */
+/* Flash is now applied to .rails (the element that owns the visual line via ::after) */
 function judgeFlash(type) {
-  const el = document.querySelector('.judge-line');        // find judge bar
-  if (!el) return;                                         // guard
-  el.classList.remove('flash-good', 'flash-miss');         // normalize previous state
-  if (type === 'good') el.classList.add('flash-good');     // add good class
-  if (type === 'miss') el.classList.add('flash-miss');     // add miss class
-  const onEnd = () => {                                    // cleanup after flash
-    el.classList.remove('flash-good', 'flash-miss');       // remove classes
-    el.removeEventListener('animationend', onEnd);         // detach
-  };
-  el.addEventListener('animationend', onEnd);              // single-cycle cleanup
+  const rails = document.querySelector('.rails');
+  if (!rails) return;
+  rails.classList.remove('flash-good','flash-miss');
+  if (type === 'good') rails.classList.add('flash-good');
+  if (type === 'miss') rails.classList.add('flash-miss');
+
+  // Remove class after animation window (can't listen to ::after reliably)
+  setTimeout(() => {
+    rails.classList.remove('flash-good','flash-miss');
+  }, 320);
 }
 
 /* ----------------------------------------
@@ -592,7 +591,7 @@ function clearAllNotes() {
     if (shouldShow) {
       rotateOverlay.removeAttribute('inert');          // allow interaction
       rotateOverlay.setAttribute('aria-hidden', 'false');
-      // Optional: put focus inside so screen readers don't land behind it
+      // put focus inside so screen readers don't land behind it
       if (closeBtn) closeBtn.focus();
     } else {
       // If something inside had focus, blur it before hiding to avoid warnings
