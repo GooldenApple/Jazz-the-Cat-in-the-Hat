@@ -563,48 +563,90 @@ function clearAllNotes() {
   activeNotes.length = 0;                                            // purge queue
 }
 
-
 /* =============================
    Rotate Overlay Controller
    ============================= */
 /* ----------------------------------------
-   Purpose: Landscape blocker on small widths. User can dismiss until portrait.
-   CSS prerequisite (already in your CSS):
-     body[data-rotate-dismissed="true"] #rotateOverlay { display: none !important; }
+   Purpose: Show the rotate overlay only on tiny landscape or very short heights.
+   - Keeps aria-hidden in sync
+   - Uses `inert` to block focus behind the overlay
+   - Blurs focused element before hiding to avoid ARIA warning
 ---------------------------------------- */
 (() => {
-  const body = document.body;                                           // body tag
-  const rotateOverlay = document.getElementById('rotateOverlay');       // overlay root
-  const closeBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; // close button
+  const body = document.body;
+  const rotateOverlay = document.getElementById('rotateOverlay');
+  const closeBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null;
 
-  const mqLandscape = window.matchMedia('(orientation: landscape)');    // orientation query
-  const mqBurgerMax = window.matchMedia('(max-width: 991.98px)');       // Bootstrap < lg
+  // Match our CSS media queries: show on ≤767.98px & landscape, or ≤480px height
+  const mqTinyLandscape = window.matchMedia('(max-width: 767.98px) and (orientation: landscape)');
+  const mqShortHeight   = window.matchMedia('(max-height: 480px)');
 
-  function updateRotateOverlayAria() {                                   // keep aria-hidden in sync
-    const dismissed = body.getAttribute('data-rotate-dismissed') === 'true'; // user dismissed?
-    const visibleByCSS = mqLandscape.matches && mqBurgerMax.matches;     // CSS would show now?
-    const shouldBeVisible = visibleByCSS && !dismissed;                  // final visibility
-    if (rotateOverlay) rotateOverlay.setAttribute('aria-hidden', shouldBeVisible ? 'false' : 'true');
+  /** Update ARIA + inert to reflect current visibility */
+  function updateRotateOverlayAria() {
+    const dismissed = body.getAttribute('data-rotate-dismissed') === 'true';
+    const visibleByMQ = (mqTinyLandscape.matches || mqShortHeight.matches);
+    const shouldShow = visibleByMQ && !dismissed;
+
+    if (!rotateOverlay) return;
+
+    if (shouldShow) {
+      rotateOverlay.removeAttribute('inert');          // allow interaction
+      rotateOverlay.setAttribute('aria-hidden', 'false');
+      // Optional: put focus inside so screen readers don't land behind it
+      if (closeBtn) closeBtn.focus();
+    } else {
+      // If something inside had focus, blur it before hiding to avoid warnings
+      if (rotateOverlay.contains(document.activeElement)) {
+        document.activeElement.blur?.();
+      }
+      rotateOverlay.setAttribute('inert', '');         // block focus
+      rotateOverlay.setAttribute('aria-hidden', 'true');
+    }
   }
 
-  function dismissRotateUntilPortrait() {                                // user clicks Close
-    body.setAttribute('data-rotate-dismissed', 'true');                  // remember dismissal
-    updateRotateOverlayAria();                                           // sync aria
+  /** User clicked "Close window": hide until we go back to portrait/taller */
+  function dismissRotateUntilPortrait() {
+    // Remove focus first to avoid the ARIA warning
+    if (rotateOverlay.contains(document.activeElement)) {
+      document.activeElement.blur?.();
+    }
+    body.setAttribute('data-rotate-dismissed', 'true');
+    updateRotateOverlayAria();
   }
 
-  function resetDismissalIfPortrait() {                                  // when back to portrait
-    if (!mqLandscape.matches) body.removeAttribute('data-rotate-dismissed'); // clear flag
-    updateRotateOverlayAria();                                           // sync aria
+  /** When leaving landscape, clear the dismissal so it can show next time */
+  function resetDismissalIfPortrait() {
+    // Portrait = no landscape; also tall enough resets naturally via MQ
+    if (!mqTinyLandscape.matches) {
+      body.removeAttribute('data-rotate-dismissed');
+    }
+    updateRotateOverlayAria();
   }
 
-  if (rotateOverlay && closeBtn) {                                       // wire only if present
-    closeBtn.addEventListener('click', (e) => { e.preventDefault(); dismissRotateUntilPortrait(); });
-    mqLandscape.addEventListener('change', resetDismissalIfPortrait);    // on orientation flip
-    mqBurgerMax.addEventListener('change', updateRotateOverlayAria);     // on width change
-    window.addEventListener('resize', updateRotateOverlayAria);          // general resize
-    updateRotateOverlayAria();                                           // initial sync
+  if (rotateOverlay && closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      dismissRotateUntilPortrait();
+    });
+
+    // Re-evaluate when MQs flip or on resize
+    mqTinyLandscape.addEventListener('change', updateRotateOverlayAria);
+    mqShortHeight.addEventListener('change', updateRotateOverlayAria);
+    window.addEventListener('resize', updateRotateOverlayAria);
+
+    // Also watch orientation to reset dismissal when returning to portrait
+    window.matchMedia('(orientation: landscape)')
+      .addEventListener('change', resetDismissalIfPortrait);
+
+    // Initial sync
+    updateRotateOverlayAria();
   }
+
+  // TODO: Add fade/animation when overlay appears/disappears for smoother UX
+  // TODO: Maybe store dismissal in localStorage if i want it remembered between sessions
 })();
+
+
 
 
 /* =============================

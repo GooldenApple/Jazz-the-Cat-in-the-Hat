@@ -21,30 +21,30 @@
     <link rel="stylesheet" href="assets/css/style.css" />
   </head>
   <body>
-    <!-- Sticky neon navbar (Bootstrap structure + my classes) -->
-<header class="topbar navbar navbar-expand-lg" role="banner">
-  <!-- brand (left) -->
-  <a class="navbar-brand brand" href="#">🐱 Jazz the Cat in the Hat 🎩</a>
-  
   <!-- Rotation blocker: shown only in landscape -->
-<div id="rotateOverlay" aria-hidden="true">
-  <div class="rb-card" role="dialog" aria-label="Rotate device">
-    <div class="rb-icon" aria-hidden="true">📱↩️</div> <!-- small hint emoji -->
-    <p class="rb-title">Rotate to portrait</p>        <!-- main message -->
-    <p class="rb-text">This game is optimized for portrait mode.</p> <!-- sub -->
-    <button class="rb-try" type="button" aria-label="Continue in landscape">
-      Close window
-    </button>
+  <div id="rotateOverlay" aria-hidden="true">
+    <div class="rb-card" role="dialog" aria-label="Rotate device">
+      <div class="rb-icon" aria-hidden="true">📱↩️</div> <!-- small hint emoji -->
+        <p class="rb-title">Rotate to portrait</p>        <!-- main message -->
+        <p class="rb-text">This game is optimized for portrait mode.</p> <!-- sub -->
+        <button class="rb-try" type="button" aria-label="Continue in landscape">
+         Close window
+      </button>
+    </div>
   </div>
-</div>
-  <!-- hamburger toggler (right on mobile) -->
-  <button class="navbar-toggler hamburger" type="button"
-        data-bs-toggle="collapse" data-bs-target="#mainNav"
-        aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-  <span></span>
-  <span></span>
-  <span></span>
-</button>
+  <!-- Sticky neon navbar (Bootstrap structure + my classes) -->
+  <header class="topbar navbar navbar-expand-lg" role="banner">
+    <!-- brand (left) -->
+    <a class="navbar-brand brand" href="#">🐱 Jazz the Cat in the Hat 🎩</a>
+  
+      <!-- hamburger toggler (right on mobile) -->
+      <button class="navbar-toggler hamburger" type="button"
+          data-bs-toggle="collapse" data-bs-target="#mainNav"
+          aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
   <!-- collapsible nav (right side) -->
   <div class="collapse navbar-collapse" id="mainNav">
