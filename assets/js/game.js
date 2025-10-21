@@ -251,26 +251,43 @@ function setMenuLabelToPlay()  { const b = getMenuPlayToggle(); if (!b) return; 
 function setMenuLabelToPause() { const b = getMenuPlayToggle(); if (!b) return; b.textContent = '⏸ Pause'; b.setAttribute('aria-pressed','true'); }
 function updatePlayMenuLabel() { state.running ? setMenuLabelToPause() : setMenuLabelToPlay(); }
 
+/* ----------------------------------------
+   Play/Pause toggle button
+   Purpose: Toggle game state using the always visible quick button.
+   Usage: Call wireMenuPlayToggle() on DOMContentLoaded.
+---------------------------------------- */
 function wireMenuPlayToggle() {
-  const btn = getMenuPlayToggle();                   // query navbar button
-  if (!btn) return;                                  // guard
-  btn.addEventListener('click', () => {              // on click
-    if (state.running) {                             // if running → pause
-      state.running = false;                         // stop gameplay
-      stopBeatSpawner();                             // stop spawner
-      setOverlayLabel('Paused');                     // label = Paused
-      showOverlay();                                 // show overlay as pause screen
-      updatePlayMenuLabel();                         // navbar → Play
-    } else {                                         // if paused → start/resume
-      state.running = true;                          // running
-      startBeatSpawner();                            // resume spawner
-      setOverlayLabel('Play');                       // normalize label
-      hideOverlay();                                 // hide overlay
-      updatePlayMenuLabel();                         // navbar → Pause
-      // TODO: resumeGameLoop();
+  const btn = document.getElementById('quickPlayPause'); // query quick button
+  if (!btn) return; // guard if button missing
+
+  btn.addEventListener('click', () => { // on click
+    if (state.running) {
+      // ----- PAUSE -----
+      state.running = false;                 // mark paused
+      stopBeatSpawner();                     // stop random spawner (existing fn)
+      setOverlayLabel('Paused');             // overlay label
+      showOverlay();                         // show overlay
+      btn.setAttribute('aria-pressed', 'false'); // a11y state
+      btn.setAttribute('aria-label', 'Play');    // a11y label
+      // (optional) if your quick button shows text/icon, update it here
+      // btn.textContent = '▶ Play';
+    } else {
+      // ----- START/RESUME -----
+      state.running = true;                  // mark running
+      startBeatSpawner();                    // start random spawner (existing fn)
+      setOverlayLabel('Play');               // normalize overlay label
+      hideOverlay();                         // hide overlay
+      btn.setAttribute('aria-pressed', 'true');  // a11y state
+      btn.setAttribute('aria-label', 'Pause');   // a11y label
+      // (optional) if your quick button shows text/icon, update it here
+      // btn.textContent = '⏸ Pause';
+      // TODO: resumeGameLoop() if/when you add a real loop
     }
   });
 }
+
+
+
 
 /* =============================
    MOVE CONTROLLER (CSS-driven)

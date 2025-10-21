@@ -209,6 +209,47 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
   box-shadow: 0 0 10px rgba(0,255,213,0.35); /* halo */
 }
 
+
+/* --------------------------------------- */
+/* Quick Play/Pause button under the navbar */
+/* --------------------------------------- */
+.quick-pp {
+  position: fixed;                     /* keep the button always visible on screen */
+  top: calc(var(--topbar-h) + 8px);    /* place it just below the navbar */
+  right: 16px;                         /* align it to the right side, inside screen edges */
+  width: 56px;                         /* set button width */
+  height: 56px;                        /* set button height */
+  border-radius: 50%;                  /* make it perfectly round */
+  background: var(--hud-bg);           /* use same HUD background for theme consistency */
+  border: 2px solid var(--hud-border); /* outline to match HUD look */
+  color: var(--neon-cyan);                /* icon color */
+  font-size: 24px;                     /* size for the play/pause icon */
+  display: flex;                       /* center icon horizontally */
+  align-items: center;                 /* center icon vertically */
+  justify-content: center;             /* make sure the icon is exactly centered */
+  cursor: pointer;                     /* show pointer on hover to indicate interactivity */
+  z-index: 2302;                       /* keep above game area but below expanded menu */
+  transition: background 0.2s;         /* smooth hover/active background change */
+}
+
+.quick-pp:hover {
+  background: var(--hud-bg-hover); /* slightly lighter background on hover */
+}
+
+.quick-pp:active {
+  transform: scale(0.95); /* small shrink effect when pressing the button */
+}
+
+.quick-pp .pp-icon {
+  font-size: 2rem;                 /* double size */
+  color: var(--neon-pink);          /* neon theme color */
+  display: inline-flex;            /* inline flex → stays horizontal */
+  align-items: center;             /* vertical align center */
+  gap: 0.25rem;                    /* spacing between characters */
+  letter-spacing: 0.15rem;         /* extra spacing for slash */
+}
+
+
 /* ---------------- HUD: overall container ---------------- */
 .hud {
   position: fixed;                       /* pin HUD */

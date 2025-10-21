@@ -49,15 +49,18 @@
   <!-- collapsible nav (right side) -->
   <div class="collapse navbar-collapse" id="mainNav">
     <ul class="navbar-nav ms-auto nav-list" id="primaryNav">
-      <li class="nav-item">
-       <button class="nav-btn" id="menuPlayToggle" data-action="play" aria-pressed="false">▶ Play</button>
-      </li>
       <li class="nav-item"><button class="nav-btn" data-action="tutorial">Tutorial</button></li>
       <li class="nav-item"><button class="nav-btn" data-action="settings">Settings</button></li>
       <li class="nav-item"><button class="nav-btn" data-action="highscore">High Score</button></li>
     </ul>
   </div>
 </header>
+<!-- Always visible Play/Pause button -->
+<button id="quickPlayPause" class="quick-pp" aria-label="Play/Pause" aria-pressed="false">
+  <span class="pp-icon">▶</span>
+  <span class="divider">/</span>
+  <span class="pp-icon">⏸</span>
+</button>
 
 <main id="game" class="game" role="main">
       <!-- HUD: lives, score, best, level, mode -->
