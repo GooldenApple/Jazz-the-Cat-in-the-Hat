@@ -309,6 +309,44 @@ function createHeart(stateClass) {
   return svg;                                                                   // return the ready node
 }
 
+/* ----------------------------------------
+   spawnNote
+   Purpose: Create one falling orb (note) inside the given rail.
+   - It sets CSS variables for judge distance and bottom distance.
+   - It computes animation duration so that the orb passes the judge line
+     exactly at the desired ETA (travelBeats @ bpm).
+   - On hit: removed at judge line by gradeHit().
+   - On miss: continues falling to the rail bottom and disappears on animationend.
+   Usage: spawnNote('left', 2, 120)
+---------------------------------------- */
+function spawnNote(dir, travelBeats = 2, bpm = 120) {
+  const rails = getRailsMap();                                  // get all rail refs
+  if (!rails || !rails[dir]) return null;                       // guard: missing lane
+  const rail = rails[dir];                                      // pick the correct lane
+
+  const note = document.createElement('div');                   // make a new orb div
+  note.className = `note note-${dir} note--${dir}`;             // add base + direction classes
+
+  const judgePx  = getJudgeDistancePx(rail);                    // pixels to judge line
+  const bottomPx = getBottomDistancePx(rail);                   // pixels to rail bottom
+
+  note.style.setProperty('--drop-distance-judge',  `${judgePx}px`);   // feed CSS var for judge
+  note.style.setProperty('--drop-distance-bottom', `${bottomPx}px`);  // feed CSS var for bottom
+
+  const msPerBeat = 60000 / bpm;                                // how long one beat is
+  const secondsToJudge = Math.max(0.08, travelBeats * (msPerBeat / 1000)); // time until judge
+  const safeJudge = Math.max(1, judgePx);                       // avoid divide by zero
+  const safeBottom = Math.max(safeJudge + 1, bottomPx);         // ensure > judge distance
+
+  const totalSeconds = secondsToJudge * (safeBottom / safeJudge); // scale so ETA = judge
+  note.style.animationDuration = `${totalSeconds}s`;            // assign fall duration
+
+  note.dataset.state = 'alive';                                 // mark as active note
+  rail.appendChild(note);                                       // attach note to DOM
+  return note;                                                  // return reference
+}
+
+
 
 /* ---------------------------
    Export all UI functions
@@ -326,6 +364,8 @@ export {
   judgeFlash, setFeedback,
   // Hearts
   createHeart,
+  // Notes (visual)
+  spawnNote,
   // Rotate overlay
   updateRotateOverlayAria, dismissRotateUntilPortrait, resetDismissalIfPortrait, initRotateOverlay
 };

@@ -1,3 +1,5 @@
+import { spawnJudgedNote } from './scoring.js';
+
 /* ----------------------------------------
    startBeatSpawner
    Purpose: Start a simple random spawner aligned to BPM (for testing).
