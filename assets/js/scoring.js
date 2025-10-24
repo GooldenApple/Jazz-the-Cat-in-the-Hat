@@ -13,10 +13,13 @@ import { setFeedback, spawnNote } from './ui.js';
 // ----- Global state (exported) -----
 const state = {
   running: false,  // flag: the game is currently running or paused
-  score:   0,      // current score counter
-  lives:   5,      // total lives (full hearts)
-  level:   1,      // level placeholder (for future difficulty scaling)
-  partial: 0       // damage steps on the active heart: 0..3 (four steps = -1 life)
+  score:    0,      // current score counter
+  best:     0,     // personal best (overwritten on init)
+  lives:    5,      // total lives (full hearts)
+  level:    1,      // level placeholder (for future difficulty scaling)
+  partial:  0,       // damage steps on the active heart: 0..3 (four steps = -1 life)
+  combo:    0,       // current combo length
+  maxCombo: 0        // best combo this run
 };
 
 /* --------------------------------------------------------
@@ -31,7 +34,12 @@ function init() {
   state.lives   = 5;      // default lives count
   state.level   = 1;      // default level value
   state.partial = 0;      // no partial damage on start
+  state.combo   = 0;      // Reset combo count
+  state.maxCombo= 0;      // Reset maximum combo achieved this run
   notify();               // push fresh snapshot to HUD via hook
+
+  state.best = loadBestScore();   // Load persisted best score
+  notify();                  // Push a fresh snapshot to the HUD via update hook
 }
 
 /* --------------------------------------------------------
@@ -40,21 +48,21 @@ function init() {
    - setHooks(): register callbacks; currently only onUpdate.
    - notify(): calls onUpdate with the latest snapshot.
 -------------------------------------------------------- */
-function getSnapshot() {
-  // Return only serializable values that HUD needs.
-  return {
-    score:   state.score,
-    lives:   state.lives,
-    level:   state.level,
-    partial: state.partial
+function getSnapshot() {           // Build a read-only view for the HUD layer
+  return {                         // Return a plain object
+    score:   state.score,          // Current score value
+    best:    state.best,           // Persisted best (high) score
+    lives:   state.lives,          // Remaining full hearts
+    level:   state.level,           // Current level (for future difficulty scaling)
+    partial: state.partial,         // Quarter-damage steps on the active heart (0..3)
+    combo:   state.combo           // Current combo count
   };
 }
 
 let onUpdate = null; // holds the HUD update callback (if registered)
 
 function notify() {
-  // If a hook exists, send the current snapshot to HUD.
-  if (typeof onUpdate === 'function') onUpdate(getSnapshot());
+  if (typeof onUpdate === 'function') onUpdate(getSnapshot());  // If a hook exists, send the current snapshot to HUD.
 }
 
 /* --------------------------------------------------------
@@ -66,6 +74,44 @@ function setHooks(hooks) {
   if (typeof hooks.onUpdate === 'function') { // only accept valid function
     onUpdate = hooks.onUpdate;                // store the HUD updater
   }
+}
+
+// Best score persistence 
+const BEST_SCORE_KEY = 'bestScore';
+
+/** Load best score from storage; returns 0 if missing/invalid/unavailable */
+export function loadBestScore() {
+  try {
+    const n = Number(localStorage.getItem(BEST_SCORE_KEY)); // parse to number
+    if (!Number.isFinite(n)) return 0;                      // invalid → 0
+    return Math.max(0, Math.floor(n));                      // clamp to 0+ int
+  } catch {
+    return 0;                                               // storage blocked → 0
+  }
+}
+
+/** Save best score; coerces to non-negative integer and ignores storage errors */
+export function saveBestScore(v) {
+  try {
+    const n = Math.max(0, Math.floor(Number(v) || 0));      // sanitize input
+    localStorage.setItem(BEST_SCORE_KEY, String(n));         // store as string
+  } catch {
+    /* non-fatal: ignore */
+  }
+}
+
+
+/* --------------------------------------------------------
+   Combo multiplier
+   Returns a score multiplier based on the (new) combo length.
+   Tiers example: 0→1.0, ≥10→1.1, ≥25→1.2, ≥50→1.3, ≥100→1.5
+-------------------------------------------------------- */
+function getMultiplierForCombo(comboLen) {               // Compute multiplier from combo length
+  if (comboLen >= 100) return 1.5;                       // Very high combo ⇒ biggest boost
+  if (comboLen >= 50)  return 1.3;                       // 50+ combo  ⇒ large boost
+  if (comboLen >= 25)  return 1.2;                       // 25+ combo  ⇒ medium boost
+  if (comboLen >= 10)  return 1.1;                       // 10+ combo  ⇒ small boost
+  return 1.0;                                            // Otherwise  ⇒ no boost
 }
 
 /* --------------------------------------------------------
@@ -120,68 +166,95 @@ function removeActiveById(id) {
 }
 
 /* --------------------------------------------------------
+   getMultiplierForCombo(n)
+   Purpose: Map a combo length to a score multiplier.
+   Curve: +0.1x every 10 combo, capped at 2.0x total.
+-------------------------------------------------------- */
+function getMultiplierForCombo(n) {                     // Convert combo length into a multiplier
+  const safe = Math.max(0, Math.floor(Number(n) || 0)); // Sanitize: integer, clamp to 0+
+  const step = Math.floor(safe / 10);                    // One step per 10 combo (0..)
+  const mult = 1 + (step * 0.1);                         // 0→1.0x, 10→1.1x, 20→1.2x, ...
+  return Math.min(2.0, Math.max(1.0, mult));             // Clamp between 1.0x and 2.0x
+}
+
+
+/* --------------------------------------------------------
    gradeHit(dir)
    Purpose: On input, pick closest ETA in the same lane and grade by |eta - now|.
    Returns:
      { hit:true,  label:'Perfect'|'Great'|'Good' }
      { hit:false, label:'Miss' }
-   Notes:
-   - On any input miss (wrong lane OR outside timing windows) we apply a heart penalty.
-   - Natural misses (no input as the note falls) are visual-only elsewhere and do not penalize lives.
+   Rules:
+   - Input miss (wrong lane or outside timing window): heart penalty + break combo.
+   - Natural miss (no input) handled elsewhere; no penalty, no combo break.
 -------------------------------------------------------- */
-function gradeHit(dir) {
-  const t = nowMs();              // current time for window comparison
-  let bestIdx = -1;               // index of best candidate in queue
-  let bestAbs = Infinity;         // best |eta - now| so far
+function gradeHit(dir) {                                  // Evaluate a player's input for a given lane
+  const t = nowMs();                                      // Current monotonic time (ms)
+  let bestIdx = -1;                                       // Index of the closest candidate note
+  let bestAbs = Infinity;                                 // Smallest |eta - now| seen so far
 
-  // Scan the queue for the closest note in the same direction.
-  for (let i = 0; i < activeNotes.length; i++) {
-    const n = activeNotes[i];            // candidate
-    if (n.dir !== dir) continue;         // skip other lanes
-    const adt = Math.abs(n.eta - t);     // absolute delta to target time
-    if (adt < bestAbs) {                 // keep the tightest window
-      bestAbs = adt;                     // update best |Δt|
-      bestIdx = i;                       // remember index
+  // Scan the active queue for the closest note in the same direction
+  for (let i = 0; i < activeNotes.length; i++) {          // Iterate over registered notes
+    const n = activeNotes[i];                             // Candidate metadata
+    if (n.dir !== dir) continue;                          // Skip notes from other lanes
+    const adt = Math.abs(n.eta - t);                      // Absolute delta from target time
+    if (adt < bestAbs) {                                  // If this candidate is closer...
+      bestAbs = adt;                                      // ...remember its |Δt|
+      bestIdx = i;                                        // ...and its index
     }
   }
 
-  // No candidate in lane → input MISS (apply penalty).
-  if (bestIdx === -1) {
-    setFeedback('MISS', 'miss');   // visual feedback
-    hit();                         // apply heart penalty on input miss
-    notify();                      // update HUD immediately
-    return { hit: false, label: 'Miss' };
+  // No candidate in this lane → input MISS (penalty + break combo)
+  if (bestIdx === -1) {                                   // If no note matches the input lane
+    setFeedback('MISS', 'miss');                          // Show MISS feedback with miss flash
+    state.combo = 0;                                      // Break the combo on input-miss
+    hit();                                                // Apply quarter-heart penalty (hit() calls notify())
+    return { hit:false, label:'Miss' };                   // Return miss result
   }
 
-  // Resolve grade label by window thresholds.
-  const w = judgeConfig.windows;   // window boundaries
-  let label = 'Miss';              // default to miss
-  if (bestAbs <= w.perfect) label = 'Perfect';
-  else if (bestAbs <= w.great) label = 'Great';
-  else if (bestAbs <= w.good)  label = 'Good';
+  // Resolve grade by timing windows
+  const w = judgeConfig.windows;                          // Timing windows (ms) for grading
+  let label = 'Miss';                                     // Default outcome is miss
+  if (bestAbs <= w.perfect) label = 'Perfect';            // Inside Perfect window
+  else if (bestAbs <= w.great) label = 'Great';           // Inside Great window
+  else if (bestAbs <= w.good)  label = 'Good';            // Inside Good window
 
-  // If within a valid window, score and clean up.
-  if (label !== 'Miss') {
-    const n = activeNotes[bestIdx];  // the judged note
-    n.hit = true;                    // mark as hit for bookkeeping
-    if (n.el) n.el.remove();         // remove DOM element if still present
-    activeNotes.splice(bestIdx, 1);  // drop from queue
+  // Successful hit inside a timing window
+  if (label !== 'Miss') {                                 // If the input qualifies as a hit
+    const n = activeNotes[bestIdx];                       // Retrieve the matched note meta
+    n.hit = true;                                         // Mark as consumed by input
+    if (n.el) n.el.remove();                              // Remove visual orb if still in DOM
+    activeNotes.splice(bestIdx, 1);                       // Remove from judging queue
 
-    // Score by quality.
-    if (label === 'Perfect') state.score += 100;
-    else if (label === 'Great') state.score += 70;
-    else if (label === 'Good')  state.score += 50;
+    // Base points by grade
+    const base =                                          // Decide base points by quality
+      label === 'Perfect' ? 100 :                         // Perfect ⇒ 100 pts
+      label === 'Great'   ?  70 :                         // Great   ⇒  70 pts
+                            50;                           // Good    ⇒  50 pts
 
-    notify();                        // update HUD with new score
-    setFeedback(label, 'good');      // show positive feedback + flash
-    return { hit: true, label };     // return graded result
+    const newCombo = state.combo + 1;                     // Increase combo AFTER a successful hit
+    const mult     = getMultiplierForCombo(newCombo);     // Compute multiplier for the new combo
+    state.combo    = newCombo;                            // Commit updated combo
+    if (state.combo > state.maxCombo)                     // Track the best combo this run
+      state.maxCombo = state.combo;
+
+    state.score += Math.round(base * mult);               // Add points with multiplier (rounded)
+
+    if (state.score > (state.best || 0)) {                // If new score beats stored best...
+      state.best = state.score;                           // ...update best in memory
+      saveBestScore(state.best);                          // ...persist to localStorage
+    }
+
+    notify();                                             // Push updated HUD snapshot
+    setFeedback(label, 'good');                           // Show positive feedback + good flash
+    return { hit:true, label };                           // Return successful result
   }
 
-  // Outside windows → input MISS (apply penalty).
-  setFeedback('MISS', 'miss'); // visual feedback
-  hit();                       // apply heart penalty on early/late input
-  notify();                    // update HUD immediately
-  return { hit: false, label: 'Miss' };
+  // Outside timing window → input MISS (penalty + break combo)
+  setFeedback('MISS', 'miss');                            // Show MISS feedback
+  state.combo = 0;                                        // Break combo for early/late input
+  hit();                                                  // Apply quarter-heart penalty (hit() calls notify())
+  return { hit:false, label:'Miss' };                     // Return miss result
 }
 
 /* --------------------------------------------------------

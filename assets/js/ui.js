@@ -413,15 +413,25 @@ function renderLives(container, lives, partial = 0, steps = 4) {
   }
 }
 
-/* Updates HUD numbers and hearts using a provided snapshot object */
-function updateHUD(snapshot) {
-  if (!snapshot) return; // guard
-  const livesEl = document.getElementById('lives'); // hearts container
-  const scoreEl = document.getElementById('score'); // score text
-  const levelEl = document.getElementById('level'); // level text
-  renderLives(livesEl, snapshot.lives, snapshot.partial); // hearts
-  if (scoreEl) scoreEl.textContent = snapshot.score; // score number
-  if (levelEl) levelEl.textContent = snapshot.level; // level number
+// Updates HUD numbers and hearts using a provided snapshot object
+function updateHUD(snapshot) {                              // Refresh on-screen HUD values
+  if (!snapshot) return;                                    // Guard against undefined
+
+  const livesEl = document.getElementById('lives');         // hearts container
+  const scoreEl = document.getElementById('score');         // score text node
+  const levelEl = document.getElementById('level');         // level text node
+  const bestEl  = document.getElementById('best');          // BEST/personal record node
+
+  renderLives(livesEl, snapshot.lives, snapshot.partial);   // redraw hearts (supports partial damage)
+
+  if (scoreEl) scoreEl.textContent = snapshot.score;        // update current score
+  if (levelEl) levelEl.textContent = snapshot.level;        // update current level
+
+  // show personal best (persisted in localStorage and loaded into snapshot.best)
+  if (bestEl && typeof snapshot.best !== 'undefined') {     // ensure element + value exist
+    bestEl.textContent = snapshot.best;                     // render BEST value
+    //  (pretty formatting): bestEl.textContent = (snapshot.best ?? 0).toLocaleString();
+  }
 }
 
 

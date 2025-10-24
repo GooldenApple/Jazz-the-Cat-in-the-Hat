@@ -13,7 +13,7 @@ import {
 } from './input.js';
 
 import {
-  showOverlay, setOverlayLabel, updatePlayMenuLabel,
+  showOverlay, setOverlayLabel, updatePlayMenuLabel, hideOverlay,
 } from './ui.js';
 
 //  everything under one namespace to avoid global clutter.
@@ -55,5 +55,35 @@ if (typeof window !== 'undefined') {
       showOverlay();
       updatePlayMenuLabel();
     },
+
+      // --- Quick control helpers (no random spawner) ---
+    // Unpause the game without starting the random spawner
+    play: () => {
+      document.body.removeAttribute('data-paused'); // unfreeze CSS animations
+      state.running = true;                          // mark game as running
+      hideOverlay();                                 // hide overlay
+    },
+
+    // Pause the game (no random spawner involved)
+    pause: () => {
+      state.running = false;                         // stop accepting inputs
+      document.body.setAttribute('data-paused', 'true'); // freeze animations
+      setOverlayLabel('Paused');
+      showOverlay();
+    },
+
+    // Schedule a hit after N ms (handy for timing tests)
+    // Usage: dev.spawn('left',2,120); dev.hitIn(1000,'left')
+    hitIn: (ms = 1000, dir = 'left') =>
+      setTimeout(() => {
+        const d = String(dir).toLowerCase();
+        if (d === 'left')  { doLeftMove();  gradeHit('left');  }
+        if (d === 'right') { doRightMove(); gradeHit('right'); }
+        if (d === 'up')    { doUpMove();    gradeHit('up');    }
+        if (d === 'down')  { doDownMove();  gradeHit('down');  }
+      }, ms),
+
+
   };
+
 }
