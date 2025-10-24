@@ -17,21 +17,19 @@ const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // ci
     showOverlay / hideOverlay / setOverlayLabel
     Purpose: Visual helpers for the CTA/pause overlay.
  */
+function showOverlay() {
+  const el = document.getElementById('overlay');     // lookup fresh
+  if (el) el.classList.remove('hidden');             // reveal overlay
+}
 
-function showOverlay() { 
-  overlayEl?.classList.remove('hidden');                         // reveal overlay
- }
-function hideOverlay() { 
-  overlayEl?.classList.add('hidden');                            // hide overlay
-} 
-/* setOverlayLabel
-   Purpose: Update the overlay CTA label text.
-   Usage: setOverlayLabel('Play');
-*/
+function hideOverlay() {
+  const el = document.getElementById('overlay');     // lookup fresh
+  if (el) el.classList.add('hidden');                // hide overlay
+}
+
 function setOverlayLabel(text) {
-  const label = document.querySelector('#overlay .play-label');
-  if (!label) return;
-  label.textContent = text;
+  const label = document.querySelector('#overlay .play-label'); // lookup fresh
+  if (label) label.textContent = text;                          // set label
 }
 
 /* ----------------------------------------
@@ -163,39 +161,45 @@ function updatePlayMenuLabel() {
 
 
 /* wirePlayButton
-   Purpose: Wire the circular CTA button and request a start-run; flip UI paused state first so UI reflects running even if later code throws.
-   Usage: wirePlayButton();
+   Purpose: Wire the big CTA play button. Do NOT hide overlay here;
+            song lifecycle events will handle countdown + hide.
 */
 function wirePlayButton() {
-  console.log('[overlay] wirePlayButton: start');
+  console.log('[overlay] wirePlayButton: start');                 // debug marker
 
-  const overlay = document.getElementById('overlay'); // overlay root
-  if (!overlay) { console.log('[overlay] wirePlayButton: no overlay'); return; }
+  const overlay = document.getElementById('overlay');             // overlay root
+  if (!overlay) {                                                 // guard: missing DOM
+    console.log('[overlay] wirePlayButton: no overlay');
+    return;
+  }
 
-  const btn = overlay.querySelector('.play-btn'); // play button
-  if (!btn) { console.log('[overlay] wirePlayButton: no .play-btn'); return; }
+  const btn = overlay.querySelector('.play-btn');                 // circular CTA button
+  if (!btn) {                                                     // guard: missing DOM
+    console.log('[overlay] wirePlayButton: no .play-btn');
+    return;
+  }
 
-  if (btn.dataset.wired === 'true') { console.log('[overlay] wirePlayButton: already wired'); return; }
-  btn.dataset.wired = 'true';
+  if (btn.dataset.wired === 'true') {                             // avoid double-binding
+    console.log('[overlay] wirePlayButton: already wired');
+    return;
+  }
+  btn.dataset.wired = 'true';                                     // mark as wired
   console.log('[overlay] wirePlayButton: listener attached');
 
-  btn.addEventListener('click', () => {
-    console.log('[overlay] click: paused(before)=', document.body.hasAttribute('data-paused'));
+  btn.addEventListener('click', () => {                           // when CTA is clicked
+    console.log('[overlay] click: paused(before)=',               // log paused flag
+      document.body.hasAttribute('data-paused'));
 
-    // request start
-    window.dispatchEvent(new CustomEvent('ui:requestStartRun'));
+    window.dispatchEvent(new CustomEvent('ui:requestStartRun'));  // ask app to start a run (song-based)
 
-    // unpause UI immediately
-    document.body.removeAttribute('data-paused');
-    console.log('[overlay] after removeAttribute: paused=', document.body.hasAttribute('data-paused'));
-    updatePlayMenuLabel();
+    document.body.removeAttribute('data-paused');                 // unfreeze UI immediately
+    console.log('[overlay] after removeAttribute: paused=',
+      document.body.hasAttribute('data-paused'));
+    updatePlayMenuLabel();                                        // sync navbar label
 
-    // normalize overlay state
-    setOverlayLabel('Play');
-    hideOverlay();
-
-
-    console.log('[overlay] end handler');
+    // NOTE: Do NOT hide the overlay or change its label here.     // keep overlay visible
+    // The countdown (3-2-1) and hiding will be controlled by      // handled in song:ready/started
+    // 'song:ready' and 'song:started' events.                     // events in game.js
   });
 }
 

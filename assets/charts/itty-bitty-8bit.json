@@ -1,0 +1,46 @@
+{
+  "bpm": 120,
+  "offsetMs": 0,
+  "travelBeats": 2.0,
+  "notes": [
+    { "timeMs": 0, "dir": "up" },
+    { "timeMs": 500, "dir": "left" },
+    { "timeMs": 1000, "dir": "down" },
+    { "timeMs": 1500, "dir": "right" },
+
+    { "timeMs": 2000, "dir": "up" },
+    { "timeMs": 2500, "dir": "left" },
+    { "timeMs": 3000, "dir": "down" },
+    { "timeMs": 3500, "dir": "right" },
+
+    { "timeMs": 4000, "dir": "up" },
+    { "timeMs": 4500, "dir": "left" },
+    { "timeMs": 5000, "dir": "down" },
+    { "timeMs": 5500, "dir": "right" },
+
+    { "timeMs": 6000, "dir": "up" },
+    { "timeMs": 6500, "dir": "left" },
+    { "timeMs": 7000, "dir": "down" },
+    { "timeMs": 7500, "dir": "right" },
+
+    { "timeMs": 8000, "dir": "up" },
+    { "timeMs": 8500, "dir": "left" },
+    { "timeMs": 9000, "dir": "down" },
+    { "timeMs": 9500, "dir": "right" },
+
+    { "timeMs": 10000, "dir": "up" },
+    { "timeMs": 10500, "dir": "left" },
+    { "timeMs": 11000, "dir": "down" },
+    { "timeMs": 11500, "dir": "right" },
+
+    { "timeMs": 12000, "dir": "up" },
+    { "timeMs": 12500, "dir": "left" },
+    { "timeMs": 13000, "dir": "down" },
+    { "timeMs": 13500, "dir": "right" },
+
+    { "timeMs": 14000, "dir": "up" },
+    { "timeMs": 14500, "dir": "left" },
+    { "timeMs": 15000, "dir": "down" },
+    { "timeMs": 15500, "dir": "right" }
+  ]
+}

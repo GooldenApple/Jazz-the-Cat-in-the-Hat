@@ -165,17 +165,6 @@ function removeActiveById(id) {
   if (idx !== -1) activeNotes.splice(idx, 1);          // remove from queue if found
 }
 
-/* --------------------------------------------------------
-   getMultiplierForCombo(n)
-   Purpose: Map a combo length to a score multiplier.
-   Curve: +0.1x every 10 combo, capped at 2.0x total.
--------------------------------------------------------- */
-function getMultiplierForCombo(n) {                     // Convert combo length into a multiplier
-  const safe = Math.max(0, Math.floor(Number(n) || 0)); // Sanitize: integer, clamp to 0+
-  const step = Math.floor(safe / 10);                    // One step per 10 combo (0..)
-  const mult = 1 + (step * 0.1);                         // 0→1.0x, 10→1.1x, 20→1.2x, ...
-  return Math.min(2.0, Math.max(1.0, mult));             // Clamp between 1.0x and 2.0x
-}
 
 
 /* --------------------------------------------------------

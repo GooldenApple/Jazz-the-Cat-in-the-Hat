@@ -1,161 +1,102 @@
-/**
- * songPlayer.js — drive chart-based spawns against the Web Audio clock
- *
- * Flow:
- * 1) startSongById('some-id') → looks up song in registry.
- * 2) Loads chart JSON and audio buffer.
- * 3) Starts audio; ticks a lightweight scheduler that spawns notes
- *    exactly when (note.t + offsetMs - leadMs) <= songTimeMs.
- * 4) Emits window events: 'song:ready', 'song:started', 'song:ended'.
- *
- * Policy:
- * - Only chart-driven spawns; no random spawner here.
- * - Natural misses (no input) are handled in scoring's animationend handler.
- * - Input misses cost hearts; handled in gradeHit().
- */
+// Minimal chart-driven song player: loads audio + chart and schedules orb spawns.
 
-import { getSongById, getFirstSong } from './songRegistry.js';       // Song lookup
-import { loadChart, computeSpawnLeadMs } from './chartLoader.js';    // Chart I/O + helpers
-import { loadAudioBuffer, unlockAudio, playBuffer, stop,            // Web Audio helpers
-         getSongTimeMs, isPlaying } from './audio.js';
-import { spawnJudgedNote } from './scoring.js';                      // Visual+judged note spawner
+import { SONGS } from './songRegistry.js';
+import { spawnJudgedNote } from './scoring.js';
 
-// ---- Internal runtime state -------------------------------------------------
-let _timer = null;                       // Interval handle for the scheduler tick
-let _chart = null;                       // Last loaded chart object
-let _spawnIdx = 0;                       // Index of the next note to spawn
-let _leadMs = 0;                         // Pre-roll time so notes reach the judge line
-let _travelBeats = 2.0;                  // How many beats a note travels (for spawn lead)
-let _status = 'idle';                    // 'idle'|'loading'|'ready'|'playing'|'ended'|'error'
-let _currentSongId = null;               // ID of the song currently prepared/playing
+let audio = null;             // active HTMLAudioElement
+let timers = [];              // scheduled setTimeout ids
+let current = null;           // { song, chart, bpm, travelBeats, offsetMs }
 
-// ---- Small helpers ----------------------------------------------------------
-
-/** Clear the interval/timer if active. */
-function clearTick() {                   // Stop the scheduler loop
-  if (_timer) {                          // If a timer exists
-    clearInterval(_timer);               // Clear the setInterval
-    _timer = null;                       // Drop reference
-  }
+/** Dispatch a DOM CustomEvent so game.js/ui.js can react (overlay/countdown etc). */
+function emit(name, detail = {}) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
 }
-
-/** Dispatch a DOM CustomEvent for external UI */
-function emit(name, detail = {}) {       // Broadcast status to the app (non-blocking)
-  window.dispatchEvent(new CustomEvent(name, { detail })); // Fire event on window
-}
-
-// ---- Core scheduler ---------------------------------------------------------
-
 /**
- * tick()
- * Called ~60fps while the song is playing.
- * Spawns all notes whose spawn time has passed.
+ * Start a song by id (or first in registry if id is undefined).
+ * Options:
+ *  - countdownSec: number (optional visual delay before audio starts)
+ *  - travelBeats:  number (override chart.travelBeats for spawn timing)
  */
-function tick() {                                                // One scheduling step
-  if (!_chart) return;                                           // Guard: nothing loaded
-  const nowMs = getSongTimeMs();                                 // Current audio clock in ms
-  if (nowMs <= 0) return;                                        // Not started yet (pre-roll)
+export async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
+  // Pick song
+  const song = id
+    ? SONGS.find(s => s.id === id)
+    : (Array.isArray(SONGS) && SONGS[0]);
+  if (!song) throw new Error('No songs in registry');
 
-  // Spawn while we have due notes
-  while (_spawnIdx < _chart.notes.length) {                      // Notes remaining
-    const n = _chart.notes[_spawnIdx];                           // Next note
-    const spawnAt = (n.t + (_chart.offsetMs || 0)) - _leadMs;    // Time must spawn this note
+  // Load chart JSON
+  const chartRes = await fetch(song.chart);
+  if (!chartRes.ok) throw new Error(`Failed to load chart: ${song.chart}`);
+  const chart = await chartRes.json();
 
-    if (spawnAt <= nowMs) {                                      // Due: time passed for spawn
-      spawnJudgedNote(n.dir, _travelBeats, _chart.bpm);          // Create a judged note in lane
-      _spawnIdx += 1;                                            // Advance index
-      continue;                                                  // Try spawning next (if also due)
-    }
-    break;                                                       // Next note is in the future → stop
+  // Validate timing params
+  const bpm = Number(chart.bpm);
+  if (!Number.isFinite(bpm)) throw new Error('Chart missing valid bpm');
+  const tb = Number.isFinite(travelBeats) ? Number(travelBeats) : (chart.travelBeats ?? 2.0);
+  const offsetMs = chart.offsetMs ?? 0;
+
+  // Prepare audio element
+  audio = new Audio(song.audio);
+  audio.preload = 'auto';
+
+  current = { song, chart, bpm, travelBeats: tb, offsetMs };
+
+  // Notify UI that we’re ready (good moment to show “3..2..1”)
+  emit('song:ready', { song });
+
+  // Optional countdown before starting audio
+  if (countdownSec > 0) {
+    await new Promise(r => setTimeout(r, countdownSec * 1000));
   }
 
-  // If all notes spawned and audio finished, end the run
-  if (_spawnIdx >= _chart.notes.length && !isPlaying()) {        // No more notes; audio has ended
-    clearTick();                                                 // Stop ticking
-    _status = 'ended';                                           // Mark status
-    emit('song:ended', { id: _currentSongId });                  // Notify UI
+  // Start audio (play() must be user-initiated in most browsers — your CTA click handles that)
+  await audio.play();
+  emit('song:started', { song });
+
+  // Schedule note spawns
+  const startAt = performance.now();       // ms timestamp baseline
+  const msPerBeat = 60000 / bpm;
+  const travelMs = tb * msPerBeat;         // how long an orb needs to reach the judge line
+
+  // Clear any leftover timers from a previous run
+  timers.forEach(t => clearTimeout(t));
+  timers = [];
+
+  // Helper: schedule a single note
+  const scheduleOne = (note) => {
+    const dir = String(note.dir || '').toLowerCase();
+    if (!['left', 'up', 'down', 'right'].includes(dir)) return;
+
+    // Target judge time relative to song start
+    const targetMs = offsetMs + (note.timeMs ?? note.time ?? 0);
+
+    // Spawn earlier by the travel time so orb arrives at the judge line on targetMs
+    const spawnDelay = Math.max(0, targetMs - travelMs);
+    const dueAt = startAt + spawnDelay;
+    const delay = Math.max(0, dueAt - performance.now());
+
+    const tId = setTimeout(() => {
+      spawnJudgedNote(dir, tb, bpm);
+    }, delay);
+    timers.push(tId);
+  };
+
+  (chart.notes || []).forEach(scheduleOne);
+
+  // When audio ends, stop everything
+  audio.addEventListener('ended', () => {
+    stopSong();
+  }, { once: true });
+}
+
+/** Stop playback and clear any scheduled spawns. */
+export function stopSong() {
+  if (audio) {
+    try { audio.pause(); } catch {}
+    audio = null;
   }
-}
-
-// ---- Public API -------------------------------------------------------------
-
-/**
- * startSongById(songId, opts)
- * Look up a song from registry and start it.
- */
-export async function startSongById(songId, opts = {}) {         // Entry by ID 
-  const song = getSongById(songId) || getFirstSong();            // Resolve song or fallback to first
-  if (!song) throw new Error('No songs registered');             // Hard guard if registry is empty
-  return startSong(song, opts);                                  // Defer to startSong()
-}
-
-/**
- * startSong(song, opts)
- * Load chart + audio, compute spawn lead, then start audio and scheduler.
- */
-export async function startSong(song, opts = {}) {               // Main entry with song object
-  // Normalize options
-  _travelBeats = Math.max(0.25, Number(opts.travelBeats ?? 2.0));  // Clamp sensible travel beats
-  const countdownSec = Math.max(0, Number(opts.countdownSec ?? 0));// pre-start delay (UI later)
-
-  // Reset previous state
-  stopSong();                                                    // Stop audio + timer if any (safe no-op)
-  _status = 'loading';                                           // Mark as loading
-  _currentSongId = song.id || null;                              // Track current song id
-  emit('song:loading', { id: _currentSongId });                  // Inform UI
-
-  try {
-    // Prepare audio context (must follow a user gesture in some browsers)
-    await unlockAudio();                                         // Resume/satisfy autoplay policies
-
-    // Load resources
-    _chart = await loadChart(song.chart);                        // Fetch/parse chart JSON
-    await loadAudioBuffer(song.audio);                           // Fetch/decode audio → AudioBuffer
-
-    // Compute spawn lead from chart tempo + travel beats
-    _leadMs = computeSpawnLeadMs(_travelBeats, _chart.bpm);      // e.g., 2 beats at 120 BPM = 1000ms
-    _spawnIdx = 0;                                               // Start from first note
-
-    // Ready state (before we actually start playback)
-    _status = 'ready';                                           // Loaded but not started
-    emit('song:ready', { id: _currentSongId, bpm: _chart.bpm }); // Notify UI (for countdown, etc.)
-
-    // Start audio and start ticking
-    playBuffer(undefined, countdownSec);                         // Start/schedule playback
-    _status = 'playing';                                         // We are now playing
-    emit('song:started', { id: _currentSongId });                // Inform UI it started
-    _timer = setInterval(tick, 16);                              // ~60fps scheduler
-  } catch (err) {
-    _status = 'error';                                           // Mark failure
-    clearTick();                                                 // Ensure timer is off
-    stop();                                                      // Stop any half-started audio
-    console.error('[songPlayer] start failed:', err);            // Log to console for debugging
-    emit('song:error', { id: _currentSongId, error: String(err) });// Notify UI about the error
-    throw err;                                                   // Re-throw for callers if needed
-  }
-}
-
-/** Stop current song playback and scheduler . */
-export function stopSong() {                                     // Public stop
-  clearTick();                                                   // Kill scheduler if running
-  try { stop(); } catch {}                                       // Stop audio (ignore errors)
-  _status = 'idle';                                              // Reset status to idle
-  _spawnIdx = 0;                                                 // Reset index
-  _chart = null;                                                 // Drop chart
-  _currentSongId = null;                                         // Drop id
-}
-
-/** Return whether a song is currently playing. */
-export function isSongPlaying() {                                // Playing status for UI
-  return _status === 'playing';                                  // True only while ticking is active
-}
-
-/** Lightweight accessor for progress (ms since audio start). */
-export function getSongProgressMs() {                            // Progress for HUD/UX if needed
-  return getSongTimeMs();                                        // Delegate to audio clock
-}
-
-/** Expose internal status string (debug/UX). */
-export function getSongStatus() {                                // For debug panels
-  return _status;                                                // 'idle'|'loading'|'ready'|'playing'|'ended'|'error'
+  timers.forEach(t => clearTimeout(t));
+  timers = [];
+  emit('song:ended', current ? { song: current.song } : {});
+  current = null;
 }

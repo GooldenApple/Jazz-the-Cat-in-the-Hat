@@ -1,7 +1,9 @@
 
 import { state, gradeHit } from './scoring.js';
-import { startBeatSpawner, stopBeatSpawner } from './scheduler.js';
-import { setOverlayLabel, showOverlay, hideOverlay } from './ui.js';
+
+import { startSongById, stopSong } from './songPlayer.js';
+
+import { setOverlayLabel, showOverlay, } from './ui.js';
 
 // --- TEMP DEBUG ---
 console.log('[input] module loaded');
@@ -105,42 +107,51 @@ function initMoveControls() {
 
 /* ----------------------------------------
    Play/Pause toggle button
-   Purpose: Toggle game state using the always visible quick button.
-   Usage: Call wireMenuPlayToggle() on DOMContentLoaded.
+   Purpose: Toggle game state using the always-visible quick button.
+   Behavior: Uses song engine (not random spawner) + keeps overlay for countdown.
 ---------------------------------------- */
 function wireMenuPlayToggle() {
-  const btn = document.getElementById('quickPlayPause'); // query quick button
-  if (!btn) return; // guard if button missing
-  if (btn.dataset.wired === 'true') return; // avoid duplicate listener
-  btn.dataset.wired = 'true';
+  const btn = document.getElementById('quickPlayPause');  // find the quick toggle button
+  if (!btn) return;                                       // guard: button missing
+  if (btn.dataset.wired === 'true') return;               // avoid double-binding
+  btn.dataset.wired = 'true';                              // mark as wired
 
-  btn.addEventListener('click', () => { // on click
-    if (state.running) {
-      // ----- PAUSE -----
-      state.running = false;                      // mark paused
-      stopBeatSpawner();                          // stop random spawner (existing fn)
-      setOverlayLabel('Paused');                  // overlay label
-      showOverlay();                              // show overlay
-      document.body.setAttribute('data-paused', 'true');   /* freeze notes in place */
-      btn.setAttribute('aria-pressed', 'false');  // a11y state
-      btn.setAttribute('aria-label', 'Play');     // a11y label
-      return;
-      
-     // btn.textContent = '▶ Play';                // quick button shows text/icon
-    } else {
-      // ----- START/RESUME -----
-      state.running = true;                       // mark running                    
-      document.body.removeAttribute('data-paused');        /* unfreeze notes */
-      btn.setAttribute('aria-pressed', 'true');   // a11y state
-      btn.setAttribute('aria-label', 'Pause');    // a11y label
-      startBeatSpawner();                         // start random spawner (existing fn)
-      setOverlayLabel('Play');                    // normalize overlay label
-      hideOverlay();                               // hide overlay
-     // btn.textContent = '⏸ Pause';          //  quick button shows text/icon
-      // TODO: resumeGameLoop() if/when you add a real loop
+  btn.addEventListener('click', async () => {              // toggle on click
+    if (state.running) {                                   // currently playing → pause/stop
+      state.running = false;                               // mark paused in game state
+      stopSong();                                          // stop audio + scheduler (safe)
+      setOverlayLabel('Paused');                           // show a clear pause label
+      showOverlay();                                       // reveal overlay again
+      document.body.setAttribute('data-paused', 'true');   // freeze UI animations
+      btn.setAttribute('aria-pressed', 'false');           // a11y: not pressed
+      btn.setAttribute('aria-label', 'Play');              // a11y: label says Play
+      return;                                              // done with pause path
+    }
+
+    // was paused → start fresh with a countdown
+    state.running = true;                                  // enable input/game state
+    document.body.removeAttribute('data-paused');          // unfreeze UI animations
+    btn.setAttribute('aria-pressed', 'true');              // a11y: pressed
+    btn.setAttribute('aria-label', 'Pause');               // a11y: label says Pause
+
+    setOverlayLabel('');                                   // clear label (countdown will update it)
+    showOverlay();                                         // keep overlay visible for 3-2-1
+
+    try {
+      await startSongById(                                 // start the first registered song
+        undefined,                                         // undefined → fallback to first song
+        { countdownSec: 3, travelBeats: 2.0 }              // 3s countdown; current travel timing
+      );
+    } catch (err) {
+      console.error('[input] failed to start song:', err); // surface any error
+      state.running = false;                               // roll back game running state
+      document.body.setAttribute('data-paused', 'true');   // re-freeze UI
+      setOverlayLabel('Play');                             // neutral CTA
+      showOverlay();                                       // keep overlay visible for retry
     }
   });
 }
+
 
 
 /* ---------------------------

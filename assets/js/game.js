@@ -2,7 +2,7 @@
    Jazz the Cat in the Hat – Base JS
    ============================= */
 
-
+import { SONGS } from './songRegistry.js';
 // ui (DOM helpers used during app bootstrap and UI wiring)
 import {
   setOverlayLabel,
@@ -15,6 +15,8 @@ import {
   wireHudInlineToggle,
   bindControls,
   updateHUD,
+  showOverlay,
+  hideOverlay,
 } from './ui.js';
 
 // inputs (maps buttons/keyboard to game intents)
@@ -23,7 +25,7 @@ import { initMoveControls, wireMenuPlayToggle } from './input.js';
 // scoring (bootstraps score/lives state and HUD sync trigger)
 import { init as initScoring, state, getSnapshot, setHooks } from './scoring.js';
 
-import { startBeatSpawner } from './scheduler.js';
+import { startSongById, stopSong } from './songPlayer.js'; 
 
 // --- TEMP DEBUG: module loaded + DOMContentLoaded hook present ---
 console.log('[game] module loaded');
@@ -31,6 +33,24 @@ console.log('[game] module loaded');
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[game] DOMContentLoaded fired (before try)');
 });
+
+/** Run a simple 3-2-1 countdown on the overlay label. */
+function runOverlayCountdown(seconds = 3) {                 // Show 3..2..1..GO! on overlay
+  const total = Math.max(0, Math.floor(seconds));           // Sanitize input
+  let left = total;                                         // Seconds remaining
+  setOverlayLabel(String(left || ''));                      // Initial label (e.g., "3")
+  const id = setInterval(() => {                            // Tick every second
+    left -= 1;                                              // Decrement remaining
+    if (left > 0) {                                         // Still counting
+      setOverlayLabel(String(left));                        // Update label
+      return;                                               // Keep ticking
+    }
+    clearInterval(id);                                      // Stop the interval
+    setOverlayLabel('GO!');                                 // Tiny punch before song starts
+    setTimeout(() => setOverlayLabel('Play'), 600);         // Normalize back after a short beat
+  }, 1000);
+}
+
 
 /* =============================
    DOMContentLoaded bootstrap - Wire everything once DOM is ready.
@@ -61,18 +81,81 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePlayMenuLabel();                         // navbar shows ▶ Play (safe if unused)
     console.log('[game] paused attr set:', document.body.hasAttribute('data-paused'));
 
-    /* Listens for a start-run request from the UI and enables gameplay */
-    window.addEventListener('ui:requestStartRun', () => {
-      console.log('[game] ui:requestStartRun received: paused(before)=', document.body.hasAttribute('data-paused'), ' running(before)=', state.running);
 
-      state.running = true;                         // enable gameplay
-      document.body.removeAttribute('data-paused'); // UI no longer paused
 
-      console.log('[game] after unpause: paused=', document.body.hasAttribute('data-paused'), ' running=', state.running);
+    /* Listens for a start-run request from the UI and starts the current song */
+window.addEventListener('ui:requestStartRun', async () => {
+  // --- Guard: abort if no songs are registered ---
+  const hasSongs = Array.isArray(SONGS) && SONGS.length > 0;
+  if (!hasSongs) {
+    state.running = false;                          // keep inputs locked
+    document.body.setAttribute('data-paused', 'true'); // freeze UI anims
+    setOverlayLabel('No songs installed');          // friendly message
+    showOverlay();                                  // keep CTA visible
+    console.warn('[game] start aborted: no songs in registry');
+    return;
+  }
 
-      updatePlayMenuLabel();                        // keep label in sync (safe if unused)
-       startBeatSpawner();
+  console.log(
+    '[game] ui:requestStartRun received: paused(before)=',
+    document.body.hasAttribute('data-paused'),
+    ' running(before)=', state.running
+  );
+
+  state.running = true;                               // unlock input
+  document.body.removeAttribute('data-paused');       // unfreeze UI
+  updatePlayMenuLabel();                              // sync navbar
+
+  // Show overlay and let the song events drive the countdown lifecycle.
+  setOverlayLabel('');                                // clear any old text
+
+  try {
+    // Start the first registered song; 3s visual/audio countdown.
+    await startSongById(undefined, {
+      countdownSec: 3,                                // 3..2..1..GO!
+      travelBeats: 2.0                                // keep current travel timing
     });
+  } catch (err) {
+    console.error('[game] failed to start song:', err);
+    // fail-safe UI recovery
+    state.running = false;
+    document.body.setAttribute('data-paused', 'true');
+    setOverlayLabel('Play');
+    showOverlay();
+  }
+});
+
+
+
+    /* Song lifecycle → drive overlay and countdown text */
+    window.addEventListener('song:ready', () => {   // Chart+audio loaded, countdown about to run
+      showOverlay();                                // make sure overlay is visible
+      runOverlayCountdown(3);                       // show 3..2..1..GO!
+    });
+
+    window.addEventListener('song:started', () => { // Audio actually started
+      hideOverlay();                                // hide overlay for gameplay
+    });
+
+    window.addEventListener('song:ended', () => {   // Song finished
+      state.running = false;                        // lock inputs
+      document.body.setAttribute('data-paused', 'true'); // freeze UI anims
+      updatePlayMenuLabel();                        // sync navbar label
+      setOverlayLabel('Play');                      // normalize CTA label
+      showOverlay();                                // show overlay to let player start next
+    });
+
+    window.addEventListener('song:error', (e) => {  // Loading/decoding failed
+      console.error('[game] song error:', e.detail); // surface the error
+      state.running = false;                         // lock inputs
+      document.body.setAttribute('data-paused', 'true'); // pause UI
+      setOverlayLabel('Play');                       // back to neutral
+      showOverlay();                                 // keep recovery UX
+    });
+
+
+
+
 
     // ensure overlay is visible on first load
     const overlay = document.getElementById('overlay');
@@ -101,6 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
     bindControls();
     console.log('[game] bindControls() called');
 
+
+
+
     /* ----- Inline HUD collapse (Score/Best/Level) ----- */
     const savedHud = localStorage.getItem(HUD_MODE_KEY);                  // fetch persisted mode
     const prefersCollapsed = window.matchMedia('(max-width: 732px)').matches; // breakpoint check
@@ -119,6 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     console.log('[game] HUD breakpoint listener attached');
+
+
 
     /* ----- Mobile UX: close navbar collapse after clicking a nav button ----- */
     document.querySelectorAll('#primaryNav .nav-btn').forEach((btn) => {
