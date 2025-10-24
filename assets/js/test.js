@@ -1,39 +1,59 @@
-/* =============================
-   RANDOM TEST SPAWNER (dev)
-   ============================= */
+// test.js — developer console helpers (non-production)
 
-let _beatTimer = null;                                     // interval handle
-const rhythm = {
-  bpm: 120,            // tempo
-  stepDiv: 1,          // ticks per beat (1=each beat)
-  travelBeats: 2.0     // travel beats to judge line
-};
+import {
+  state,
+  gradeHit,
+  spawnJudgedNote,
+  clearAllNotes,
+  init as initScoring,
+} from './scoring.js';
 
+import {
+  doLeftMove, doRightMove, doUpMove, doDownMove,
+} from './input.js';
 
-/* =============================
-   DEV test hooks
-   ============================= */
-/* ----------------------------------------
-   exposeDevHooks
-   Purpose: Attach useful helpers to window for console testing.
-   Safe to keep in production; only references are exposed.
----------------------------------------- */
-(function exposeDevHooks() {
-  if (typeof window === 'undefined') return;  // guard
+import {
+  showOverlay, setOverlayLabel, updatePlayMenuLabel,
+} from './ui.js';
 
-  // Moves (Console: doLeftMove(), doRightMove(), doUpMove(), doDownMove())
-  window.doLeftMove  = doLeftMove;
-  window.doRightMove = doRightMove;
-  window.doUpMove    = doUpMove;
-  window.doDownMove  = doDownMove;
+//  everything under one namespace to avoid global clutter.
+if (typeof window !== 'undefined') {
+  window.dev = {
+    // Read-only view of current game state
+    state,
 
-  // Time-based judge entry (Console: tryJudge('left'|'right'|'up'|'down'))
-  window.tryJudge    = tryJudge;
+    // Visual-only moves (animation only, no scoring)
+    move: {
+      left:  () => doLeftMove(),
+      right: () => doRightMove(),
+      up:    () => doUpMove(),
+      down:  () => doDownMove(),
+    },
 
-  // TODO: expose start/stop helpers if you want quick testing:
-  // window.startBeatSpawner = startBeatSpawner;
-  // window.stopBeatSpawner  = stopBeatSpawner;
-})();
+    // Move + judge (animation + scoring)
+    hit: {
+      left:  () => { doLeftMove();  gradeHit('left');  },
+      right: () => { doRightMove(); gradeHit('right'); },
+      up:    () => { doUpMove();    gradeHit('up');    },
+      down:  () => { doDownMove();  gradeHit('down');  },
+    },
 
+    // Spawn a judged note into a lane
+    // Usage: dev.spawn('left') or dev.spawn('up', 1.5, 120)
+    spawn: (dir = 'left', beats = 2, bpm = 120) =>
+      spawnJudgedNote(dir, beats, bpm),
 
-export{ exposeDevHooks };
+    // Remove all notes (DOM + internal queue)
+    clear: () => clearAllNotes(),
+
+    // Full reset: clear, reset scoring/HUD, show overlay in paused state
+    reset: () => {
+      clearAllNotes();
+      initScoring();
+      document.body.setAttribute('data-paused', 'true');
+      setOverlayLabel('Play');
+      showOverlay();
+      updatePlayMenuLabel();
+    },
+  };
+}

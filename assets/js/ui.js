@@ -1,3 +1,8 @@
+
+
+
+// --- TEMP DEBUG ---
+console.log('[ui] module loaded');
 /* ---------------------------
    UI related functions
 ---------------------------- */
@@ -13,11 +18,20 @@ const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // ci
     Purpose: Visual helpers for the CTA/pause overlay.
  */
 
-function showOverlay() { overlayEl?.classList.remove('hidden'); } // reveal overlay
-function hideOverlay() { overlayEl?.classList.add('hidden'); }    // hide overlay
+function showOverlay() { 
+  overlayEl?.classList.remove('hidden');                         // reveal overlay
+ }
+function hideOverlay() { 
+  overlayEl?.classList.add('hidden');                            // hide overlay
+} 
+/* setOverlayLabel
+   Purpose: Update the overlay CTA label text.
+   Usage: setOverlayLabel('Play');
+*/
 function setOverlayLabel(text) {
-  const label = document.querySelector('#overlay .play-label');   // find label span
-  if (label) label.textContent = text;                            // set text content
+  const label = document.querySelector('#overlay .play-label');
+  if (!label) return;
+  label.textContent = text;
 }
 
 /* ----------------------------------------
@@ -115,38 +129,79 @@ function initRotateOverlay() {
    Purpose: Keep navbar button in sync with game state.
    Usage: wireMenuPlayToggle() on DOM ready; call updatePlayMenuLabel() on state change.
 ---------------------------------------- */
+/* Returns the navbar Play/Pause toggle button */
 function getMenuPlayToggle() {
-  return document.getElementById('menuPlayToggle'); // late query for safety
+  return document.getElementById('menuPlayToggle');
 }
-function setMenuLabelToPlay()  { const b = getMenuPlayToggle(); if (!b) return; b.textContent = '▶ Play';  b.setAttribute('aria-pressed','false'); }
-function setMenuLabelToPause() { const b = getMenuPlayToggle(); if (!b) return; b.textContent = '⏸ Pause'; b.setAttribute('aria-pressed','true'); }
-function updatePlayMenuLabel() { state.running ? setMenuLabelToPause() : setMenuLabelToPlay(); }
+
+/* Sets the navbar label to ▶ Play and updates the a11y state */
+function setMenuLabelToPlay() {
+  const btn = getMenuPlayToggle();
+  if (!btn) return;
+  btn.textContent = '▶ Play';
+  btn.setAttribute('aria-pressed', 'false');
+}
+
+/* Sets the navbar label to ⏸ Pause and updates the a11y state */
+function setMenuLabelToPause() {
+  const btn = getMenuPlayToggle();
+  if (!btn) return;
+  btn.textContent = '⏸ Pause';
+  btn.setAttribute('aria-pressed', 'true');
+}
+
+/* Updates the navbar Play/Pause label based on the paused data attribute */
+function updatePlayMenuLabel() {
+  const isPaused = document.body.hasAttribute('data-paused');
+  if (isPaused) {
+    setMenuLabelToPlay();
+  } else {
+    setMenuLabelToPause();
+  }
+}
 
 
-/* 
-   wirePlayButton
-   Purpose: Wire the circular CTA button (once). Starts the game.
-   Usage: call once after overlay is visible on DOMContentLoaded.
-   TODO: call your real game loop start instead of spawner only.
- */
 
+/* wirePlayButton
+   Purpose: Wire the circular CTA button and request a start-run; flip UI paused state first so UI reflects running even if later code throws.
+   Usage: wirePlayButton();
+*/
 function wirePlayButton() {
-  const overlay = document.getElementById('overlay');       // re-query overlay (robust)
-  if (!overlay) return;                                     // guard: missing overlay
-  const btn = overlay.querySelector('.play-btn');           // find play button
-  if (!btn) return;                                         // guard: missing button
-  if (btn.dataset.wired === 'true') return;                 // already wired once
-  btn.dataset.wired = 'true';                               // mark as wired
+  console.log('[overlay] wirePlayButton: start');
 
-  btn.addEventListener('click', () => {                     // on click
-    state.running = true;                                   // go to running
-    startBeatSpawner();                                     // start test spawner
-    setOverlayLabel('Play');                                // normalize label
-    hideOverlay();                                          // close overlay
-    updatePlayMenuLabel();                                  // navbar → Pause
-    // TODO: startGameLoop();
+  const overlay = document.getElementById('overlay'); // overlay root
+  if (!overlay) { console.log('[overlay] wirePlayButton: no overlay'); return; }
+
+  const btn = overlay.querySelector('.play-btn'); // play button
+  if (!btn) { console.log('[overlay] wirePlayButton: no .play-btn'); return; }
+
+  if (btn.dataset.wired === 'true') { console.log('[overlay] wirePlayButton: already wired'); return; }
+  btn.dataset.wired = 'true';
+  console.log('[overlay] wirePlayButton: listener attached');
+
+  btn.addEventListener('click', () => {
+    console.log('[overlay] click: paused(before)=', document.body.hasAttribute('data-paused'));
+
+    // request start
+    window.dispatchEvent(new CustomEvent('ui:requestStartRun'));
+
+    // unpause UI immediately
+    document.body.removeAttribute('data-paused');
+    console.log('[overlay] after removeAttribute: paused=', document.body.hasAttribute('data-paused'));
+    updatePlayMenuLabel();
+
+    // normalize overlay state
+    setOverlayLabel('Play');
+    hideOverlay();
+
+
+    console.log('[overlay] end handler');
   });
 }
+
+
+
+
 
 /* ----------------------------------------
    bindControls
@@ -239,17 +294,40 @@ function judgeFlash(type) {
   }, 320);
 }
 
+// Used by setFeedback to auto-clear the message
+let _feedbackTimer = null;                 // active timeout handle
+let _feedbackSeq = 0;                      // sequence to avoid stale clears
+const FEEDBACK_CLEAR_MS = 700;             // how long the text stays (ms)
+
+
+
 /* ----------------------------------------
    setFeedback
    Purpose: Show textual feedback + trigger judgeFlash.
-   Usage: setFeedback('Perfect','good') / setFeedback('MISS','miss')
+   Usage: setFeedback('Perfect','good') / setFeedback('miss')
 ---------------------------------------- */
 function setFeedback(label, flash) {
-  const el = document.getElementById('feedback');          // feedback element
-  if (!el) return;                                         // guard
-  el.textContent = label;                                  // set text
-  if (flash === 'good') judgeFlash('good');                // success flash
-  if (flash === 'miss') judgeFlash('miss');                // miss flash
+  const el = document.getElementById('feedback');
+  if (!el) return;
+
+  // Cancel any previous clear timer
+  if (_feedbackTimer) { clearTimeout(_feedbackTimer); _feedbackTimer = null; }
+
+  // Show text + optional judge flash
+  el.textContent = label;
+  if (flash === 'good') judgeFlash('good');
+  if (flash === 'miss') judgeFlash('miss');
+
+  // Sequence guard: prevents an older timer from clearing a newer message
+  const mySeq = ++_feedbackSeq;
+
+  // Auto-clear after a short delay
+  _feedbackTimer = setTimeout(() => {
+    if (mySeq === _feedbackSeq) {
+      el.textContent = '';
+    }
+    _feedbackTimer = null;
+  }, FEEDBACK_CLEAR_MS);
 }
 
 
@@ -309,6 +387,77 @@ function createHeart(stateClass) {
   return svg;                                                                   // return the ready node
 }
 
+
+/* Renders the hearts row based on lives and the current partial damage step */
+function renderLives(container, lives, partial = 0, steps = 4) {
+  if (!container) return; // guard
+  container.innerHTML = ''; // clear
+
+  const safeLives   = Math.max(0, lives); // clamp
+  const safePartial = Math.min(Math.max(partial, 0), steps - 1); // clamp
+
+  for (let i = 0; i < Math.max(safeLives - 1, 0); i++) {
+    container.appendChild(createHeart('full')); // full hearts except last
+  }
+
+  if (safeLives > 0) {
+    let klass = 'full'; // default
+    if (safePartial === 1) klass = 'threequarter';
+    if (safePartial === 2) klass = 'half';
+    if (safePartial === 3) klass = 'quarter';
+    container.appendChild(createHeart(klass)); // last heart can be partial
+  }
+
+  if (safeLives <= 0) {
+    container.appendChild(createHeart('empty')); // empty state when no lives
+  }
+}
+
+/* Updates HUD numbers and hearts using a provided snapshot object */
+function updateHUD(snapshot) {
+  if (!snapshot) return; // guard
+  const livesEl = document.getElementById('lives'); // hearts container
+  const scoreEl = document.getElementById('score'); // score text
+  const levelEl = document.getElementById('level'); // level text
+  renderLives(livesEl, snapshot.lives, snapshot.partial); // hearts
+  if (scoreEl) scoreEl.textContent = snapshot.score; // score number
+  if (levelEl) levelEl.textContent = snapshot.level; // level number
+}
+
+
+/* Returns cached references to the four rails so I can target the right lane */
+function getRailsMap() {
+  const root = document.querySelector('.rails'); // rails root
+  if (!root) return null; // guard
+  return {
+    left:  root.querySelector('.rail-left'),  // left rail
+    up:    root.querySelector('.rail-up'),    // up rail
+    down:  root.querySelector('.rail-down'),  // down rail
+    right: root.querySelector('.rail-right')  // right rail
+  };
+}
+
+/* Calculates the pixel distance from the rail top to the center of the judge line */
+function getJudgeDistancePx(railEl) {
+  if (!railEl) return 0; // guard
+  const stageTop = railEl.getBoundingClientRect().top; // rail top Y
+  const judge = document.querySelector('.judge-line'); // judge hook
+  if (!judge) {
+    return Math.max(0, railEl.clientHeight * 0.62 - 20); // fallback approximation
+  }
+  const targetY = judge.getBoundingClientRect().top + (judge.clientHeight / 2); // center Y
+  const dist = Math.max(0, targetY - stageTop - 9); // distance to align note center
+  return dist;
+}
+
+/* Calculates the pixel distance from the rail top to where the note ends at the bottom */
+function getBottomDistancePx(railEl) {
+  if (!railEl) return 0; // guard
+  const NOTE_H = 40; // must match CSS .note height
+  return Math.max(0, railEl.clientHeight - NOTE_H); // bottom stop
+}
+
+
 /* ----------------------------------------
    spawnNote
    Purpose: Create one falling orb (note) inside the given rail.
@@ -347,7 +496,6 @@ function spawnNote(dir, travelBeats = 2, bpm = 120) {
 }
 
 
-
 /* ---------------------------
    Export all UI functions
 ---------------------------- */
@@ -363,9 +511,13 @@ export {
   // Feedback / judge flash
   judgeFlash, setFeedback,
   // Hearts
-  createHeart,
+  createHeart,  renderLives,
   // Notes (visual)
   spawnNote,
   // Rotate overlay
-  updateRotateOverlayAria, dismissRotateUntilPortrait, resetDismissalIfPortrait, initRotateOverlay
+  updateRotateOverlayAria, dismissRotateUntilPortrait, resetDismissalIfPortrait, initRotateOverlay,
+  // Extra controls
+  bindControls,
+  // HUD update
+  updateHUD,
 };

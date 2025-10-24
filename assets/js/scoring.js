@@ -1,360 +1,260 @@
-import { createHeart } from './ui.js';
-import { setFeedback } from './ui.js';
+import { setFeedback, spawnNote } from './ui.js';
 
+/* =========================================================
+   Scoring & Judging — single source of truth for game state
+   Owns: score/lives/level, timing queue, grading, and HUD hooks
+   UI owns: visual note spawning & rail measurements (via ui.js)
 
+   Notes to self:
+   - Keep this module logic-only for visuals that belong to UI.
+   - Do not mutate DOM except removing note elements on hit/miss.
+========================================================= */
 
-/* ----------------------------------------
-   Global game state
-   - Single source of truth for HUD + run state.
-   Usage: mutate via functions (hit/heal/start/stop).
----------------------------------------- */
+// ----- Global state (exported) -----
 const state = {
-  running: false,  // game running flag
-  score:   0,      // current score
-  lives:   3,      // hearts left
-  level:   1,      // current level
-  partial: 0       // damage steps on the active heart (0..3)
-};
-/* 
-
-/* ----------------------------------------
-   Quick HUD refs
-   - Cache key DOM nodes used by updateHUD().
-   Usage: hud.score.textContent = '10'
----------------------------------------- */
-const hud = {
-  lives: document.getElementById('lives'), // lives container (hearts)
-  score: document.getElementById('score'), // score number
-  best:  document.getElementById('best'),  // (placeholder) best/high score
-  level: document.getElementById('level')  // level number
+  running: false,  // flag: the game is currently running or paused
+  score:   0,      // current score counter
+  lives:   5,      // total lives (full hearts)
+  level:   1,      // level placeholder (for future difficulty scaling)
+  partial: 0       // damage steps on the active heart: 0..3 (four steps = -1 life)
 };
 
-/* ----------------------------------------
-   init
-   Purpose: Reset state and render the HUD once.
-   Usage: call once on DOMContentLoaded.
-   TODO: load best score from storage when you add persistence.
----------------------------------------- */
+/* --------------------------------------------------------
+   init()
+   Purpose: Reset state to defaults and notify HUD once.
+   Usage:
+     init(); // typically on DOMContentLoaded
+-------------------------------------------------------- */
 function init() {
-  state.running = false;  // ensure not running
-  state.score   = 0;      // reset score
-  state.lives   = 5;      // default lives
-  state.level   = 1;      // default level
-  state.partial = 0;      // clear partial damage
-  updateHUD();            // render HUD to match state
+  state.running = false;  // ensure not running on fresh init
+  state.score   = 0;      // reset score to zero
+  state.lives   = 5;      // default lives count
+  state.level   = 1;      // default level value
+  state.partial = 0;      // no partial damage on start
+  notify();               // push fresh snapshot to HUD via hook
 }
 
-/* ----------------------------------------
-   Quick HUD refs
-   - Cache key DOM nodes used by updateHUD().
-   Usage: hud.score.textContent = '10'
----------------------------------------- */
-const hud = {
-  lives: document.getElementById('lives'), // lives container (hearts)
-  score: document.getElementById('score'), // score number
-  best:  document.getElementById('best'),  // (placeholder) best/high score
-  level: document.getElementById('level')  // level number
-};
-
-/* ----------------------------------------
-   updateHUD
-   Purpose: Sync HUD numbers and hearts from state.
-   Usage: updateHUD()
----------------------------------------- */
-function updateHUD() {
-  renderLives(hud.lives, state.lives, state.partial); // render lives strip
-  hud.score.textContent = state.score;                // update score text
-  hud.level.textContent = state.level;                // update level text
-  // TODO: show best/high score when you add persistence.
+/* --------------------------------------------------------
+   Snapshot & hooks
+   - getSnapshot(): returns a plain, read-only view for HUD.
+   - setHooks(): register callbacks; currently only onUpdate.
+   - notify(): calls onUpdate with the latest snapshot.
+-------------------------------------------------------- */
+function getSnapshot() {
+  // Return only serializable values that HUD needs.
+  return {
+    score:   state.score,
+    lives:   state.lives,
+    level:   state.level,
+    partial: state.partial
+  };
 }
 
+let onUpdate = null; // holds the HUD update callback (if registered)
 
-/* ----------------------------------------
-   renderLives
-   Purpose: Render hearts row according to lives + partial damage step.
-   Usage: renderLives(hud.lives, state.lives, state.partial)
----------------------------------------- */
-function renderLives(container, lives, partial = 0, steps = 4) {
-  container.innerHTML = '';                                  // clear old hearts
-  const safeLives   = Math.max(0, lives);                    // clamp negative
-  const safePartial = Math.min(Math.max(partial, 0), steps - 1); // clamp step
+function notify() {
+  // If a hook exists, send the current snapshot to HUD.
+  if (typeof onUpdate === 'function') onUpdate(getSnapshot());
+}
 
-  for (let i = 0; i < Math.max(safeLives - 1, 0); i++) {     // for all but last
-    container.appendChild(createHeart('full'));              // render full heart
-  }
-
-  if (safeLives > 0) {                                       // last heart may be partial
-    let klass = 'full';                                      // default full
-    if (safePartial === 1) klass = 'threequarter';           // 3/4
-    if (safePartial === 2) klass = 'half';                   // 1/2
-    if (safePartial === 3) klass = 'quarter';                // 1/4
-    container.appendChild(createHeart(klass));               // append the last one
-  }
-
-  if (safeLives <= 0) {                                      // no lives → show empty
-    container.appendChild(createHeart('empty'));
+/* --------------------------------------------------------
+   setHooks
+   Purpose: Provide callbacks (e.g., HUD updater) to scoring.
+-------------------------------------------------------- */
+function setHooks(hooks) {
+  if (!hooks) return;                         // guard: nothing provided
+  if (typeof hooks.onUpdate === 'function') { // only accept valid function
+    onUpdate = hooks.onUpdate;                // store the HUD updater
   }
 }
 
-
-/* ----------------------------------------
-   hit
-   Purpose: Apply damage in steps; every 4th step consumes one life.
-   Usage: hit()
----------------------------------------- */
+/* --------------------------------------------------------
+   Lives management
+   hit(): apply quarter-damage; every 4 steps consume 1 life.
+   heal(): restore one full life and clear partial damage.
+   Notes:
+   - No negative clamp here; add game-over handling elsewhere if needed.
+-------------------------------------------------------- */
 function hit() {
-  if (state.lives <= 0) return;            // already dead → ignore
-  if (state.partial < 3) {                 // not yet at 4th step
-    state.partial += 1;                    // increment step
-  } else {
-    state.lives -= 1;                      // lose one heart
-    state.partial = 0;                     // reset step
+  if (state.lives <= 0) return;     // ignore hits when no lives remain
+  if (state.partial < 3) {          // build up partial damage (0→1→2→3)
+    state.partial += 1;             // step partial by one
+  } else {                          // on the 4th step...
+    state.lives -= 1;               // consume one full life
+    state.partial = 0;              // reset partial back to zero
   }
-  updateHUD();                              // refresh HUD
+  notify();                         // reflect change in the HUD
 }
 
-
-
-/* ----------------------------------------
-   heal
-   Purpose: Restore a full heart and clear partial damage.
-   Usage: heal()
----------------------------------------- */
 function heal() {
-  state.lives += 1;                         // add life
-  state.partial = 0;                        // clear damage step
-  updateHUD();                              // refresh HUD
+  state.lives += 1;   // add a full life
+  state.partial = 0;  // clear any partial damage on the active heart
+  notify();           // update HUD with the new lives state
 }
 
-/* =============================
-   TIME-BASED JUDGING (ETA queue)
-   ============================= */
-
-/* ----------------------------------------
-   judgeConfig
-   Purpose: Shared tempo + timing windows for grading.
----------------------------------------- */
+/* =========================================================
+   Time-based judging (ETA queue)
+   - We register each spawned note with an ETA (when it crosses judge line).
+   - On input, we pick the nearest ETA in the same lane and grade by |Δt|.
+========================================================= */
 const judgeConfig = {
-  bpm: 120,                 // tempo used for ETA
-  travelBeats: 2.0,         // beats from spawn to judge line
-  windows: {                // centered hit windows (ms)
-    perfect: 50,            // ≤ 50ms
-    great:   90,            // ≤ 90ms
-    good:   140             // ≤ 140ms
+  bpm: 120,           // tempo in beats per minute (controls ETA spacing)
+  travelBeats: 2.0,   // how many beats a note travels from spawn to judge line
+  windows: {          // centered hit windows (in milliseconds)
+    perfect: 50,      // |Δt| ≤ 50ms → Perfect
+    great:   90,      // |Δt| ≤ 90ms → Great
+    good:   140       // |Δt| ≤ 140ms → Good
   }
 };
 
-/* ----------------------------------------
-   Runtime queue
-   Each entry: { id, dir, eta, el, hit:false }
----------------------------------------- */
-const activeNotes = [];   // pending notes to judge
-let _noteId = 0;         // simple id counter
+// Runtime queue of active notes waiting to be judged.
+const activeNotes = []; // each: { id, dir, eta, el, hit:false }
+let _noteId = 0;        // simple counter for debugging and tracking
 
-/* Small helpers */
-function nowMs() { return performance.now(); }             // monotonic clock
+// Small helpers
+function nowMs() { return performance.now(); } // monotonic timestamp for comparisons
+
 function removeActiveById(id) {
-  const idx = activeNotes.findIndex(n => n.id === id);     // find by id
-  if (idx !== -1) activeNotes.splice(idx, 1);              // remove if found
+  const idx = activeNotes.findIndex(n => n.id === id); // locate note by id
+  if (idx !== -1) activeNotes.splice(idx, 1);          // remove from queue if found
 }
 
-/* ----------------------------------------
-   gradeHit
-   Purpose: On input, pick closest note in same dir and grade by |eta-now|.
-   Returns: {hit:true,label:'Perfect'|'Great'|'Good'} or {hit:false,label:'Miss'}
----------------------------------------- */
+/* --------------------------------------------------------
+   gradeHit(dir)
+   Purpose: On input, pick closest ETA in the same lane and grade by |eta - now|.
+   Returns:
+     { hit:true,  label:'Perfect'|'Great'|'Good' }
+     { hit:false, label:'Miss' }
+   Notes:
+   - On any input miss (wrong lane OR outside timing windows) we apply a heart penalty.
+   - Natural misses (no input as the note falls) are visual-only elsewhere and do not penalize lives.
+-------------------------------------------------------- */
 function gradeHit(dir) {
-  const t = nowMs();                                       // current time
-  let bestIdx = -1;                                        // best candidate index
-  let bestAbs = Infinity;                                  // best |Δt|
+  const t = nowMs();              // current time for window comparison
+  let bestIdx = -1;               // index of best candidate in queue
+  let bestAbs = Infinity;         // best |eta - now| so far
 
-  for (let i = 0; i < activeNotes.length; i++) {           // scan queue
-    const n = activeNotes[i];                              // candidate
-    if (n.dir !== dir) continue;                           // must match direction
-    const adt = Math.abs(n.eta - t);                       // |Δt| to ETA
-    if (adt < bestAbs) { bestAbs = adt; bestIdx = i; }     // keep tighter one
+  // Scan the queue for the closest note in the same direction.
+  for (let i = 0; i < activeNotes.length; i++) {
+    const n = activeNotes[i];            // candidate
+    if (n.dir !== dir) continue;         // skip other lanes
+    const adt = Math.abs(n.eta - t);     // absolute delta to target time
+    if (adt < bestAbs) {                 // keep the tightest window
+      bestAbs = adt;                     // update best |Δt|
+      bestIdx = i;                       // remember index
+    }
   }
 
-  if (bestIdx === -1) {                                    // none in lane
-    setFeedback('MISS', 'miss');                           // UI miss
-    return { hit:false, label:'Miss' };
+  // No candidate in lane → input MISS (apply penalty).
+  if (bestIdx === -1) {
+    setFeedback('MISS', 'miss');   // visual feedback
+    hit();                         // apply heart penalty on input miss
+    notify();                      // update HUD immediately
+    return { hit: false, label: 'Miss' };
   }
 
-  const w = judgeConfig.windows;                           // window cfg
-  let label = 'Miss';                                      // default
+  // Resolve grade label by window thresholds.
+  const w = judgeConfig.windows;   // window boundaries
+  let label = 'Miss';              // default to miss
   if (bestAbs <= w.perfect) label = 'Perfect';
   else if (bestAbs <= w.great) label = 'Great';
   else if (bestAbs <= w.good)  label = 'Good';
 
-  if (label !== 'Miss') {                                  // a valid hit
-    const n = activeNotes[bestIdx];                        // note meta
-    n.hit = true;                                          // mark hit
-    if (n.el) n.el.remove();                               // remove DOM if still there
-    activeNotes.splice(bestIdx, 1);                        // consume
+  // If within a valid window, score and clean up.
+  if (label !== 'Miss') {
+    const n = activeNotes[bestIdx];  // the judged note
+    n.hit = true;                    // mark as hit for bookkeeping
+    if (n.el) n.el.remove();         // remove DOM element if still present
+    activeNotes.splice(bestIdx, 1);  // drop from queue
 
-    if (label === 'Perfect') state.score += 100;           // score bumps
+    // Score by quality.
+    if (label === 'Perfect') state.score += 100;
     else if (label === 'Great') state.score += 70;
     else if (label === 'Good')  state.score += 50;
-    updateHUD();                                           // refresh HUD
-    setFeedback(label, 'good');                            // UI good flash
-    return { hit:true, label };
+
+    notify();                        // update HUD with new score
+    setFeedback(label, 'good');      // show positive feedback + flash
+    return { hit: true, label };     // return graded result
   }
 
-  setFeedback('MISS', 'miss');                             // outside windows
-  return { hit:false, label:'Miss' };                      // miss
+  // Outside windows → input MISS (apply penalty).
+  setFeedback('MISS', 'miss'); // visual feedback
+  hit();                       // apply heart penalty on early/late input
+  notify();                    // update HUD immediately
+  return { hit: false, label: 'Miss' };
 }
 
-
-
-/* ----------------------------------------
-   tryJudge
-   Purpose: Check if a note in the lane is hittable and apply scoring.
-   Usage: tryJudge('left'|'right'|'up'|'down')
----------------------------------------- */
-function tryJudge(dir) {
-  const lane = document.querySelector(`.lane.${dir}`);     // select lane element
-  if (!lane) return;                                       // guard if missing
-
-  const note = lane.querySelector('.note');                // first note in lane
-  if (!note) {                                             // no note to hit
-    setFeedback('MISS', 'miss');                           // feedback miss
-    hit();                                                 // lose life
-    return;
-  }
-
-  // TODO: Replace with proper timing window check vs. music
-  const inWindow = true;                                   // temporary always true
-  if (inWindow) {
-    note.remove();                                         // remove note
-    state.score += 100;                                    // add points
-    setFeedback('Perfect!', 'good');                       // feedback perfect
-  } else {
-    setFeedback('MISS', 'miss');                           // feedback miss
-    hit();                                                 // lose life
-  }
-
-  updateHUD();                                             // refresh HUD
-}
-
-
-/* ----------------------------------------
-   judgeHit
-   Purpose: Wrapper for note judging so input.js 
-   does not call game.js directly.
-   Usage: judgeHit('left'|'right'|'up'|'down')
----------------------------------------- */
-function judgeHit(dir) {
-  tryJudge(dir); // delegate to main game logic
-}
-
-/* ----------------------------------------
-   registerNote
-   Purpose: Compute ETA and push into activeNotes.
-   Returns: meta so caller can link DOM element later.
----------------------------------------- */
+/* --------------------------------------------------------
+   registerNote(dir, travelBeats?, bpm?)
+   Purpose: Compute ETA from now and push note meta into the queue.
+   Usage:
+     const meta = registerNote('left', 2, 120);
+-------------------------------------------------------- */
 function registerNote(dir, travelBeats = judgeConfig.travelBeats, bpm = judgeConfig.bpm) {
-  const msPerBeat = 60000 / bpm;                           // beat length in ms
-  const eta = nowMs() + (travelBeats * msPerBeat);         // expected crossing time
-  const meta = { id: ++_noteId, dir, eta, el: null, hit: false }; // runtime meta
-  activeNotes.push(meta);                                   // store
-  return meta;                                              // return
-}
-
-/* ----------------------------------------
-   spawnJudgedNote
-   Purpose: Register ETA + spawn DOM, and auto-MISS if animation finishes unhit.
-   Usage: use this from your test spawner (and later from chart playback).
----------------------------------------- */
-function spawnJudgedNote(dir, travelBeats = judgeConfig.travelBeats, bpm = judgeConfig.bpm) {
-  const meta = registerNote(dir, travelBeats, bpm);        // create meta with ETA
-  const el = spawnNote(dir, travelBeats, bpm);             // create DOM note (from UI)
-  if (!el) return;                                         // guard
-  meta.el = el;                                            // link DOM→meta
-  el.__noteId = meta.id;                                   // store id on DOM (debug)
-
-  el.addEventListener('animationend', () => {              // when fall ends
-    const still = activeNotes.find(n => n.id === meta.id); // still pending?
-    if (!still) return;                                    // already hit → ignore
-    setFeedback('MISS', 'miss');                           // UI miss
-    hit();                                                 // apply damage step
-    updateHUD();                                           // refresh HUD
-    removeActiveById(meta.id);                             // drop from queue
-    el.remove();                                           // clean DOM
-  }, { once:true });
-}
-
-/* =============================
-   Rails + Notes (visual)
-   ============================= */
-
-/* ----------------------------------------
-   getRailsMap
-   Purpose: Cache references to rail elements.
-   Returns: { left, up, down, right } or null.
----------------------------------------- */
-function getRailsMap() {
-  const root = document.querySelector('.rails');           // rails root
-  if (!root) return null;                                  // guard
-  return {
-    left:  root.querySelector('.rail-left'),               // left rail
-    up:    root.querySelector('.rail-up'),                 // up rail
-    down:  root.querySelector('.rail-down'),               // down rail
-    right: root.querySelector('.rail-right')               // right rail
+  const msPerBeat = 60000 / bpm;                 // length of one beat in ms
+  const eta = nowMs() + (travelBeats * msPerBeat);// target crossing time
+  const meta = {
+    id: ++_noteId,    // unique incremental id
+    dir,              // lane: 'left' | 'up' | 'down' | 'right'
+    eta,              // expected crossing timestamp
+    el: null,         // will link to the DOM element after spawn
+    hit: false        // flag: becomes true on successful judge
   };
+  activeNotes.push(meta);                         // stage into queue
+  return meta;                                    // return for linking
 }
 
-/* ----------------------------------------
-   getJudgeDistancePx
-   Purpose: Pixel distance from rail top to judge-line center.
-   Notes: Uses a hidden .judge-line hook; falls back to an approximation.
----------------------------------------- */
-function getJudgeDistancePx(railEl) {
-  if (!railEl) return 0;                                        // guard
-  const stageTop = railEl.getBoundingClientRect().top;          // rail top Y (viewport)
-  const judge = document.querySelector('.judge-line');          // measurement hook
-  if (!judge) {                                                 // no hook → approximate
-    return Math.max(0, railEl.clientHeight * 0.62 - 20);        // crude approx to --judge-rel
-  }
-  const targetY = judge.getBoundingClientRect().top + (judge.clientHeight / 2); // center Y
-  const dist = Math.max(0, targetY - stageTop - 9);             // align note center reasonably
-  return dist;                                                  // pixels to judge line
+/* --------------------------------------------------------
+   spawnJudgedNote
+   Purpose: Register ETA + spawn a visual note and auto-MISS on fall end.
+   Usage:
+     spawnJudgedNote('up');            // default beats/bpm
+     spawnJudgedNote('left', 1.5, 96); // custom travel/bpm
+-------------------------------------------------------- */
+function spawnJudgedNote(dir, travelBeats = judgeConfig.travelBeats, bpm = judgeConfig.bpm) {
+  const meta = registerNote(dir, travelBeats, bpm); // create meta with ETA
+  const el = spawnNote(dir, travelBeats, bpm);      // ask UI to create the orb
+  if (!el) return;                                  // guard if UI couldn't spawn
+
+  meta.el = el;             // link DOM element to meta entry
+  el.__noteId = meta.id;    // debug hook: useful in devtools
+
+  // When animation reaches the bottom and the note wasn't hit,  count as MISS without penalty.
+  el.addEventListener('animationend', () => {
+    const still = activeNotes.find(n => n.id === meta.id); // still in queue?
+    if (!still) return;             // note already judged as hit; do nothing
+
+
+    // No heart penalty on natural miss by design
+    removeActiveById(meta.id);      // purge from queue
+    el.remove();                    // clean DOM element
+  }, { once: true });               // run once per spawned element
 }
 
-/* ----------------------------------------
-   getBottomDistancePx
-   Purpose: Pixel distance from rail top to where the note stops at bottom.
-   Notes: NOTE_H must match CSS .note height.
----------------------------------------- */
-function getBottomDistancePx(railEl) {
-  if (!railEl) return 0;                        // guard
-  const NOTE_H = 40;                            // must match CSS
-  return Math.max(0, railEl.clientHeight - NOTE_H); // top of note touches rail bottom
-}
-
-/* ----------------------------------------
-   clearAllNotes
-   Purpose: Remove all visual notes and clear ETA queue.
----------------------------------------- */
+/* --------------------------------------------------------
+   clearAllNotes()
+   Purpose: Remove all notes from DOM and clear the ETA queue.
+   Usage:
+     clearAllNotes(); 
+-------------------------------------------------------- */
 function clearAllNotes() {
-  document.querySelectorAll('.rail .note').forEach(n => n.remove()); // purge nodes
-  activeNotes.length = 0;                                            // purge queue
+  document.querySelectorAll('.rail .note') // query every note element
+    .forEach(n => n.remove());             // remove them from DOM
+  activeNotes.length = 0;                  // empty the runtime queue
 }
 
+ // Exports 
 
-
-/* ---------------------------
-   Export all Scoring functions
----------------------------- */
 export {
   // Core state
-  state, init, hud,
-  // Hearts
-  renderLives,
-  // HUD updates
-  updateHUD,
-  // Gameplay
-  hit, heal, 
-    // Judging / spawn
-  tryJudge, spawnJudgedNote, judgeHit, tryJudge, clearAllNotes
+  state, init,
 
+  // Lives API
+  hit, heal,
+
+  // Judging / spawn
+  spawnJudgedNote, clearAllNotes, gradeHit,
+
+  // HUD hooks
+  getSnapshot, setHooks,
 };

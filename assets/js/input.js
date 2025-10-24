@@ -1,7 +1,10 @@
 
-import { state, judgeHit } from './scoring.js';
+import { state, gradeHit } from './scoring.js';
 import { startBeatSpawner, stopBeatSpawner } from './scheduler.js';
 import { setOverlayLabel, showOverlay, hideOverlay } from './ui.js';
+
+// --- TEMP DEBUG ---
+console.log('[input] module loaded');
 
 /* =============================
    MOVE CONTROLLER (CSS-driven)
@@ -62,10 +65,10 @@ function wireMoveButtons() {
     btn.addEventListener('click', () => {                              // on click/tap
       const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // read dir attribute
       if (!state.running) return;                                      // ignore when paused
-      if (dir === 'left')  { doLeftMove();  judgeHit('left');  }       // play left + judge
-      if (dir === 'right') { doRightMove(); judgeHit('right'); }       // play right + judge
-      if (dir === 'up')    { doUpMove();    judgeHit('up');    }       // play up + judge
-      if (dir === 'down')  { doDownMove();  judgeHit('down');  }       // play down + judge
+      if (dir === 'left')  { doLeftMove();  gradeHit('left');  }       // play left + judge
+      if (dir === 'right') { doRightMove(); gradeHit('right'); }       // play right + judge
+      if (dir === 'up')    { doUpMove();    gradeHit('up');    }       // play up + judge
+      if (dir === 'down')  { doDownMove();  gradeHit('down');  }       // play down + judge
     });
   });
 }
@@ -83,10 +86,10 @@ function wireMoveKeyboard() {
     if (isArrow) e.preventDefault();                                   // prevent scroll
     if (!state.running) return;                                        // ignore when paused
 
-    if (e.key === 'ArrowLeft')  { doLeftMove();  judgeHit('left');  return; }
-    if (e.key === 'ArrowRight') { doRightMove(); judgeHit('right'); return; }
-    if (e.key === 'ArrowUp')    { doUpMove();    judgeHit('up');    return; }
-    if (e.key === 'ArrowDown')  { doDownMove();  judgeHit('down');  return; }
+    if (e.key === 'ArrowLeft')  { doLeftMove();  gradeHit('left');  return; }
+    if (e.key === 'ArrowRight') { doRightMove(); gradeHit('right'); return; }
+    if (e.key === 'ArrowUp')    { doUpMove();    gradeHit('up');    return; }
+    if (e.key === 'ArrowDown')  { doDownMove();  gradeHit('down');  return; }
   });
 }
 
@@ -108,6 +111,8 @@ function initMoveControls() {
 function wireMenuPlayToggle() {
   const btn = document.getElementById('quickPlayPause'); // query quick button
   if (!btn) return; // guard if button missing
+  if (btn.dataset.wired === 'true') return; // avoid duplicate listener
+  btn.dataset.wired = 'true';
 
   btn.addEventListener('click', () => { // on click
     if (state.running) {
@@ -119,19 +124,19 @@ function wireMenuPlayToggle() {
       document.body.setAttribute('data-paused', 'true');   /* freeze notes in place */
       btn.setAttribute('aria-pressed', 'false');  // a11y state
       btn.setAttribute('aria-label', 'Play');     // a11y label
-      // (optional) if your quick button shows text/icon, update it here
-      // btn.textContent = '▶ Play';
+      return;
+      
+     // btn.textContent = '▶ Play';                // quick button shows text/icon
     } else {
       // ----- START/RESUME -----
-      state.running = true;                       // mark running
-      startBeatSpawner();                         // start random spawner (existing fn)
-      setOverlayLabel('Play');                    // normalize overlay label
-      hideOverlay();                              // hide overlay
+      state.running = true;                       // mark running                    
       document.body.removeAttribute('data-paused');        /* unfreeze notes */
       btn.setAttribute('aria-pressed', 'true');   // a11y state
       btn.setAttribute('aria-label', 'Pause');    // a11y label
-      // (optional) if your quick button shows text/icon, update it here
-      // btn.textContent = '⏸ Pause';
+      startBeatSpawner();                         // start random spawner (existing fn)
+      setOverlayLabel('Play');                    // normalize overlay label
+      hideOverlay();                               // hide overlay
+     // btn.textContent = '⏸ Pause';          //  quick button shows text/icon
       // TODO: resumeGameLoop() if/when you add a real loop
     }
   });
@@ -142,6 +147,5 @@ function wireMenuPlayToggle() {
    Export all Input functions
 ---------------------------- */
 export {
-  initMoveControls,
-  wireMenuPlayToggle
+  initMoveControls, wireMenuPlayToggle, doLeftMove, doRightMove, doUpMove, doDownMove,
 };

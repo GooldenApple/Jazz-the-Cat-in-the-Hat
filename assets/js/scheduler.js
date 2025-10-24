@@ -1,4 +1,22 @@
-import { spawnJudgedNote } from './scoring.js';
+import { state, spawnJudgedNote } from './scoring.js';
+// --- TEMP DEBUG ---
+console.log('[scheduler] module loaded');
+
+/* =============================
+   Beat Scheduler
+   Notes to self:
+   - This handles a simple beat-based random spawner for notes.
+   - Uses BPM and step division to time intervals.
+   - Calls spawnJudgedNote with random direction when game is running.
+   - Exports rhythm settings so other parts of the game can use them.
+============================= */
+let _beatTimer = null;                                     // interval handle
+const rhythm = {
+  bpm: 120,            // tempo
+  stepDiv: 1,          // ticks per beat (1=each beat)
+  travelBeats: 2.0     // travel beats to judge line
+};
+
 
 /* ----------------------------------------
    startBeatSpawner
@@ -18,6 +36,7 @@ function startBeatSpawner() {
   }, Math.max(80, tickMs));                                // guard too-fast timers
 }
 
+
 /* ----------------------------------------
    stopBeatSpawner
    Purpose: Stop the random spawner.
@@ -26,4 +45,10 @@ function stopBeatSpawner() {
   if (_beatTimer) { clearInterval(_beatTimer); _beatTimer = null; } // clear timer
 }
 
-export { startBeatSpawner,stopBeatSpawner };
+
+
+
+/* ----------------------------------------
+   Export Scheduler API
+---------------------------------------- */
+export { startBeatSpawner, stopBeatSpawner, rhythm, };
