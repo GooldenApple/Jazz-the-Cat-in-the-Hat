@@ -1,5 +1,4 @@
 
-
 // Song registry 
 export const SONGS = [
   {
