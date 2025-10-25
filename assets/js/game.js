@@ -28,7 +28,7 @@ import {
 import { initMoveControls, wireMenuPlayToggle } from './input.js'; // exposes input setup
 
 // scoring (bootstraps score/lives state and HUD sync trigger)
-import { init as initScoring, state, getSnapshot, setHooks } from './scoring.js'; // scoring API
+import { init as initScoring, state, getSnapshot, setHooks, clearAllNotes, } from './scoring.js'; // scoring API
 
 import { startSongById, stopSong } from './songPlayer.js'; // song engine entry points
 
@@ -36,24 +36,41 @@ import { startSongById, stopSong } from './songPlayer.js'; // song engine entry 
 console.log('[game] module loaded'); // prints that this module loaded
 
 let _startingRun = false; // prevents double-start during countdown/loading
+// Track countdown timers so they can be cancelled on pause/stop
+let _cdInterval = null;
+let _cdAfterGoTimer = null;
 
-/** Run a simple 3-2-1 countdown on the overlay label. */
-function runOverlayCountdown(seconds = 3) {              // declares countdown helper
-  const total = Math.max(0, Math.floor(seconds));        // clamps input to non-negative int
-  let left = total;                                      // holds remaining seconds
-  setOverlayLabel(String(left || ''));                   // paints initial number
-  const id = setInterval(() => {                         // creates 1s ticker
-    left -= 1;                                           // decrements per tick
-    if (left > 0) {                                      // continues until zero
-      setOverlayLabel(String(left));                     // updates number
-      return;                                            // exits this tick
-    }
-    clearInterval(id);                                   // stops the ticker
-    setOverlayLabel('GO!');                              // shows a quick punch
-    setTimeout(() => setOverlayLabel('Play'), 600);      // restores neutral label
-  }, 1000);                                              // 1 second interval
+function cancelOverlayCountdown() {
+  if (_cdInterval) { clearInterval(_cdInterval); _cdInterval = null; }
+  if (_cdAfterGoTimer) { clearTimeout(_cdAfterGoTimer); _cdAfterGoTimer = null; }
 }
 
+/* runOverlayCountdown
+   Brief: Show a 3-2-1 countdown on the overlay label; safe to restart and cancel. */
+function runOverlayCountdown(seconds = 3) {
+  cancelOverlayCountdown();                          // prevent overlapping countdowns
+
+  const total = Math.max(0, Math.floor(seconds));    // clamp to non-negative integer
+  let left = total;                                  // remaining seconds tracker
+  setOverlayLabel(String(left || ''));               // render initial number (or empty)
+
+  _cdInterval = setInterval(() => {                  // start 1s tick
+    left -= 1;                                       // decrement remaining
+    if (left > 0) {                                  // still counting
+      setOverlayLabel(String(left));                 // update label with next number
+      return;                                        // skip the finish branch
+    }
+
+    clearInterval(_cdInterval);                      // stop ticking at zero
+    _cdInterval = null;                              // drop interval handle
+
+    setOverlayLabel('GO!');                          // flash “GO!” briefly
+    _cdAfterGoTimer = setTimeout(() => {             // schedule label restore
+      setOverlayLabel('Play');                       // restore neutral label
+      _cdAfterGoTimer = null;                        // drop timeout handle
+    }, 600);                                         // short flash duration
+  }, 1000);                                          // 1 second per tick
+}
 
 /* =============================
    DOMContentLoaded bootstrap - Wire everything once DOM is ready.
@@ -120,17 +137,24 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
     });                                                           // done start intent listener
 
 
-    /* =========================================
-       Song lifecycle: song:ready
-       Brief: When audio + chart are ready, show overlay, freeze visuals, and run the 3-2-1 label.
-       ========================================= */
-    window.addEventListener('song:ready', () => {                 // reacts to assets ready
-      showOverlay();                                              // ensures overlay visible
-      document.body.setAttribute('data-paused', 'true');          // freezes visuals
-      runOverlayCountdown(3);                                     // runs countdown label
-      setOverlayIcon('pause');                                    // keeps pause icon visible
-      updatePlayMenuLabel();                                      // keeps labels consistent
-    });                                                           // done song:ready
+/* song:ready — prepare the overlay for countdown and clean panels before playback starts */
+window.addEventListener('song:ready', () => {
+  cancelOverlayCountdown();                               // stop any previous countdown timers to avoid stale label updates
+  showOverlay();                                          // make the overlay layer visible for the countdown
+  document.body.setAttribute('data-paused', 'true');      // freeze stage animations during the countdown phase
+
+  const res = document.getElementById('resultsCta');      // get Results panel
+  const go  = document.getElementById('gameOverCta');     // get Game Over panel
+  if (res) res.classList.add('hidden');                   // hide Results if it was visible from a prior run
+  if (go)  go.classList.add('hidden');                    // hide Game Over if it was visible from a prior run
+
+  const baseCta = document.querySelector('#overlay .play-cta'); // get the base CTA (round button + label)
+  if (baseCta) baseCta.classList.remove('hidden');        // ensure base CTA is visible (so the label shows the countdown)
+
+  runOverlayCountdown(3);                                 // start the 3 → 2 → 1 → GO! label sequence
+  setOverlayIcon('pause');                                // show the pause icon while the game is “starting”
+  updatePlayMenuLabel();                                  // sync navbar/quick toggle text and aria state to starting/paused
+});
 
 
     /* =========================================
@@ -138,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
        Brief: When audio actually starts, unfreeze visuals, enable input, sync UI, and hide overlay.
        ========================================= */
     window.addEventListener('song:started', () => {               // reacts to audio start
+      cancelOverlayCountdown();
       document.body.removeAttribute('data-paused');               // unfreezes visuals
       state.running = true;                                       // enables judging
       updatePlayMenuLabel();                                      // syncs labels
@@ -158,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
        Brief: Route to Pause / Results / Game Over depending on reason and remaining lives.
        ========================================= */
     window.addEventListener('song:ended', (e) => {                // reacts to end of song
+      cancelOverlayCountdown();
       const reason = e?.detail?.reason || 'completed';            // reads stop reason
 
       state.running = false;                                      // locks inputs
@@ -190,26 +216,34 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
     });                                                           // done song:ended
 
 
-    /**
-     * startLevelWithCountdown()
-     * Brief: Starts the current level with a 3-second overlay countdown; keeps visuals frozen until the audio actually starts.
-     */
-    async function startLevelWithCountdown() {                    // declares helper for next/restart/retry
-      document.body.setAttribute('data-paused', 'true');          // freezes visuals for countdown
-      state.running = false;                                      // disables judging during countdown
-      updatePlayMenuLabel();                                      // syncs labels to paused
-      setOverlayLabel('');                                        // clears label (countdown will paint)
-      showOverlay();                                              // ensures overlay visible
-      try {                                                       // protects start
-        await startSongById(undefined, { countdownSec: 3 });      // starts first song with countdown
-      } catch (err) {                                             // handles failure
-        console.error('[game] failed to start level:', err);      // logs error
-        state.running = false;                                    // keeps inputs locked
-        document.body.setAttribute('data-paused', 'true');        // keeps visuals paused
-        setOverlayLabel('Play');                                  // restores neutral label
-        showOverlay();                                            // keeps overlay visible for retry
-      }                                                           // error path ends
-    }                                                             // helper ends
+/**
+ * startLevelWithCountdown()
+ * Brief: Starts the current level with a 3-second overlay countdown; keeps visuals frozen until the audio actually starts.
+ */
+async function startLevelWithCountdown() {
+  document.body.setAttribute('data-paused', 'true');      // keep CSS animations frozen during countdown
+  state.running = false;                                  // disable judging/input until 'song:started'
+  document.body.setAttribute('data-starting', 'true');    // mark countdown state so overlay button can pause
+  setOverlayIcon('pause');                                 // show pause icon while “starting”
+  updatePlayMenuLabel();                                   // keep quick/toolbar Play/Pause labels in sync
+
+  setOverlayLabel('');                                     // clear CTA text (countdown will paint 3-2-1-GO)
+  showOverlay();                                           // ensure the overlay layer is visible for the countdown
+
+  try {
+    await startSongById(undefined, { countdownSec: 3 });   // request a 3s pre-roll and start the first registered song
+  } catch (err) {
+    console.error('[game] failed to start level:', err);   // log for debugging
+    state.running = false;                                 // remain in paused state after failure
+    document.body.setAttribute('data-paused', 'true');     // keep visuals frozen
+    document.body.removeAttribute('data-starting');        // clear starting flag on failure
+    setOverlayIcon('play');                                 // back to play icon on failure
+    updatePlayMenuLabel();                                  // resync labels
+    setOverlayLabel('Play');                                // restore a neutral CTA label
+    showOverlay();                                          // keep overlay visible so the user can retry
+  }
+}
+
 
 
     /**
@@ -235,13 +269,19 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
       try { stopSong('failed'); } catch {}
     });
 
-    /**
-     * Listen for "Retry" click from Game Over overlay.
-     * Brief: Retries the same level with countdown.
-     */
-    window.addEventListener('ui:retryLevel', async () => {        // reacts to retry-level
-      await startLevelWithCountdown();                            // retries current level
-    });                                                           // done retry-level
+  /**
+  * Listen for "Retry" click from Game Over overlay.
+  * Brief: Fully reset the run (keep current level), clear notes, and start with countdown.
+  */
+  window.addEventListener('ui:retryLevel', async () => {
+    const prevLevel = state.level;                 // remember current level to preserve it
+    initScoring();                                 // reset score/lives/partial/combo/maxCombo and HUD
+    state.level = prevLevel;                       // restore the intended level number
+    updateHUD(getSnapshot());                      // refresh HUD after restoring level
+    clearAllNotes();                               // remove any lingering notes from the previous run
+    await startLevelWithCountdown();               // start fresh with the standard 3s countdown
+  });
+
 
     window.addEventListener('song:error', (e) => {                // reacts to loading/decoding error
       console.error('[game] song error:', e.detail);              // logs error detail
