@@ -499,10 +499,6 @@ function spawnNote(dir, travelBeats = 2, bpm = 120) {
 
 /* ===== Results & Game Over panels (inside #overlay) ===== */
 
-/** Cache panel roots it dosent query them repeatedly. */
-const resultsCta  = document.getElementById('resultsCta');  // results panel container
-const gameOverCta = document.getElementById('gameOverCta'); // game-over panel container
-
 /**
  * hideAllOverlayPanels
  * Brief: Hides every panel inside the overlay (play, results, game over).
@@ -564,32 +560,27 @@ function showPauseOverlay() {
 
 /**
  * showGameOverOverlay
- * Brief: Shows the game-over panel and fills it with level/score/combo numbers.
+ * Shows the game-over panel and fills it with level/score/combo numbers.
  */
 function showGameOverOverlay({ level, score, maxCombo }) {
-  // Guard: if the panel is missing in the DOM, do nothing
-  if (!gameOverCta) return;                                       // safety check
+  hideAllOverlayPanels();                                                // hide other panels first
+  showOverlay();                                                         // make overlay visible
 
-  // Hide any other open panel first
-  hideAllOverlayPanels();                                         // reset UI
-
-  // Ensure the overlay layer is visible
-  showOverlay();                                                  // reveal overlay
-
-  // Small helper to set text content by selector (only if the node exists)
-  const set = (sel, v) => {                                       // tiny setter
-    const el = document.querySelector(sel);                       // find node
-    if (el) el.textContent = v;                                   // set text if found
+  const set = (sel, v) => {                                              // helper to set text by selector
+    const el = document.querySelector(sel);                              // find node for selector
+    if (el) el.textContent = v;                                          // set text when node exists
   };
 
-  // Fill the visible numbers in the game-over card
-  set('#goLevel',  level ?? '');                                  // level reached
-  set('#goScore',  score ?? 0);                                   // final score
-  set('#goCombo',  maxCombo ?? 0);                                // best combo
+  set('#goLevel',  level ?? '');                                         // write level value
+  set('#goScore',  score ?? 0);                                          // write score value
+  set('#goCombo',  maxCombo ?? 0);                                       // write max combo value
 
-  // Finally show the game-over panel
-  gameOverCta.classList.remove('hidden');                         // unhide game over
+  const panel = document.getElementById('gameOverCta');                  // fresh lookup of panel node
+  if (panel) panel.classList.remove('hidden');                           // unhide game-over panel
 }
+
+
+
 
 /**
  * initResultOverlays()

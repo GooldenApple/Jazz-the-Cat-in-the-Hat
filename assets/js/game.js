@@ -230,6 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
       await startLevelWithCountdown();                            // restarts current level
     });                                                           // done restart-level
 
+    // When lives reach zero mid-song: stop playback as failure (will route to Game Over via song:ended)
+    window.addEventListener('game:livesDepleted', () => {
+      try { stopSong('failed'); } catch {}
+    });
 
     /**
      * Listen for "Retry" click from Game Over overlay.
@@ -238,24 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
     window.addEventListener('ui:retryLevel', async () => {        // reacts to retry-level
       await startLevelWithCountdown();                            // retries current level
     });                                                           // done retry-level
-
-
-    /**
-     * Listen for "game:over" (lives reached zero mid-song).
-     * Brief: Stops playback, freezes UI, shows Game Over overlay.
-     */
-    window.addEventListener('game:over', () => {                  // reacts to game-over
-      try { stopSong(); } catch {}                                // stops audio defensively
-      state.running = false;                                      // locks input
-      document.body.setAttribute('data-paused', 'true');          // freezes UI animations
-      updatePlayMenuLabel();                                      // syncs navbar toggle
-      showGameOverOverlay({                                       // shows Game Over panel
-        level: state.level,                                       // level number
-        score: state.score,                                       // score value
-        maxCombo: state.maxCombo,                                 // best combo value
-      });                                                         // passes summary
-    });                                                           // done game:over
-
 
     window.addEventListener('song:error', (e) => {                // reacts to loading/decoding error
       console.error('[game] song error:', e.detail);              // logs error detail
