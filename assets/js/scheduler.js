@@ -1,3 +1,5 @@
+//scheduler.js
+
 import { state, spawnJudgedNote } from './scoring.js';
 // --- TEMP DEBUG ---
 console.log('[scheduler] module loaded');

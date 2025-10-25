@@ -1,5 +1,5 @@
 
-// Song registry 
+// Songregistry.js 
 export const SONGS = [
   {
     id: 'balloon-game',

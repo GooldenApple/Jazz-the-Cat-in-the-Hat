@@ -1,3 +1,4 @@
+//chartloader.js
 // load & validate note charts (JSON)
 
 const VALID_DIRS = new Set(['left', 'up', 'down', 'right']);            // Allowed lanes (whitelist)

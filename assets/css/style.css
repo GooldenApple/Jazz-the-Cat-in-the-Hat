@@ -24,6 +24,8 @@
   --hud-gap: 10px;                      /* gap between HUD rows */
   --hud-pad-x: 8px;                     /* HUD horizontal padding */
   --hud-stack-h: 200px;                 /* space for Lives + pills block */
+  --hud-bg: rgba(18,27,52,0.78);
+  --hud-border: rgba(166,77,255,0.45);
 
   --arrow-size: 92px;                   /* arrow icon size */
   --controls-gap: 24px;                 /* spacing between arrows */
@@ -928,13 +930,29 @@ body[data-paused="true"] .rail .note {
   box-shadow: 0 0 12px var(--neon-cyan);/* cyan glow */
 }
 
-.play-btn::before {
-  content: "";                          /* triangle glyph */
-  position: absolute; top: 50%; left: 38%; transform: translateY(-50%); /* center triangle */
-  border-style: solid;                  /* triangle shape */
-  border-width: 14px 0 14px 22px;       /* right-pointing */
-  border-color: transparent transparent transparent var(--neon-cyan); /* cyan triangle */
+/* Center the icons inside the circular play button */
+.play-btn .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 42px;                 /* icon size */
+  line-height: 1;
+  color: var(--neon-cyan);         
+  text-shadow: 0 0 12px var(--neon-cyan);
+  display: none;                    
 }
+
+/* Paused → show PLAY  */
+body[data-paused="true"] #overlay .play-btn .icon-play {
+  display: inline-block;
+}
+
+/* Running/Countdown → show PAUSE  */
+body:not([data-paused]) #overlay .play-btn .icon-pause {
+  display: inline-block;
+}
+
 
 .play-btn:hover { 
   border-color: var(--neon-pink); 
@@ -945,7 +963,11 @@ body[data-paused="true"] .rail .note {
   font-size: 20px; 
   color: var(--ink); 
   text-shadow: var(--text-glow);            /* label */
+  white-space: pre-line;   /* render '\n' as actual line breaks */
+  text-align: center;      /* center multi-line text under the round button */
 }
+
+
 
 /* subtle neon accents for the SVG cat */
 #hat-band { 

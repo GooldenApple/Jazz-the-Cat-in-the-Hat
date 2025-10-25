@@ -1,4 +1,4 @@
-
+//ui.js
 
 
 // --- TEMP DEBUG ---
@@ -10,9 +10,10 @@ console.log('[ui] module loaded');
 
 // Overlay (Play/Pause) controls 
 
-const overlayEl = document.getElementById('overlay');            // overlay root (CTA + label)
-const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // circular play button
-
+const overlayEl = document.getElementById('overlay');
+const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null;
+const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null;
+const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null;
 /* 
     showOverlay / hideOverlay / setOverlayLabel
     Purpose: Visual helpers for the CTA/pause overlay.
@@ -150,60 +151,47 @@ function setMenuLabelToPause() {
 
 /* Updates the navbar Play/Pause label based on the paused data attribute */
 function updatePlayMenuLabel() {
-  const isPaused = document.body.hasAttribute('data-paused');
-  if (isPaused) {
+  const isPaused   = document.body.hasAttribute('data-paused');
+  const isStarting = document.body.getAttribute('data-starting') === 'true';
+  const runningLike = (!isPaused) || isStarting;
+  if (!runningLike) {
     setMenuLabelToPlay();
   } else {
     setMenuLabelToPause();
   }
+  const quick = document.getElementById('quickPlayPause');
+  if (quick) {
+    quick.setAttribute('aria-pressed', runningLike ? 'true' : 'false');
+    quick.setAttribute('aria-label',  runningLike ? 'Pause' : 'Play');
+  }
 }
 
 
 
-/* wirePlayButton
-   Purpose: Wire the big CTA play button. Do NOT hide overlay here;
-            song lifecycle events will handle countdown + hide.
-*/
+/**
+ * wirePlayButton
+ * Brief: Bind the overlay round button. On click, emit pause if the game is running or starting; otherwise emit start.
+ */
 function wirePlayButton() {
-  console.log('[overlay] wirePlayButton: start');                 // debug marker
+  const overlay = document.getElementById('overlay');              // get overlay root (fresh lookup)
+  if (!overlay) return;                                            // guard if markup is missing
 
-  const overlay = document.getElementById('overlay');             // overlay root
-  if (!overlay) {                                                 // guard: missing DOM
-    console.log('[overlay] wirePlayButton: no overlay');
-    return;
-  }
+  const btn = overlay.querySelector('.play-btn');                  // get the circular CTA button
+  if (!btn) return;                                                // guard if button is missing
 
-  const btn = overlay.querySelector('.play-btn');                 // circular CTA button
-  if (!btn) {                                                     // guard: missing DOM
-    console.log('[overlay] wirePlayButton: no .play-btn');
-    return;
-  }
+  if (btn.dataset.wired === 'true') return;                        // avoid attaching duplicate listeners
+  btn.dataset.wired = 'true';                                      // mark as wired once
 
-  if (btn.dataset.wired === 'true') {                             // avoid double-binding
-    console.log('[overlay] wirePlayButton: already wired');
-    return;
-  }
-  btn.dataset.wired = 'true';                                     // mark as wired
-  console.log('[overlay] wirePlayButton: listener attached');
-
-  btn.addEventListener('click', () => {                           // when CTA is clicked
-    console.log('[overlay] click: paused(before)=',               // log paused flag
-      document.body.hasAttribute('data-paused'));
-
-    window.dispatchEvent(new CustomEvent('ui:requestStartRun'));  // ask app to start a run (song-based)
-
-    document.body.removeAttribute('data-paused');                 // unfreeze UI immediately
-    console.log('[overlay] after removeAttribute: paused=',
-      document.body.hasAttribute('data-paused'));
-    updatePlayMenuLabel();                                        // sync navbar label
-
-    // NOTE: Do NOT hide the overlay or change its label here.     // keep overlay visible
-    // The countdown (3-2-1) and hiding will be controlled by      // handled in song:ready/started
-    // 'song:ready' and 'song:started' events.                     // events in game.js
+  btn.addEventListener('click', () => {                            // listen for a click on the CTA
+    const isStarting = document.body.getAttribute('data-starting') === 'true'; // check if a countdown is running
+    const isRunning  = !document.body.hasAttribute('data-paused');            // check if gameplay is unpaused
+    if (isStarting || isRunning) {                                 // treat both starting and running as "pause"
+      window.dispatchEvent(new CustomEvent('ui:requestPause'));    // request pause/stop from the app
+    } else {                                                       // otherwise the game is fully paused/stopped
+      window.dispatchEvent(new CustomEvent('ui:requestStartRun')); // request a new run from the app
+    }
   });
-}
-
-
+};
 
 
 
@@ -509,6 +497,152 @@ function spawnNote(dir, travelBeats = 2, bpm = 120) {
   return note;                                                  // return reference
 }
 
+/* ===== Results & Game Over panels (inside #overlay) ===== */
+
+/** Cache panel roots it dosent query them repeatedly. */
+const resultsCta  = document.getElementById('resultsCta');  // results panel container
+const gameOverCta = document.getElementById('gameOverCta'); // game-over panel container
+
+/**
+ * hideAllOverlayPanels
+ * Brief: Hides every panel inside the overlay (play, results, game over).
+ */
+function hideAllOverlayPanels() {
+  // Select all overlay panels that use the shared .play-cta shell
+  const panels = document.querySelectorAll('#overlay .play-cta'); // NodeList of panels
+  // Hide each panel by adding the shared .hidden class
+  panels.forEach(el => el.classList.add('hidden'));               // collapse all
+}
+
+/**
+ * showResultsOverlay
+ * Shows the Results panel and fills level/score/combo, then sets a celebratory headline.
+ */
+function showResultsOverlay({ level, score, maxCombo }) {
+  hideAllOverlayPanels();                                   // hide any other overlay panels
+  showOverlay();                                            // ensure the overlay layer is visible
+
+  const congratsEl = document.getElementById('resCongrats'); // get the headline element
+  if (congratsEl) {                                         // guard: only if the element exists
+    const choices = [                                       // list of headline variants
+      'YOU DID IT!',
+      'AWESOME JOB!',
+      'YOU NAILED IT!',
+      'NICE WORK!'
+    ];
+    const i = Math.floor(Math.random() * choices.length);   // pick a random index
+    congratsEl.textContent = choices[i];                    // set the chosen headline text
+  }
+
+  const set = (sel, v) => {                                 // small helper to set text content safely
+    const el = document.querySelector(sel);                 // query the target element
+    if (el) el.textContent = v;                             // assign text when found
+  };
+
+  set('#resLevel',  level ?? '');                           // write level value
+  set('#resScore',  score ?? 0);                            // write score value
+  set('#resCombo',  maxCombo ?? 0);                         // write max combo value
+
+  const panel = document.getElementById('resultsCta');      // get the results panel root
+  if (panel) panel.classList.remove('hidden');              // unhide the results panel
+}
+
+
+/**
+ * showPauseOverlay
+ * Shows the base CTA and prints a clear two-line resume hint while paused.
+ */
+function showPauseOverlay() {
+  hideAllOverlayPanels();                                               // hide results/game-over panels
+  const baseCta = document.querySelector('#overlay .play-cta');         // get the base CTA (round button + label)
+  if (baseCta) baseCta.classList.remove('hidden');                      // ensure the base CTA is visible again
+  setOverlayLabel('Game paused\nPress Play to resume');                 // two-line hint (CSS makes '\n' break line)
+  showOverlay();                                                        // reveal the overlay layer
+}
+
+
+
+/**
+ * showGameOverOverlay
+ * Brief: Shows the game-over panel and fills it with level/score/combo numbers.
+ */
+function showGameOverOverlay({ level, score, maxCombo }) {
+  // Guard: if the panel is missing in the DOM, do nothing
+  if (!gameOverCta) return;                                       // safety check
+
+  // Hide any other open panel first
+  hideAllOverlayPanels();                                         // reset UI
+
+  // Ensure the overlay layer is visible
+  showOverlay();                                                  // reveal overlay
+
+  // Small helper to set text content by selector (only if the node exists)
+  const set = (sel, v) => {                                       // tiny setter
+    const el = document.querySelector(sel);                       // find node
+    if (el) el.textContent = v;                                   // set text if found
+  };
+
+  // Fill the visible numbers in the game-over card
+  set('#goLevel',  level ?? '');                                  // level reached
+  set('#goScore',  score ?? 0);                                   // final score
+  set('#goCombo',  maxCombo ?? 0);                                // best combo
+
+  // Finally show the game-over panel
+  gameOverCta.classList.remove('hidden');                         // unhide game over
+}
+
+/**
+ * initResultOverlays()
+ * Brief: Wire panel buttons to emit UI events handled in game.js.
+ */
+function initResultOverlays() {
+  const btnNext    = document.getElementById('btnNextLevel');     // Next button in results
+  const btnRestart = document.getElementById('btnRestartLevel');  // Restart button in results
+  const btnRetry   = document.getElementById('btnRetryLevel');    // Retry button in game over
+
+  if (btnNext && btnNext.dataset.wired !== 'true') {              // guard double-binding
+    btnNext.dataset.wired = 'true';                               // mark as wired
+    btnNext.addEventListener('click', () => {                     // on click
+      hideAllOverlayPanels();                                     // hide panels
+      window.dispatchEvent(new CustomEvent('ui:nextLevel'));      // tell game.js to go next
+    });
+  }
+
+  if (btnRestart && btnRestart.dataset.wired !== 'true') {        // guard double-binding
+    btnRestart.dataset.wired = 'true';                            // mark as wired
+    btnRestart.addEventListener('click', () => {                  // on click
+      hideAllOverlayPanels();                                     // hide panels
+      window.dispatchEvent(new CustomEvent('ui:restartLevel'));   // tell game.js to restart
+    });
+  }
+
+  if (btnRetry && btnRetry.dataset.wired !== 'true') {            // guard double-binding
+    btnRetry.dataset.wired = 'true';                              // mark as wired
+    btnRetry.addEventListener('click', () => {                    // on click
+      hideAllOverlayPanels();                                     // hide panels
+      window.dispatchEvent(new CustomEvent('ui:retryLevel'));     // tell game.js to retry
+    });
+  }
+}
+
+// Force overlay icon: 'play' | 'pause' | null (null = release to CSS control)
+function setOverlayIcon(mode) {
+  if (!iconPlay || !iconPause) return;
+  if (mode === 'play') {
+    iconPlay.style.display  = 'inline-block';
+    iconPause.style.display = 'none';
+    return;
+  }
+  if (mode === 'pause') {
+    iconPlay.style.display  = 'none';
+    iconPause.style.display = 'inline-block';
+    return;
+  }
+  // release to CSS defaults
+  iconPlay.style.display  = '';
+  iconPause.style.display = '';
+}
+
 
 /* ---------------------------
    Export all UI functions
@@ -517,7 +651,7 @@ export {
   // HUD toggle
   HUD_MODE_KEY, getHudInlineMode, setHudInlineMode, toggleHudInline, wireHudInlineToggle,
   // Overlay (Play/Pause)
-  overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton,
+  overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton, setOverlayIcon,
   // Navbar Play/Pause sync
   getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel,
   // Navbar collapse (Bootstrap)
@@ -534,4 +668,7 @@ export {
   bindControls,
   // HUD update
   updateHUD,
+  // overlay play/paus/gameover/next
+   showResultsOverlay, showGameOverOverlay, initResultOverlays, showPauseOverlay,
+
 };

@@ -1,3 +1,4 @@
+//scoring.js
 import { setFeedback, spawnNote } from './ui.js';
 
 /* =========================================================
@@ -100,6 +101,12 @@ export function saveBestScore(v) {
   }
 }
 
+export function setJudgeWindows(newWindows) {
+  if (!newWindows) return;
+  if (newWindows.perfect != null) judgeConfig.windows.perfect = newWindows.perfect;
+  if (newWindows.great   != null) judgeConfig.windows.great   = newWindows.great;
+  if (newWindows.good    != null) judgeConfig.windows.good    = newWindows.good;
+}
 
 /* --------------------------------------------------------
    Combo multiplier
@@ -114,23 +121,29 @@ function getMultiplierForCombo(comboLen) {               // Compute multiplier f
   return 1.0;                                            // Otherwise  ⇒ no boost
 }
 
-/* --------------------------------------------------------
-   Lives management
-   hit(): apply quarter-damage; every 4 steps consume 1 life.
-   heal(): restore one full life and clear partial damage.
-   Notes:
-   - No negative clamp here; add game-over handling elsewhere if needed.
--------------------------------------------------------- */
+/**hit(): apply quarter-damage; every 4 steps consume 1 life.
+* Sends a custom event when lives drop to 0.
+*/
 function hit() {
-  if (state.lives <= 0) return;     // ignore hits when no lives remain
-  if (state.partial < 3) {          // build up partial damage (0→1→2→3)
-    state.partial += 1;             // step partial by one
-  } else {                          // on the 4th step...
-    state.lives -= 1;               // consume one full life
-    state.partial = 0;              // reset partial back to zero
+  const prevLives = state.lives;                 // remember previous lives
+
+  if (state.lives <= 0) return;                  // ignore if already dead
+
+  if (state.partial < 3) {                       // build up partial damage 0→1→2→3
+    state.partial += 1;                          // add a quarter-heart hit
+  } else {                                       // on the 4th step…
+    state.lives -= 1;                            // consume one full life
+    state.partial = 0;                           // reset partial damage
   }
-  notify();                         // reflect change in the HUD
+
+  notify();                                      // update HUD
+
+  // If we just crossed from >0 lives to 0 lives → announce depletion
+  if (prevLives > 0 && state.lives <= 0) {
+    window.dispatchEvent(new CustomEvent('game:livesDepleted')); // let the app react
+  }
 }
+
 
 function heal() {
   state.lives += 1;   // add a full life
@@ -147,9 +160,9 @@ const judgeConfig = {
   bpm: 120,           // tempo in beats per minute (controls ETA spacing)
   travelBeats: 2.0,   // how many beats a note travels from spawn to judge line
   windows: {          // centered hit windows (in milliseconds)
-    perfect: 50,      // |Δt| ≤ 50ms → Perfect
-    great:   90,      // |Δt| ≤ 90ms → Great
-    good:   140       // |Δt| ≤ 140ms → Good
+    perfect: 85,      // |Δt| ≤ 50ms → Perfect
+    great:   140,      // |Δt| ≤ 90ms → Great
+    good:   200       // |Δt| ≤ 140ms → Good
   }
 };
 

@@ -1,4 +1,6 @@
-// audio.js — tiny Web Audio helper for loading/playing songs
+//Audio.js
+
+//  tiny Web Audio helper for loading/playing songs
 
 let ctx = null;                      // AudioContext (created on first use)
 let master = null;                   // Master GainNode (for volume control)
