@@ -322,45 +322,70 @@ function setFeedback(label, flash) {
   }, FEEDBACK_CLEAR_MS);
 }
 
-
-/* =============================
-   Navbar collapse sync (Bootstrap)
-   ============================= */
-/* ----------------------------------------
-   initNavbarCollapseSync
-   Purpose: Keep burger/collapse state correct over lg (992px) breakpoint.
-   - Uses Bootstrap Collapse instance as source of truth.
-   - Mirrors open state on body[data-nav-open] so CSS can morph burger → X.
----------------------------------------- */
-function initNavbarCollapseSync() {
-  const collapseEl = document.querySelector('.topbar .navbar-collapse'); // collapsible area
-  const togglerEl  = document.querySelector('.navbar-toggler.hamburger'); // burger button
-  if (!collapseEl || !togglerEl || !window.bootstrap) return;            // guard
-
-  const collapse = new bootstrap.Collapse(collapseEl, { toggle: false }); // programmatic control
-
-  collapseEl.addEventListener('shown.bs.collapse', () => {               // when opened
-    document.body.setAttribute('data-nav-open', 'true');                 // burger → X
-    togglerEl.setAttribute('aria-expanded', 'true');                     // a11y
-  });
-  collapseEl.addEventListener('hidden.bs.collapse', () => {              // when closed
-    document.body.removeAttribute('data-nav-open');                      // X → burger
-    togglerEl.setAttribute('aria-expanded', 'false');                    // a11y
-  });
-
-  togglerEl.addEventListener('click', () => { collapse.toggle(); });     // ensure toggle works
-
-  const mqLgUp = window.matchMedia('(min-width: 992px)');                // lg breakpoint
-  const normalizeForViewport = () => {                                   // clean state when crossing
-    collapse.hide();                                                     // remove hanging .show
-    document.body.removeAttribute('data-nav-open');                      // clear body flag
-    togglerEl.setAttribute('aria-expanded', 'false');                    // a11y reset
-  };
-
-  normalizeForViewport();                                                // start closed
-  mqLgUp.addEventListener('change', normalizeForViewport);               // keep consistent
+// === Topbar auto-height -> updates CSS var --topbar-h ===
+// Purpose: Measure the real header height (including fonts + open/close of the burger menu)
+// and push it into CSS as --topbar-h so the stage/overlay/rails align perfectly.
+function setTopbarCSSVar() {
+  const tb = document.querySelector('.topbar');
+  if (!tb) return;
+  const h = Math.round(tb.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--topbar-h', `${h}px`);
+  // Useful hook if anything else needs to react to layout changes
+  window.dispatchEvent(new CustomEvent('ui:layoutChanged', { detail: { topbarHeight: h }}));
 }
 
+// Wires resize/orientation/font-load listeners so the value stays fresh.
+function initTopbarAutoHeight() {
+  setTopbarCSSVar(); // initial measurement
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => setTopbarCSSVar());     // Re-measure once webfonts finish loading 
+  }
+  window.addEventListener('resize', setTopbarCSSVar);
+  window.addEventListener('orientationchange', setTopbarCSSVar);
+}
+// === Navbar collapse sync (Bootstrap) ===
+// Purpose: keep body[data-nav-open] in sync with Bootstrap's collapse
+// and re-measure --topbar-h at both start and end of the transition.
+// This lets CSS move the quick-PP button out of the way *before* anything overlaps.
+function initNavbarCollapseSync() {
+  const collapseEl = document.querySelector('.topbar .navbar-collapse');
+  const togglerEl  = document.querySelector('.navbar-toggler.hamburger');
+  if (!collapseEl || !togglerEl || !window.bootstrap) return;
+
+  const collapse = new bootstrap.Collapse(collapseEl, { toggle: false });
+
+  const markOpen  = () => {
+    document.body.setAttribute('data-nav-open', 'true');
+    togglerEl.setAttribute('aria-expanded', 'true');
+    setTopbarCSSVar(); // re-measure since header height changes
+  };
+  const markClose = () => {
+    document.body.removeAttribute('data-nav-open');
+    togglerEl.setAttribute('aria-expanded', 'false');
+    setTopbarCSSVar(); // re-measure after closing
+  };
+
+  // Fire at the start of the transition (prevents quick-PP/menu collisions)
+  collapseEl.addEventListener('show.bs.collapse',  markOpen);
+  collapseEl.addEventListener('hide.bs.collapse',  markClose);
+  // Confirm at the end as well (safety)
+  collapseEl.addEventListener('shown.bs.collapse', markOpen);
+  collapseEl.addEventListener('hidden.bs.collapse', markClose);
+
+  togglerEl.addEventListener('click', () => { collapse.toggle(); });
+
+  // Normalize state when crossing the lg breakpoint
+  const mqLgUp = window.matchMedia('(min-width: 992px)');
+  const normalizeForViewport = () => { collapse.hide(); markClose(); };
+  normalizeForViewport();
+  mqLgUp.addEventListener('change', normalizeForViewport);
+
+  // Force a measure shortly after toggle clicks (some devices animate height late)
+  togglerEl.addEventListener('click', () => {
+    requestAnimationFrame(() => setTimeout(setTopbarCSSVar, 50));
+  });
+
+}
 /* ----------------------------------------
    createHeart
    Purpose: Build one SVG heart with a given visual state.
@@ -646,8 +671,8 @@ export {
   // Navbar Play/Pause sync
   getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel,
   // Navbar collapse (Bootstrap)
-  initNavbarCollapseSync,
-  // Feedback / judge flash
+  initNavbarCollapseSync, initTopbarAutoHeight, setTopbarCSSVar,
+  // Feedback / judge flash 
   judgeFlash, setFeedback,
   // Hearts
   createHeart,  renderLives,

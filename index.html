@@ -30,6 +30,8 @@
   </div>
   <!-- Sticky neon navbar (Bootstrap structure + my classes) -->
   <header class="topbar navbar navbar-expand-lg" role="banner">
+    <!-- flex row: brand grows, burger sits at right -->
+    <!--<div class="nav-head"> -->
     <!-- brand (left) -->
     <a class="navbar-brand brand" href="#">🐱 Jazz the Cat in the Hat 🎩</a>
   
@@ -41,7 +43,7 @@
         <span></span>
         <span></span>
       </button>
-
+    <!--</div>-->
   <!-- collapsible nav (right side) -->
   <div class="collapse navbar-collapse" id="mainNav">
     <ul class="navbar-nav ms-auto nav-list" id="primaryNav">
@@ -100,7 +102,7 @@
   </div>
 
 </section>
-
+<div class="lanebox">
  <!-- Game Stage: prompt lane + dancer + feedback -->
 <section class="stage" aria-label="Game stage">
     <!-- Lane where prompts will appear (SR-friendly updates) -->
@@ -297,6 +299,7 @@
 
 </section>
 
+</div>
     <!-- Overlays tutorial / pause / ..., play button overlay only shows when game is not running -->
   <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
     <!-- play call-to-action container -->

@@ -22,6 +22,7 @@ import {
   showGameOverOverlay,
   initResultOverlays,
   setOverlayIcon,
+  initTopbarAutoHeight,
 } from './ui.js';
 
 // inputs (maps buttons/keyboard to game intents)
@@ -312,8 +313,9 @@ async function startLevelWithCountdown() {
     console.log('[game] typeof wireMenuPlayToggle:', typeof wireMenuPlayToggle); // logs type
     wireMenuPlayToggle();                                         // wires quick Play/Pause button
     console.log('[game] wireMenuPlayToggle() called');            // logs wiring
-
-    // wire navbar collapse behavior and rotate overlay
+// Keep --topbar-h accurate at all times (fonts, resize, menu open/close)
+    initTopbarAutoHeight();
+// wire navbar collapse behavior and rotate overlay
     initNavbarCollapseSync();                                     // initializes navbar collapse
     initRotateOverlay();                                          // initializes rotate overlay
     initResultOverlays();                                         // wires overlay actions

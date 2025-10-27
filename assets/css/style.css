@@ -218,19 +218,19 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 .quick-pp {
   position: fixed;                           /* keep the button always visible on screen */
   top: calc(var(--topbar-h) + 8px);          /* place it just below the navbar */
-  right: 16px;                               /* align it to the right side */
+  right: max(16px, env(safe-area-inset-right));
   width: 56px;                               /* fixed button width */
   height: 56px;                              /* fixed button height */
-  border-radius: 50%;                        /* make it perfectly round */
+  border-radius: 80%;                        /* make it perfectly round */
   background: var(--hud-bg);                 /* match HUD background for consistency */
   color: var(--neon-cyan);                   /* icon color */
-  border: 2px solid var(--hud-border);       /* subtle border like HUD */
+  border: 4px solid var(--hud-border);       /* subtle border like HUD */
   display: flex;                             /* center contents */
   align-items: center;                       /* vertical centering */
   justify-content: center;                   /* horizontal centering */
   cursor: pointer;                           /* pointer to show interactivity */
   z-index: 2302;                             /* above game stage, below nav menu */
-  font-size: 2rem;
+  font-size: 1rem;
 }
 
 .quick-pp:active {
@@ -239,17 +239,24 @@ body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) r
 
 /* inner icon container */
 .quick-pp .pp-icon {
-  font-size: 2rem;                           /* big neon icons */
+  font-size: 1rem;                           /* big neon icons */
   color: var(--neon-pink);                   /* glowing pink color */
   display: inline-flex;                      /* horizontal layout */
   align-items: center;                       /* center vertically */
-  gap: 0.25rem;                              /* spacing between glyphs */
-  letter-spacing: 0.15rem;                   /* extra space for slash */
+  gap: 0.15rem;                              /* spacing between glyphs */
+
   
   text-shadow:                                 /* Pink glow around icons */
     0 0 2px var(--neon-pink),
     0 0 4px var(--neon-pink),
     0 0 6px var(--neon-pink);
+}
+/* === When the burger menu is open, relocate quick-pp to the bottom-right === */
+body[data-nav-open="true"] .quick-pp {
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  right:  max(12px, env(safe-area-inset-right));
+  left: auto;
 }
 
 
@@ -496,18 +503,6 @@ body[data-hud="collapsed"] .hud-stack {
 #rotateOverlay[aria-hidden="true"]  { display: none !important; }
 #rotateOverlay[aria-hidden="false"] { display: flex; }
 
-/* --- Overlay: let clicks pass through everywhere --- */
-.overlay {
-  pointer-events: none;   /* clicks go through overlay */
-  z-index: 2200;          /* visual layer stays high */
-}
-
-/* Keep the Play CTA clickable and on top */
-.overlay .play-cta {
-  pointer-events: auto;   /* clickable area restored */
-  position: relative;     /* create stacking context */
-  z-index: 2301;          /* above HUD and overlay */
-}
 
 
 /* stage: reserve space for HUD above and controls below */
@@ -679,34 +674,34 @@ body[data-hud="collapsed"] .hud-stack {
 }
 
 
-/* =============================
-   RAILS LAYOUT — make rails share the same playfield box
-   as judge-line (area below HUD and above controls).
-   This keeps the vertical coordinate system identical,
-   so top: var(--judge-y) lines up 1:1.
-============================= */
+/* === Rails: share the exact same horizontal model as controls/judge === */
 .stage .rails {
-  position: absolute;                  /* anchored inside .stage */
+  position: absolute;
   top: calc(var(--topbar-h) + 8px);
   bottom: calc(var(--controls-zone-h) + 120px);
-  left: 0;
-  right: 0;
 
-  display: grid;                       /* 4 equal columns for rails */
+  /* Center via transform and use the same width calc as controls/judge */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(
+    100% -
+    (max(var(--controls-side-pad), env(safe-area-inset-left)) +
+     max(var(--controls-side-pad), env(safe-area-inset-right)))
+  );
+  max-width: var(--controls-max-w);
+
+  display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-items: stretch;
-
-  /* Horizontal model mirrors controls so columns/targets align with arrows */
-  max-width: var(--controls-max-w);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left:  max(var(--controls-side-pad), env(safe-area-inset-left));
-  padding-right: max(var(--controls-side-pad), env(safe-area-inset-right));
   column-gap: var(--controls-gap);
+
+  margin: 0;
+  padding: 0;
 
   pointer-events: none;
   z-index: 14;
 }
+
 
 /* Each rail provides the positioning context for line + target + notes */
 .rail {
@@ -897,12 +892,20 @@ body[data-paused="true"] .rail .note {
   transform: scale(1.1);                  /* breathing text */
 }
 
-/* overlay: below navbar and above controls zone */
+/* === Overlay base: click-through background; only its inner panels are clickable === */
 .overlay {
-  position: fixed;                      /* cover the play area */
-  inset: var(--topbar-h) 0 var(--controls-zone-h) 0; /* respect navbar + controls */
-  z-index: 2200;                          /* above stage (rails/dancer) but below navbar */
-  pointer-events: auto;                 /* clickable */
+  position: fixed;
+  inset: var(--topbar-h) 0 var(--controls-zone-h) 0; /* sits between topbar and controls zone */
+  z-index: 2200;                                     /* above stage, below navbar/rotate overlay */
+  pointer-events: none;                              /* let clicks pass through the backdrop */
+}
+
+/* Make the overlay's own buttons/panels clickable */
+.overlay .play-cta,
+#resultsCta,
+#gameOverCta,
+#overlay .rb-card {
+  pointer-events: auto;
 }
 
 .overlay.hidden { 
@@ -1458,15 +1461,18 @@ body::before {
     display: none !important; /* ensure closed state actually hides */
   }
 
+  /* Float the panel under the header; clamp width to viewport and safe areas */
   .topbar .navbar-collapse {
-    position: absolute;                                 /* make the panel float below bar */
-    top: calc(var(--topbar-h) + 6px);                   /* place under topbar with small gap */
-    right: max(12px, env(safe-area-inset-right));       /* align panel under the toggler */
-    width: auto;                                        /* fit content width */
-    padding: 0;                                         /* no extra padding */
-    margin: 0;                                         /* no extra margin */
-    background: transparent;                            /* glass handled by buttons */
-    z-index: 40;                                        /* under the toggler (50) */
+    position: absolute;
+    top: calc(var(--topbar-h) + 6px);
+    inset-inline-end: max(12px, env(safe-area-inset-right));
+    inset-inline-start: auto;
+    width: max-content;
+    max-width: calc(100vw - (env(safe-area-inset-left) + env(safe-area-inset-right) + 24px));
+    padding: 0;
+    margin: 0;
+    background: transparent; /* buttons already have glass */
+    z-index: 40; /* under toggler (50), above the stage */
   }
 
   .topbar .navbar-collapse.show {
@@ -1582,4 +1588,54 @@ body::before {
 body[data-rotate-dismissed="true"] #rotateOverlay {
   display: none !important;   /* force hide regardless of media query */
 }
+}
+
+/* =========================================
+   PATCH: navbar + quick-pp + overlay + svg
+   (drop-in, minimal overrides, mobile-first)
+   ========================================= */
+
+/* -- Topbar: add safe-area top padding (keeps brand from notch) */
+.topbar {
+  /* fallback then safe area */
+  padding-top: 8px;
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
+/* -- Quick-PP: respect right safe-area even when menu closed */
+.quick-pp {
+  /* replace fixed 16px with safe-area aware value */
+  right: max(16px, env(safe-area-inset-right));
+}
+
+/* -- Move Quick-PP away when burger menu is open
+   Uses two signals:
+   1) :has() when the toggler is aria-expanded="true"
+   2) body[data-nav-open] your JS already sets for the X morph
+*/
+body:has(.topbar .navbar-toggler[aria-expanded="true"]) .quick-pp,
+body[data-nav-open] .quick-pp {
+  /* push to bottom-right, away from the open menu */
+  top: auto !important;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  right:  max(12px, env(safe-area-inset-right));
+  left: auto;
+}
+
+/* -- Overlay result cards: move inline min/max width into CSS */
+#overlay .rb-card,
+#resultsCta .rb-card,
+#gameOverCta .rb-card {
+  min-width: 260px;
+  max-width: 90vw;
+  margin-inline: auto;
+}
+
+/* -- Dancer: fluid width; SVG scales via CSS, not fixed attributes */
+.dancer { 
+  width: clamp(120px, 35vw, 220px);
+}
+.dancer svg {
+  width: 100%;
+  height: auto;
 }
