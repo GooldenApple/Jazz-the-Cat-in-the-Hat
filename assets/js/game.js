@@ -365,5 +365,6 @@ async function startLevelWithCountdown() {
     console.error('[INIT ERROR]', err);                            // logs error
     const overlay = document.getElementById('overlay');            // reads overlay
     if (overlay) overlay.classList.remove('hidden');               // ensures overlay visible
-  }                                                                // end try/catch
-});                                                                // attaches bootstrap listener
+  } 
+ 
+}); 

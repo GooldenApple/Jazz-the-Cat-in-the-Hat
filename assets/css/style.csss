@@ -1,0 +1,1591 @@
+/* root variables: theme colors, sizes, layout spacing */
+:root {
+  --topbar-h: 64px;                     /* navbar height */
+  --bg: #0b1221;                        /* page background color */
+  --ink: #f5f7ff;                       /* base text color */
+  --muted: #a9b3d3;                     /* secondary text */
+
+  --neon-pink:   #ff4dd2;               /* pink glow */
+  --neon-purple: #a64dff;               /* purple frames */
+  --neon-cyan:   #00ffd5;               /* cyan accents */
+  --neon-green:  #39ff14;               /* left hue */
+  --neon-orange: #ffc04d;               /* down hue */
+  --neon-red:    #fd0404;               /* hearts red */
+
+  --label-left:  var(--neon-green);     /* left label color */
+  --label-up:    #7af3e1;               /* up label color */
+  --label-down:  var(--neon-orange);    /* down label color */
+  --label-right: var(--neon-pink);      /* right label color */
+
+  --font-hud: 'Press Start 2P', monospace; /* UI font */
+  --font-score: 'VT323', monospace;        /* digits font */
+  --text-glow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan); /* text halo */
+
+  --hud-gap: 10px;                      /* gap between HUD rows */
+  --hud-pad-x: 8px;                     /* HUD horizontal padding */
+  --hud-stack-h: 200px;                 /* space for Lives + pills block */
+  --hud-bg: rgba(18,27,52,0.78);
+  --hud-border: rgba(166,77,255,0.45);
+
+  --arrow-size: 92px;                   /* arrow icon size */
+  --controls-gap: 24px;                 /* spacing between arrows */
+  --controls-bottom: 3vh;               /* gap from bottom edge */
+  --ctrl-label-size: 16px;              /* arrow label size */
+  --controls-zone-h: calc(var(--arrow-size) + 40px); /* reserved height for arrows+labels */
+
+  --controls-max-w: 640px;              /* max width for arrow row on large screens */
+  --controls-side-pad: 14px;            /* symmetric left/right padding for arrow row */
+
+  --overlay-y: 34vh;                    /* play CTA vertical position */
+
+  --floor-opacity: 0.6;                 /* grid intensity */
+  --floor-height: 44vh;                 /* grid height */
+  --floor-bottom: 0vh;                 /* grid offset from viewport bottom */
+
+  --judge-y: 55%;                      /* vertical position of the judge line AND targets */
+  --judge-rel: 62%;                    /* judge baseline as % of the rails height (same for line + targets) */
+}
+
+/* base setup: lock viewport, apply bg, global type */
+*,
+*::before,
+*::after {                                   /* predictable sizing */
+    box-sizing: border-box; 
+}    
+html, body { 
+    height: 100%;                          /* full height document */
+ }
+ 
+ /* Prevent auto text zoom on iOS */
+html {                                      /* keep text size stable */
+  -webkit-text-size-adjust: 100%; 
+}
+
+/* Prevent double-tap zoom on interactive UI */
+body, .controls, .ctrl-btn, .nav-btn { 
+  touch-action: manipulation;           /* disable double-tap zoom on supported browsers */
+}
+
+body {
+  background-color: var(--bg);           /* fallback background color */
+  background-image: url('../images/background.png.png'); /* background image */
+  background-repeat: no-repeat;          /* prevent tiling */
+  background-position: center;           /* center image */
+  background-size: cover;                /* cover viewport */
+  background-attachment: fixed;          /* keep background locked to viewport */
+  color: var(--ink);                     /* default text color */
+  font-family: var(--font-hud);          /* UI font */
+  text-transform: uppercase;             /* arcade case */
+  letter-spacing: 1px;                   /* slight tracking */
+  text-shadow: var(--text-glow);         /* global text glow */
+  display: grid;                         /* simple two-row layout */
+  grid-template-rows: auto 1fr;          /* navbar + content */
+  min-height: 100svh;                    /* mobile-safe viewport height */
+  overflow: hidden;                      /* disable page scroll */
+}
+.hidden { display: none !important; }    /* utility to hide elements */
+
+/* keep the bar one line, left-aligned, never clipping the glow */
+.topbar {
+  position: relative;                  /* anchor for absolute dropdown */
+  top: 0;
+  z-index: 30;                         /* above stage */
+  min-height: var(--topbar-h);         /* fixed height */
+  display: flex;                       /* one row */
+  align-items: center;                 /* vertical center */
+  flex-wrap: nowrap;                   /* no wrap */
+  justify-content: flex-start;         /* brand stays left */
+  overflow: visible;                   /* never clip glow */
+  padding-left:  max(12px, env(safe-area-inset-left));   /* safe edges */
+  padding-right: max(12px, env(safe-area-inset-right));
+  background: linear-gradient(to bottom, rgba(18,27,52,.92), rgba(18,27,52,.78)); /* glass */
+  border-bottom: 2px solid rgba(166,77,255,.35);          /* neon rim */
+  backdrop-filter: blur(6px);          /* blur glass */
+}
+
+/* let the collapsing panel sit under the burger, never above it */
+.topbar .navbar-collapse {
+  position: relative;                  /* stacking context under burger */
+  z-index: 1;                          /* burger wins (z=50) */
+  padding-right: 56px;                 /* leave room under burger */
+  width: 100%;                         /* expand across bar */
+  display: none;                       /* closed by default on all widths */
+}
+
+.topbar .navbar-collapse.show {
+  display: block;                /* visible when opened */
+  position: absolute;            /* drop under the bar */
+  top: 100%;                     /* directly beneath topbar */
+  right: max(12px, env(safe-area-inset-right));
+  width: auto;                   /* fit content stack */
+}
+
+
+/* keep the wordmark left, allow ellipsis on tiny widths */
+.brand {
+  margin-right: auto;                  /* push menu area right */
+  flex: 0 0 auto;                      /* do not shrink */
+  display: inline-flex;                /* emoji aligns with text */
+  align-items: center;                 /* vertical center */
+  justify-content: flex-start;         /* left inside brand box */
+  max-width: calc(100% - 72px);        /* reserve burger lane */
+  overflow: hidden;                    /* clip for ellipsis */
+  text-overflow: ellipsis;             /* show … when tight */
+  white-space: nowrap;                 /* single line */
+  padding-right: 56px;                 /* visual clearance under burger */
+   /* neon wordmark */
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan)); /* neon text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;                  /* gradient text reveal */
+  font-weight: 800;                    /* arcade bold */
+  line-height: 1;                      /* tight line box */
+  text-shadow:
+    0 0 6px rgba(255,255,255,.65),
+    0 0 18px rgba(166,77,255,.55),
+    0 0 28px rgba(0,255,213,.45);      /* soft haze */
+}
+
+
+/* neon burger; stays on top and morphs to X when open */
+.navbar-toggler.hamburger {
+  position: absolute;                             /* free from flex row */
+  top: 50%;                                       /* vertical center */
+  right: max(12px, env(safe-area-inset-right));   /* safe right */
+  transform: translateY(-50%);                    /* exact center */
+  display: inline-grid; 
+  place-content: center; 
+  gap: 4px;                                       /* tidy bars */
+  flex: 0 0 auto; 
+  line-height: 1;                                 /* compact box */
+  border: 2px solid var(--neon-purple);           /* neon frame */
+  border-radius: 10px; 
+  padding: 6px;                                   /* touch size */
+  background: rgba(10,14,28,0.55);                /* glass */
+  box-shadow: 0 0 6px rgba(166,77,255,.55), inset 0 0 10px rgba(166,77,255,.25); /* glow */
+  z-index: 50;                                    /* above dropdown */
+}
+
+.navbar-toggler.hamburger span {
+  display: block; 
+  width: 24px; 
+  height: 2px;                          /* bar size */
+  background: #fff; 
+  box-shadow: 0 0 6px rgba(255,255,255,.6); /* bar glow */
+  transition: transform .2s ease, opacity .2s ease;           /* morph */
+}
+
+/* X-state toggled via body[data-nav-open] */
+body[data-nav-open] .hamburger span:nth-child(1) { transform: translateY(6px) rotate(45deg); } /* top to diag */
+body[data-nav-open] .hamburger span:nth-child(2) { opacity: 0; }                               /* hide middle */
+body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg);}/* bottom to diag */
+
+/* collapsed nav list: vertical, right-aligned on mobile */
+.nav-list {
+  list-style: none;                      /* remove bullets */
+  display: flex;                         /* flex container */
+  flex-direction: column;                /* vertical stack */
+  align-items: flex-end;                 /* right align items */
+  gap: 8px;                             /* spacing */
+  padding: 10px 0;                       /* vertical padding */
+  margin: 0;                             /* reset */
+}
+
+/* nav buttons: neon pills */
+.nav-btn {
+  appearance: none;                      /* reset button UI */
+  border: 2px solid var(--neon-purple);  /* neon frame */
+  border-radius: 10px;                   /* pill corners */
+  padding: 6px 10px;                     /* pill size */
+  background: rgba(10,14,28,0.55);       /* glass look */
+  color: var(--ink);                     /* text color */
+  font: inherit;                         /* inherit HUD font */
+  text-shadow: var(--text-glow);         /* text glow */
+  cursor: pointer;                       /* pointer on hover */
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease; /* micro motion */
+  white-space: nowrap;                   /* keep labels on one line */
+}
+.nav-btn:hover {
+  transform: translateY(-1px);           /* tiny lift */
+  border-color: var(--neon-cyan);        /* cyan edge */
+  box-shadow: 0 0 10px rgba(0,255,213,0.35); /* halo */
+}
+
+
+/* --------------------------------------- */
+/* Quick Play/Pause button under the navbar */
+/* --------------------------------------- */
+.quick-pp {
+  position: fixed;                           /* keep the button always visible on screen */
+  top: calc(var(--topbar-h) + 8px);          /* place it just below the navbar */
+  right: max(16px, env(safe-area-inset-right));
+  width: 56px;                               /* fixed button width */
+  height: 56px;                              /* fixed button height */
+  border-radius: 80%;                        /* make it perfectly round */
+  background: var(--hud-bg);                 /* match HUD background for consistency */
+  color: var(--neon-cyan);                   /* icon color */
+  border: 4px solid var(--hud-border);       /* subtle border like HUD */
+  display: flex;                             /* center contents */
+  align-items: center;                       /* vertical centering */
+  justify-content: center;                   /* horizontal centering */
+  cursor: pointer;                           /* pointer to show interactivity */
+  z-index: 2302;                             /* above game stage, below nav menu */
+  font-size: 1rem;
+}
+
+.quick-pp:active {
+  transform: scale(0.92);                    /* pressed down effect */
+}
+
+/* inner icon container */
+.quick-pp .pp-icon {
+  font-size: 1rem;                           /* big neon icons */
+  color: var(--neon-pink);                   /* glowing pink color */
+  display: inline-flex;                      /* horizontal layout */
+  align-items: center;                       /* center vertically */
+  gap: 0.15rem;                              /* spacing between glyphs */
+
+  
+  text-shadow:                                 /* Pink glow around icons */
+    0 0 2px var(--neon-pink),
+    0 0 4px var(--neon-pink),
+    0 0 6px var(--neon-pink);
+}
+/* === When the burger menu is open, relocate quick-pp to the bottom-right === */
+body[data-nav-open="true"] .quick-pp {
+  top: auto;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  right:  max(12px, env(safe-area-inset-right));
+  left: auto;
+}
+
+
+/* ---------------- HUD: overall container ---------------- */
+.hud {
+  position: fixed;                       /* pin HUD */
+  top: var(--topbar-h);                  /* below navbar */
+  left: 0; right: 0;                     /* full width */
+  display: flex;                         /* vertical layout */
+  flex-direction: column;                /* stack rows */
+  gap: var(--hud-gap);                   /* row spacing */
+  padding-inline: var(--hud-pad-x);      /* side padding */
+  z-index: 20;                           /* above stage */
+  pointer-events: none;                  /* inert by default; opt-in below */
+  z-index: 2300;                         /* above overlay base */
+}
+
+/* ---------------- HUD: bottom row (Lives) ---------------- */
+.hud-bottom {
+  order: 0;                              /* first row */
+  display: flex;                         /* layout row */
+  justify-content: center;               /* center group */
+  width: 100%;                           /* full width row */
+  pointer-events: none;                  /* keep inert */
+}
+
+/* plain lives container */
+.hud-item.hud-item--plain {
+  pointer-events: auto;                  /* allow inner events if needed */
+  border: none;                          /* no frame */
+  background: transparent;               /* no background */
+  box-shadow: none;                      /* no glow box */
+  padding: 0;                            /* rely on content spacing */
+  text-align: center;                    /* center label+hearts */
+}
+.hud-item.hud-item--plain .hud-label {
+  display: block;                        /* own line */
+  margin-bottom: 6px;                    /* gap above hearts */
+  color: var(--neon-pink);               /* label color */
+}
+
+/* hearts row */
+.lives {
+  display: flex;                         /* horizontal row */
+  flex-wrap: wrap;                       /* wrap when many */
+  gap: 10px;                             /* spacing */
+  justify-content: center;               /* center group */
+  align-items: center;                   /* vertical align */
+  padding: 2px;                          /* breathing room */
+}
+
+/* heart visuals */
+.svg-heart {
+  width: 28px; height: 28px;             /* size */
+  fill: var(--neon-red);                 /* base color */
+  filter: drop-shadow(0 0 4px var(--neon-red)) 
+          drop-shadow(0 0 10px var(--neon-pink)); /* glow */
+  transition: opacity .25s ease, fill .25s ease;  /* smooth change */
+}
+.svg-heart.full         { opacity: 1;   fill: var(--neon-red); }
+.svg-heart.threequarter { opacity: .85; fill: var(--neon-red); }
+.svg-heart.half         { opacity: .65; fill: var(--neon-red); }
+.svg-heart.quarter      { opacity: .4;  fill: var(--neon-red); }
+.svg-heart.empty        { opacity: .15; fill: var(--muted); filter: none; }
+
+/* ---------------- HUD: top row (metrics + toggle) ---------------- */
+.hud-top {
+  order: 1;                              /* second row */
+  display: flex;                         /* vertical layout */
+  flex-direction: column;                /* stack pills */
+  align-items: flex-start;               /* left align */
+  gap: 8px;                              /* spacing */
+  width: 100%;                           /* full row */
+  pointer-events: auto;                  /* re-enable interaction */
+}
+
+/* -------- HUD: toggle button (icon + text) -------- */
+
+
+/* HUD toggle: neon icon + text */
+.hud-toggle {
+  display: inline-flex;                       
+  align-items: center;                        
+  gap: 6px;                                   /* space between icon + text */
+  padding: 4px 8px;                           /* compact button size */
+  border: 2px solid var(--neon-purple);       /* neon frame */
+  border-radius: 4px;                         /* soft corners */
+  background: rgba(12,18,36,0.75);            /* dark glass background */
+  color: var(--neon-cyan);                    /* default text color */
+  font-size: 14px;                            /* compact font size */
+  font-family: var(--font-score);             /* keep HUD font */
+  text-shadow: 0 0 5px var(--neon-cyan);      /* glowing text */
+  box-shadow: 0 0 8px var(--neon-purple);     /* neon halo */
+  cursor: pointer;                            /* pointer cursor */
+  pointer-events: auto;                       /* ensure clickable */
+  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
+}
+
+/* little arrow icon inside the button */
+.hud-toggle__icon {
+  font-size: 28px;
+  margin-left: 6px; 
+  display: inline-block; 
+  line-height: 1;           
+  transition: transform .25s ease;  /* smooth rotation */
+}
+
+/* collapsed: arrow points right (►) */
+body[data-hud="collapsed"] .hud-toggle__icon {
+  transform: rotate(0deg);
+}
+
+/* expanded: arrow points down (▼) */
+body[data-hud="expanded"] .hud-toggle__icon {
+  transform: rotate(90deg);  /* rotate to down */
+}
+
+/* hover and focus: brighter and pink glow */
+.hud-toggle:hover,
+.hud-toggle:focus-visible {
+  background: rgba(24,36,72,0.9);             
+  color: var(--neon-pink);                    
+  text-shadow: 0 0 6px var(--neon-pink);      
+  box-shadow: 0 0 10px var(--neon-pink), 0 0 18px var(--neon-purple);
+  outline: none;
+}
+
+.hud-toggle:focus-visible { 
+  outline: 2px solid var(--neon-cyan);   /* focus ring */
+  outline-offset: 2px; 
+}
+
+/* collapsed = icon points right (▸); expanded = down (▾)
+   (glyphs by JS, transforms left neutral here) */
+body[data-hud="collapsed"] .hud-toggle__icon { transform: rotate(0deg); }
+body[data-hud="expanded"]  .hud-toggle__icon { transform: rotate(0deg); }
+
+/* -------- HUD: collapsible stack (Score/Best/Level) -------- */
+/* base (expanded) state */
+.hud-stack {
+  display: flex;                         /* vertical list of pills */
+  flex-direction: column;                /* stack */
+  gap: 8px;                              /* spacing between pills */
+  overflow: hidden;                      /* clip when collapsed */
+  max-height: 520px;                     /* tall enough to show all */
+  opacity: 1;                            /* visible */
+  transition: max-height .25s ease, opacity .2s ease; /* smooth open/close */
+  pointer-events: auto;                  /* interactive when visible */
+}
+
+/* collapsed visual state (driven by body[data-hud]) */
+body[data-hud="collapsed"] .hud-stack {
+  max-height: 0;                         /* closed height */
+  opacity: 0;                            /* fade out */
+  pointer-events: none;                  /* inert when hidden */
+}
+
+/* -------- HUD: metric pills (appearance) -------- */
+.hud-top .hud-item { 
+  pointer-events: auto;                  /* interactive pills */
+}
+
+.hud-item {
+  min-width: 100px;                      /* minimum pill width */
+  padding: 8px 12px;                     /* pill padding */
+  border: 3px solid var(--neon-purple);  /* neon frame */
+  border-radius: 6px;                    /* soft corners */
+  background: rgba(18,27,52,0.8);        /* glass panel */
+  box-shadow: 0 0 12px var(--neon-purple); /* glow */
+}
+
+.hud-label {
+  font-size: 12px;                       /* label size */
+  color: var(--neon-pink);               /* label color */
+  margin-bottom: 4px;                    /* gap to metric */
+}
+
+.metric {
+  font-family: var(--font-score);        /* digits font */
+  font-size: 24px;                       /* digits size */
+  color: var(--neon-cyan);               /* digits color */
+  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink); /* digits glow */
+}
+
+/* ==== rotate overlay ==== */
+
+/* message card */
+.rb-card {
+  pointer-events: auto;                /* accept clicks */
+  padding: 16px 18px;                  /* inner spacing */
+  border: 2px solid var(--neon-purple);/* neon frame */
+  border-radius: 12px;                 /* soft corners */
+  background: rgba(10,14,28,.92);      /* glass panel */
+  color: var(--ink);                   /* readable text */
+  text-align: center;                  /* center content */
+  box-shadow:
+    0 0 14px rgba(166,77,255,.5),      /* outer glow */
+    inset 0 0 12px rgba(166,77,255,.25);/* inner glow */
+}
+
+/* small bits */
+.rb-icon  { font-size: 28px; margin-bottom: 6px; } /* emoji size + gap */
+.rb-title { font-size: 16px; margin: 0 0 6px; }    /* title line */
+.rb-text  { font-size: 13px; margin: 0 0 10px; }   /* helper line */
+
+/* “close window” pill */
+.rb-try {
+  padding: 6px 12px;                               /* click target */
+  border: 2px solid var(--neon-purple);            /* neon rim */
+  border-radius: 999px;                            /* pill shape */
+  background: rgba(10,14,28,.6);                   /* glass bg */
+  color: var(--ink);                               /* label color */
+  font: inherit;                                   /* use HUD font */
+  cursor: pointer;                                 /* pointer cursor */
+  box-shadow: 0 0 8px rgba(166,77,255,.55);        /* glow */
+}
+
+/* -----------------------------------------------
+ Rotate overlay: full-screen blocker shown on small devices in landscape.
+ Hidden by default; becomes visible based on orientation/height.
+------------------------------------------------ */
+
+/* Rotate overlay: visible only when [aria-hidden="false"] or MQ says so */
+#rotateOverlay {
+  position: fixed;     /* pin across the whole viewport */
+  inset: 0;            /* cover everything */
+  z-index: 9999;       /* higher than any other overlay/navbar */
+  display: none;       /* base: hidden */
+  pointer-events: auto;
+
+  /* visuals */
+  background: rgba(10,10,30,0.95);
+  color: #fff;
+  display: none;       /* will be set to flex when visible */
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  padding: 20px;
+  min-height: 100dvh;
+}
+
+/* JS/ARIA control */
+#rotateOverlay[aria-hidden="true"]  { display: none !important; }
+#rotateOverlay[aria-hidden="false"] { display: flex; }
+
+
+
+/* stage: reserve space for HUD above and controls below */
+.stage {
+  position: relative;                    /* anchor for absolute feedback */
+  display: flex;                         /* vertical stack */
+  flex-direction: column;                /* lane, dancer, feedback */
+  align-items: center;                   /* horizontal center */
+  justify-content: flex-start;           /* start after padding-top */
+  padding-top: var(--hud-stack-h);       /* room for lives + pills */
+  padding-bottom: calc(var(--controls-zone-h) + 10px); /* room for controls */
+  min-height: calc(100svh - var(--topbar-h)); /* fill below navbar */
+}
+
+/* prompt lane: reserved height above the dancer */
+.prompt-lane { min-height: 24px; text-align: center; } /* prompt slot */
+
+
+/* ===========
+   Judge line
+  =========== */
+/* judge line: invisible measurement hook for JS (same baseline as ::after) */
+.judge-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;                 /* must have height so center != top */
+  top: var(--judge-rel);        /* same vertical baseline as the visual line */
+  transform: translateY(-1px);  /* center a 2px line on the baseline */
+  opacity: 0;                   /* invisible */
+  pointer-events: none;         /* inert */
+  z-index: 13;                  /* same layer as the visual line */
+}
+
+/* real neon line, anchored to rails coordinate system */
+.stage .rails::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  top: var(--judge-rel);            /* <— SAME baseline as targets */
+  transform: translateY(-1px);      /* crisp centering on 2px line */
+  background: linear-gradient(
+    to right,
+    rgba(0, 255, 213, 0) 0%,
+    rgba(0, 255, 213, 0.6) 10%,
+    cyan 30%,
+    cyan 70%,
+    rgba(0, 255, 213, 0.6) 90%,
+    rgba(0, 255, 213, 0) 100%
+  );
+  box-shadow: 0 0 12px cyan, 0 0 24px cyan;
+  pointer-events: none;
+  z-index: 13; /* above rail lines (5) and under notes (16) */
+}
+
+/* Flash feedback states (optional visual confirmation) */
+@keyframes judgeFlashGood {
+  0%   { box-shadow: 0 0 10px rgba(57,255,20,.35); }
+  50%  { box-shadow: 0 0 24px rgba(57,255,20,.85); }
+  100% { box-shadow: 0 0 10px rgba(57,255,20,.35); }
+}
+@keyframes judgeFlashMiss {
+  0%   { box-shadow: 0 0 10px rgba(253,4,4,.35); }
+  50%  { box-shadow: 0 0 24px rgba(253,4,4,.85); }
+  100% { box-shadow: 0 0 10px rgba(253,4,4,.35); }
+}
+
+
+.stage .rails.flash-good::after { animation: judgeFlashGood .28s ease-out; }
+.stage .rails.flash-miss::after { animation: judgeFlashMiss .28s ease-out; }
+
+/* Reduced motion: disable flashing */
+@media (prefers-reduced-motion: reduce) {
+  .stage .rails.flash-good::after,
+  .stage .rails.flash-miss::after { animation: none; } /* removes flashes for reduced motion */
+}
+
+/* ============
+   JUDGE TARGET(rings) 
+  ============= */
+.judge-target {
+  position: absolute;
+  left: 50%;
+  top: var(--judge-rel);                 /* same vertical baseline as .judge-line */
+  transform: translate(-50%, -50%);    /* center the circle right on the line */
+
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid currentColor;
+  box-shadow: 0 0 8px currentColor, 0 0 18px currentColor;
+  pointer-events: none;
+  z-index: 15;
+  transform: translate(-50%, -50%);  /* exact centering on the baseline */
+
+  /* ring sizes for pseudo-elements */
+  --r0: 26px;
+  --r1: 40px;
+  --r2: 56px;
+}
+
+/* Middle ring */
+.judge-target::before {
+  content: "";
+  position: absolute; top: 50%; left: 50%;
+  width: var(--r1); height: var(--r1);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, currentColor 85%, white 15%);
+  opacity: .65;
+  box-shadow:
+    0 0 10px currentColor,
+    0 0 22px color-mix(in srgb, currentColor 85%, white 15%);
+}
+
+/* Outer ring */
+.judge-target::after {
+  content: "";
+  position: absolute; top: 50%; left: 50%;
+  width: var(--r2); height: var(--r2);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, currentColor 70%, white 30%);
+  opacity: .40;
+  box-shadow:
+    0 0 12px currentColor,
+    0 0 28px color-mix(in srgb, currentColor 70%, white 30%);
+}
+
+
+/* Direction colors for targets (reuse note hues) */
+.jt-left  { color: var(--label-left); }   /* green hue for LEFT lane */
+.jt-up    { color: var(--label-up); }     /* mint/cyan hue for UP lane */
+.jt-down  { color: var(--label-down); }   /* orange hue for DOWN lane */
+.jt-right { color: var(--label-right); }  /* pink hue for RIGHT lane */
+
+/* =======================================
+   Judge ticks container – ALIGNMENT FIX
+   - Uses the exact same width model as .rails / .judge-line
+   - Places 4 cells (Left, Up, Down, Right) dead-center over each rail
+   ======================================= */
+.judge-ticks {
+  position: absolute;                 /* lock to playfield */
+  top: var(--judge-y);                /* same baseline as the judge line */
+  left: 50%;
+  transform: translate(-50%, -50%);   /* center on the line */
+
+  max-width: var(--controls-max-w);
+    width: calc(
+      100% -
+      (max(var(--controls-side-pad), env(safe-area-inset-left)) +
+       max(var(--controls-side-pad), env(safe-area-inset-right)))
+    );
+
+  height: 0;                          /* targets are centered, no height needed */
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 equal columns = 4 rails */
+  pointer-events: none;
+  z-index: 11;                         /* above the judge line but under notes */
+}
+
+/* each target is centered in its cell */
+.judge-ticks .judge-target {
+  justify-self: center;
+  align-self: center;
+}
+
+
+/* === Rails: share the exact same horizontal model as controls/judge === */
+.stage .rails {
+  position: absolute;
+  top: calc(var(--topbar-h) + 8px);
+  bottom: calc(var(--controls-zone-h) + 120px);
+
+  /* Center via transform and use the same width calc as controls/judge */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(
+    100% -
+    (max(var(--controls-side-pad), env(safe-area-inset-left)) +
+     max(var(--controls-side-pad), env(safe-area-inset-right)))
+  );
+  max-width: var(--controls-max-w);
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: stretch;
+  column-gap: var(--controls-gap);
+
+  margin: 0;
+  padding: 0;
+
+  pointer-events: none;
+  z-index: 14;
+}
+
+
+/* Each rail provides the positioning context for line + target + notes */
+.rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* Vertical neon line (unchanged look) */
+.rail-line {
+  width: 2px;
+  height: 100%;
+  background: rgba(255,255,255,.9);
+  box-shadow:
+    0 0 8px  rgba(255,255,255,.75),
+    0 0 16px rgba(0,255,213,.25);
+  border-radius: 1px;
+  z-index: 5;
+}
+
+
+/* Notes (orbs) – fall using GPU transform all the way to rail bottom */
+.note {
+  position: absolute;                    /* positioned inside .rail */
+  top: 0;                                /* anchor at rail top (not animated) */
+  left: 50%;                             /* horizontally centered in rail */
+  transform: translate(-50%, 0);         /* baseline; animation overrides transform */
+  width: 40px;                           /* constant orb size */
+  height: 40px;                          /* constant orb size */
+  border-radius: 999px;                  /* circular shape */
+  background: currentColor;              /* color comes from direction class */
+  opacity: 0.98;                         /* crisp but not fully opaque */
+  z-index: 16;                           /* above rails and judge line */
+  pointer-events: none;                  /* decorative, not interactive */
+  box-shadow:
+    0 0 10px currentColor,               /* core glow */
+    0 0 24px currentColor,               /* mid glow */
+    0 0 40px color-mix(in srgb, currentColor 80%, white 20%); /* outer bloom */
+
+  /* runtime vars set by JS */
+  --drop-distance-judge: 0px;            /* Y to judgeline center */
+  --drop-distance-bottom: 0px;           /* Y to rail bottom (note TOP at bottom) */
+
+  animation-name: fallNote;              /* uses transform to fall */
+  animation-timing-function: linear;     /* steady speed */
+  animation-fill-mode: forwards;         /* stays at end position */
+  will-change: transform;                /* hint compositor */
+}
+
+/* Direction color mapping (keep neon hues) */
+.note-left  { color: var(--label-left);  } /* neon green */
+.note-up    { color: var(--label-up);    } /* mint/cyan */
+.note-down  { color: var(--label-down);  } /* neon orange */
+.note-right { color: var(--label-right); } /* neon pink */
+
+/* Falling animation – go all the way to rail bottom */
+@keyframes fallNote {
+  from { transform: translate(-50%, -60px); }
+  to   { transform: translate(-50%, var(--drop-distance-bottom)); }
+}
+
+body[data-paused="true"] .rail .note { 
+  animation-play-state: paused !important; /* hard pause current CSS animation frame */
+}
+
+/* dancer: lock the cat just above the control labels */
+.dancer {
+  position: fixed;                              /* anchor to the viewport */
+  left: 50%;                                    /* center horizontally */
+  bottom: calc(var(--controls-zone-h) + 18px);  /* sit just above labels */
+  transform: translateX(-50%);                  /* true horizontal center */
+  z-index: 12;                                  /* above floor, below overlay */
+  margin: 0;                                    /* no flow-based margins */
+}
+
+/* feedback: placed over the dancer area */
+.feedback {
+  position: absolute;                  /* layered over stage */
+  top: calc(var(--hud-stack-h) + 8px); /* under lives row */
+  left: 50%; transform: translateX(-50%); /* horizontal center */
+  min-height: 22px;                    /* consistent line box */
+  text-align: center;                  /* center text */
+  pointer-events: none;                /* non-interactive */
+}
+
+/* controls: fixed bottom row, centered container, four equal columns */
+.controls {
+  position: fixed;                     /* pin to viewport bottom */
+  left: 0; right: 0;                   /* full row */
+  margin-left: auto; 
+  margin-right: auto;                  /* center container */
+  max-width: var(--controls-max-w);    /* keep group tight on large screens */
+  bottom: var(--controls-bottom);      /* lift from bottom edge */
+  display: grid;                       /* grid layout */
+  grid-template-columns: repeat(4, 1fr); /* one row with four equal tracks */
+  align-items: center;                 /* vertical centering in cells */
+  justify-items: center;               /* horizontal centering in cells */
+  gap: var(--controls-gap);            /* spacing between arrows */
+  box-sizing: border-box;              /* include padding in width */
+  padding-left:  max(var(--controls-side-pad), env(safe-area-inset-left));   /* equal left gap */
+  padding-right: max(var(--controls-side-pad), env(safe-area-inset-right));  /* equal right gap */
+  padding-bottom: max(8px, env(safe-area-inset-bottom)); /* safe bottom inset */
+  z-index: 15;                         /* above neon floor */
+}
+
+/* control button: label above icon, no boxes */
+.ctrl-btn {
+  width: 100%;                          /* fill grid track */
+  display: flex;                        /* vertical stack */
+  flex-direction: column;               /* label then icon */
+  align-items: center;                  /* center content */
+  gap: 8px;                             /* spacing */
+  background: transparent;              /* no background box */
+  border: 0;                            /* clean edges */
+  cursor: pointer;                      /* pointer on hover */
+  outline: none;                        /* custom focus handling */
+}
+
+/* control label: above icons with glow */
+.ctrl-btn .label {
+  order: 0;                             /* first in stack */
+  font-size: var(--ctrl-label-size);    /* label size */
+  text-shadow: var(--text-glow);        /* label glow */
+}
+
+/* arrow icon: allow glow to overflow bounds */
+.arrow-icon { width: var(--arrow-size); height: var(--arrow-size); overflow: visible; } /* prevent clipping */
+
+/* direction hues via currentColor for glow and labels */
+.ctrl-btn.left  { color: var(--label-left);  }
+.ctrl-btn.up    { color: var(--label-up);    }
+.ctrl-btn.down  { color: var(--label-down);  }
+.ctrl-btn.right { color: var(--label-right); }
+.ctrl-btn.left  .label { color: var(--label-left);  }
+.ctrl-btn.up    .label { color: var(--label-up);    }
+.ctrl-btn.down  .label { color: var(--label-down);  }
+.ctrl-btn.right .label { color: var(--label-right); }
+
+/* arrow outline: DDR white stroke without fill */
+.arrow-main {
+  fill: none;                           /* transparent interior */
+  stroke: #fff;                         /* white border */
+  stroke-width: 15px;                   /* thick outline */
+  stroke-linejoin: round;               /* smooth corners */
+  stroke-linecap: round;                /* round ends */
+  transition: transform .12s ease;      /* subtle motion */
+}
+
+/* arrow glow: dedicated glow polygon (no stroke) */
+.arrow-glow {
+  filter: drop-shadow(0 0 6px #fff)     /* inner white pop */
+          drop-shadow(0 0 14px currentColor); /* colored halo */
+  transition: transform .12s ease, filter .12s ease; /* motion + intensity */
+}
+
+/* arrow hover: stronger glow and subtle scale */
+.ctrl-btn:hover .arrow-glow {
+  transform: scale(1.12);               /* small expansion */
+  filter:
+    drop-shadow(0 0 10px #fff)          /* brighter core */
+    drop-shadow(0 0 28px currentColor); /* stronger halo */
+}
+.ctrl-btn:hover .arrow-main {
+  transform: scale(1.06);               /* outline follows slightly */
+}
+.ctrl-btn:active .arrow-glow {
+  transform: scale(1.16);               /* press feedback */
+  filter:
+    drop-shadow(0 0 12px #fff)
+    drop-shadow(0 0 34px currentColor); /* extra halo on press */
+}
+
+/* optional active pulse (can be toggled via JS) */
+@keyframes neonPulse { 0%,100% { 
+  filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px currentColor);} 50% { 
+  filter: drop-shadow(0 0 12px #fff) drop-shadow(0 0 24px currentColor);} 
+}
+@keyframes textPulse { 0%,100% { 
+  text-shadow: 0 0 6px #fff,0 0 10px #fff,1px 1px 2px #000;} 50% { 
+    text-shadow: 0 0 12px #fff,0 0 22px currentColor,1px 1px 2px #000;} 
+  }
+.ctrl-btn.active .arrow-glow { 
+  animation: neonPulse .8s infinite; 
+  transform: scale(1.1);                  /* breathing glow */
+}
+.ctrl-btn.active .label { 
+  animation: textPulse .8s infinite; 
+  transform: scale(1.1);                  /* breathing text */
+}
+
+/* === Overlay base: click-through background; only its inner panels are clickable === */
+.overlay {
+  position: fixed;
+  inset: var(--topbar-h) 0 var(--controls-zone-h) 0; /* sits between topbar and controls zone */
+  z-index: 2200;                                     /* above stage, below navbar/rotate overlay */
+  pointer-events: none;                              /* let clicks pass through the backdrop */
+}
+
+/* Make the overlay's own buttons/panels clickable */
+.overlay .play-cta,
+#resultsCta,
+#gameOverCta,
+#overlay .rb-card {
+  pointer-events: auto;
+}
+
+.overlay.hidden { 
+  display: none;                        /* hidden during gameplay */
+}
+
+.play-cta {
+  position: absolute;                   /* place freely inside overlay */
+  top: var(--overlay-y);                /* vertical position */
+  left: 50%; transform: translateX(-50%); /* center horizontally */
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 10px;                            /* stack items */
+  pointer-events: auto;                 /* clickable */
+}
+
+.play-btn {
+  width: 96px; height: 96px;            /* circle size */
+  border-radius: 50%;                   /* round shape */
+  border: 4px solid var(--neon-cyan);   /* neon ring */
+  background: rgba(10,14,28,0.55);      /* glass background */
+  cursor: pointer;                      /* pointer cursor */
+  position: relative;                   /* anchor triangle */
+  box-shadow: 0 0 12px var(--neon-cyan);/* cyan glow */
+}
+
+/* Center the icons inside the circular play button */
+.play-btn .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 42px;                 /* icon size */
+  line-height: 1;
+  color: var(--neon-cyan);         
+  text-shadow: 0 0 12px var(--neon-cyan);
+  display: none;                    
+}
+
+/* Paused → show PLAY  */
+body[data-paused="true"] #overlay .play-btn .icon-play {
+  display: inline-block;
+}
+
+/* Running/Countdown → show PAUSE  */
+body:not([data-paused]) #overlay .play-btn .icon-pause {
+  display: inline-block;
+}
+
+
+.play-btn:hover { 
+  border-color: var(--neon-pink); 
+  box-shadow: 0 0 12px var(--neon-pink);   /* hover tint */
+}
+
+.play-label { 
+  font-size: 20px; 
+  color: var(--ink); 
+  text-shadow: var(--text-glow);            /* label */
+  white-space: pre-line;   /* render '\n' as actual line breaks */
+  text-align: center;      /* center multi-line text under the round button */
+}
+
+
+
+/* subtle neon accents for the SVG cat */
+#hat-band { 
+  fill: var(--label-left); 
+  filter: drop-shadow(0 0 3px var(--label-left)) drop-shadow(0 0 6px var(--label-left));/* hat band glow */
+ } 
+
+#bowtie > * { 
+  fill: var(--label-left);           /* bow tie color */
+} 
+
+#bowtie { 
+  filter: drop-shadow(0 0 6px var(--label-left));  /* bow tie glow */
+} 
+
+#glasses rect { 
+  stroke: var(--label-left); 
+  stroke-width: 1.25px; 
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.6)) drop-shadow(0 0 5px var(--label-left));   /* glasses rim glow */
+}
+
+#glasses rect:nth-child(3) { 
+  filter: none; 
+  stroke-width: 1px;               /* bridge calmer */
+}
+
+
+/* neon floor: decorative perspective grid under scene */
+body::before {
+  content: "";                          /* required pseudo-element */
+  position: fixed;                      /* pinned to viewport */
+   left: 0; right: 0;                    /* full width */
+  bottom: var(--floor-bottom);          /* vertical offset */
+  height: var(--floor-height);          /* plane height */
+  z-index: 0;                           /* behind game UI */
+  pointer-events: none;                 /* non-interactive */
+  background:
+    repeating-linear-gradient(          /* horizontal lines */
+      to top,
+      rgba(0,255,213,0.25) 0px,
+      rgba(0,255,213,0.25) 2px,
+      transparent 2px,
+      transparent 28px
+    ),
+    repeating-linear-gradient(          /* vertical lines */
+      to right,
+      rgba(0,255,213,0.25) 0px,
+      rgba(0,255,213,0.25) 2px,
+      transparent 2px,
+      transparent 36px
+    );
+  transform: perspective(700px) rotateX(62deg); /* faux 3D plane */
+  transform-origin: bottom center;               /* hinge at bottom */
+  filter: drop-shadow(0 0 10px rgba(0,255,213,.5)); /* glow */
+  opacity: var(--floor-opacity);        /* intensity */
+}
+
+/* =========================================================
+   DANCER MOVES (GPU-only transforms)
+   - JS toggles: .move-left / .move-right / .move-up / .move-down on #dancer
+   - Animate the inner SVG, not #dancer (to preserve base centering transform)
+   - Sub-elements by ID: #hat-top, #hat-band, #hat-brim, #arm-left, #arm-right, #body, #belly, #tail
+========================================================= */
+
+/* ----------------------------------------
+   SVG transform helpers
+   - Keep transforms local and predictable
+---------------------------------------- */
+#dancer svg * {
+  transform-box: fill-box;              /* compute transforms relative to element’s own box */
+  transform-origin: center;             /* default pivot = center */
+}
+
+/* ----------------------------------------
+   Pose switch (front ↔ back for DOWN)
+   - Default: show front pose
+   - When .move-down is active: fade to back/twerk pose
+---------------------------------------- */
+#dancer #pose-front {
+  opacity: 1;                            /* fully visible */
+  pointer-events: auto;                  /* clickable if needed */
+  transition: opacity 120ms ease;        /* smooth fade */
+}
+#dancer #pose-down  {
+  opacity: 0;                            /* hidden */
+  pointer-events: none;                  /* disabled */
+  transition: opacity 120ms ease;        /* smooth fade */
+}
+#dancer.move-down #pose-front {
+  opacity: 0;                            /* fade out front */
+  pointer-events: none;                  /* disable */
+}
+#dancer.move-down #pose-down  {
+  opacity: 1;                            /* fade in back */
+  pointer-events: auto;                  /* enable */
+}
+
+/* =============================
+   DANCER MOVES – LEFT / RIGHT (v2)
+   - Stronger slide distance
+   - Arm pivots fixed at shoulder
+   - Deeper hat tip
+   - Synced timings
+============================= */
+
+/* --- Arm pivots (static) ---
+   Put the hinge at the shoulder (top inner corner of each arm)
+---------------------------------------- */
+#dancer svg #arm-left,
+#dancer svg #arm-right {
+  transform-box: fill-box;               /* use element’s own bbox for transforms */
+}
+#dancer svg #arm-left {
+  transform-origin: 100% 0%;             /* left arm: top-right corner as pivot */
+}
+#dancer svg #arm-right {
+  transform-origin: 0% 0%;               /* right arm: top-left corner as pivot */
+}
+
+/* ----------------------------------------
+   LEFT: long slide + left-arm reach + deep hat tip
+---------------------------------------- */
+
+/* slide body (animate inner SVG, not wrapper) */
+@keyframes moveLeftK {
+  0% {
+    transform: translateX(0) rotate(0deg);              /* neutral */
+  }
+  60% {
+    transform: translateX(-140px) rotate(-9deg);        /* deep slide to left line + subtle body tilt */
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);              /* return to neutral */
+  }
+}
+
+/* left arm reaches up toward the hat */
+@keyframes armReachLeftK {
+  0%   { 
+    transform: rotate(0deg) scaleY(1.00); 
+  }   
+  60%  { 
+    transform: rotate(95deg) scaleY(1.06); 
+  }  
+  100% { 
+    transform: rotate(80deg) scaleY(1.00); 
+  }  
+}
+
+/* RIGHT arm: tuck in toward belly  */
+@keyframes armTuckRightK {
+  0%   { 
+    transform: rotate(0deg) scaleY(1.00); 
+  }  
+  60%  { 
+    transform: rotate(95deg) scaleY(1.06); 
+  }   
+  100% { 
+    transform: rotate(80deg) scaleY(1.00); 
+  }   
+}
+
+/* hat tips up-left (stronger) */
+@keyframes hatTipLeftK {
+  0% {
+    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+  }
+  50% {
+    transform: translate(-24px, -14px) rotate(-28deg);  /* deeper tip up-left */
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);            /* settle */
+  }
+}
+
+/* apply LEFT animations (synced, gentle delay on hat) */
+#dancer.move-left svg {
+  animation: moveLeftK 0.65s ease-in-out both;          /* main slide */
+}
+
+#dancer.move-left #arm-left {
+  animation: armReachLeftK 0.65s ease-in-out both;      /* arm reach */
+}
+
+#dancer.move-left #arm-right {
+  animation: armTuckRightK 0.65s ease-in-out both;  /* tuck mot magen */
+}
+
+#dancer.move-left #hat-top,
+#dancer.move-left #hat-band,
+#dancer.move-left #hat-brim {
+  animation: hatTipLeftK 0.68s ease-in-out 0.06s both;  /* tiny delay so hand gets there first */
+}
+
+
+/* ----------------------------------------
+   RIGHT: long slide + right-arm reach + deep hat tip
+---------------------------------------- */
+
+/* slide body (mirror) */
+@keyframes moveRightK {
+  0% {
+    transform: translateX(0) rotate(0deg);              /* neutral */
+  }
+  60% {
+    transform: translateX(140px) rotate(9deg);          /* deep slide right + subtle body tilt */
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);              /* return to neutral */
+  }
+}
+
+/* RIGHT move: make right arm reach UP-RIGHT (counter-clockwise = negative in SVG) */
+@keyframes armReachRightK {
+  0%   { 
+    transform: rotate(0deg) scaleY(1);          /* down by the side */
+  }
+  60%  { 
+    transform: rotate(-95deg) scaleY(1.06);    /* strong reach upward-right */
+  }
+  100% { 
+    transform: rotate(-80deg) scaleY(1);        /* hold slightly below max */
+  }
+}
+
+/* Apply on RIGHT move */
+#dancer.move-right #arm-right {
+  animation: armReachRightK 0.65s ease-in-out both; /* synced with your slide */
+}
+
+/* RIGHT move: LEFT arm tucks clearly over belly
+   - small clockwise rotate (+deg)
+   - strong translate inward (+x) and up (-y) */
+@keyframes armTuckLeftK {
+  0% {
+    transform: rotate(0deg) scaleY(1.00);               /* down by side */
+  }
+  60% {
+    transform: rotate(-95deg) scaleY(1.06);             /* strong reach upward-left */
+  }
+  100% {
+    transform: rotate(-80deg) scaleY(1.00);             /* hold slightly below max */
+  }
+}
+
+/* apply on RIGHT move (high specificity to win) */
+#dancer.move-right svg #arm-left {
+  animation: armTuckLeftK 0.65s ease-in-out both;
+}
+
+/* hat tips up-right (stronger) */
+@keyframes hatTipRightK {
+  0% {
+    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+  }
+  50% {
+    transform: translate(24px, -14px) rotate(28deg);    /* deeper tip up-right */
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);            /* settle */
+  }
+}
+
+/* apply RIGHT animations (synced, gentle delay on hat) */
+#dancer.move-right svg {
+  animation: moveRightK 0.65s ease-in-out both;         /* main slide */
+}
+
+#dancer.move-right #arm-right {
+  animation: armReachRightK 0.65s ease-in-out both;     /* arm reach */
+}
+
+#dancer.move-right #hat-top,
+#dancer.move-right #hat-band,
+#dancer.move-right #hat-brim {
+  animation: hatTipRightK 0.68s ease-in-out 0.06s both; /* tiny delay on hat */
+}
+
+
+/* ========================================
+   UP: jump + arms up + micro wobble
+   - Arms rotate ~90–100° with shoulder-ish pivots
+======================================== */
+/* Jump up with squash + shake wobble */
+@keyframes jumpUpK { 
+  0% {
+    transform: translateY(0) scaleY(1) rotate(0deg);         /* neutral */
+  }
+  20% {
+    transform: translateY(-28px) scaleY(0.90) rotate(3deg);  /* strong lift + tilt right */
+  }
+  40% {
+    transform: translateY(-18px) scaleY(1.04) rotate(-3deg); /* wobble left */
+  }
+  60% {
+    transform: translateY(-10px) scaleY(0.98) rotate(2deg);  /* rebound tilt */
+  }
+  80% {
+    transform: translateY(-4px) scaleY(1.02) rotate(-2deg);  /* micro shake */
+  }
+  100% {
+    transform: translateY(0) scaleY(1) rotate(0deg);         /* settle */
+  }
+}
+
+/* Left arm: up-left (mirror of LEFT-reach) */
+@keyframes armUpLeftK {
+  0%   {
+    transform: rotate(0deg)   scaleY(1.00);                     /* down at side */
+  }
+  60%  { 
+    transform: rotate(95deg)  scaleY(1.06);                     /* strong reach up-left */
+  }
+  100% { 
+    transform: rotate(80deg)  scaleY(1.00);                     /* hold slightly below max */
+  }
+}
+
+/* Right arm: up-right (mirror of RIGHT-reach) */
+@keyframes armUpRightK {
+  0%   { 
+    transform: rotate(0deg)   scaleY(1.00);                   /* down at side */
+  } 
+  60%  { 
+    transform: rotate(-95deg) scaleY(1.06);                   /* strong reach up-right */
+  }
+  100% { 
+    transform: rotate(-80deg) scaleY(1.00);                  /* hold slightly below max */
+  }
+}
+
+#dancer.move-up svg {
+  animation: jumpUpK 0.70s cubic-bezier(.25,.9,.3,1.0); /* jump on the SVG */
+}
+#dancer.move-up #arm-left {
+  animation: armUpLeftK 0.7s ease-out;             /* raise left arm */
+}
+#dancer.move-up #arm-right {
+  animation: armUpRightK 0.7s ease-out;            /* raise right arm */
+}
+
+/* ========================================
+   DOWN MOVE (Back Pose)
+   - Switches from front → back pose
+   - Adds squat, twerk, and tail wag
+======================================== */
+
+/* ---------------------------
+   Squat animation
+   - Applies to entire SVG
+   - Creates squat + rebound
+--------------------------- */
+@keyframes squatDownK {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); }       /* neutral */
+  35%  { transform: translateY(18px) scale(0.96) rotate(-2deg); }/* squat down */
+  70%  { transform: translateY(10px) scale(1.02) rotate(2deg); } /* rebound */
+  100% { transform: translateY(0) scale(1) rotate(0deg); }       /* settle */
+}
+
+/* ---------------------------
+   Twerk animation
+   - Applies to back body (#butt-back)
+   - Wiggles hip left-right
+--------------------------- */
+@keyframes twerkK {
+  0%   { transform: rotate(0deg) translateY(0); }
+  20%  { transform: rotate(10deg) translateY(2px); }   /* push right harder */
+  40%  { transform: rotate(-10deg) translateY(-2px); } /* push left harder */
+  60%  { transform: rotate(8deg) translateY(2px); }    /* rebound right */
+  80%  { transform: rotate(-8deg) translateY(-2px); }  /* rebound left */
+  100% { transform: rotate(0deg) translateY(0); }      /* settle */
+}
+
+/* ---------------------------
+   Tail wag animation
+   - Applies to #tail-back
+   - Swings tail side-to-side
+--------------------------- */
+@keyframes tailWagK {
+  0%   { transform-origin: 0% 50%; transform: rotate(0deg); }   /* center */
+  25%  { transform-origin: 0% 50%; transform: rotate(20deg); }  /* wag right */
+  50%  { transform-origin: 0% 50%; transform: rotate(-16deg);}  /* wag left */
+  75%  { transform-origin: 0% 50%; transform: rotate(12deg); }  /* rebound */
+  100% { transform-origin: 0% 50%; transform: rotate(0deg); }   /* settle */
+}
+
+/* ---------------------------
+   Apply animations when DOWN is active, Synced durations 
+--------------------------- */
+#dancer.move-down svg {
+  animation: squatDownK 0.8s ease-out;            /* squat */
+}
+
+/* Back body animations */
+#dancer.move-down #butt-back {
+  animation: twerkK 0.8s 0.7s ease-in-out;      /* but-wiggle */
+}
+#dancer.move-down #tail-back {
+  animation: tailWagK 0.8s ease-in-out 0ms 1;     /* tail-wiggle */
+}
+
+/* ----------------------------------------
+   Reduced motion (accessibility)
+---------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable body slide/jump animations */
+  #dancer.move-left  svg,
+  #dancer.move-right svg,
+  #dancer.move-up    svg {
+    animation: none;
+  }
+
+  /* Disable arm + hat animations for LEFT/RIGHT/UP */
+  #dancer.move-left  #hat-top,
+  #dancer.move-left  #hat-band,
+  #dancer.move-left  #hat-brim,
+  #dancer.move-right #hat-top,
+  #dancer.move-right #hat-band,
+  #dancer.move-right #hat-brim,
+  #dancer.move-up    #arm-left,
+  #dancer.move-up    #arm-right {
+    animation: none;
+  }
+
+  /* Disable animations for DOWN back pose + tail */
+  #dancer.move-down svg #pose-down,
+  #dancer.move-down svg #tail-back {
+    animation: none;
+  }
+
+  /* Visual feedback only: brighten dancer slightly */
+  #dancer {
+    filter: brightness(1.0);              /* normal brightness */
+    transition: filter 120ms linear;      /* smooth brightness change */
+  }
+  #dancer[class*="move-"] {
+    filter: brightness(1.15);             /* brighten during any move */
+  }
+}
+
+
+
+/* ========== MEDIA QUERIES (Bootstrap-aligned) ========== */
+
+/*  ≤575.98px — small phones */
+@media (max-width: 575.98px) {
+  :root {
+
+    
+    /* lift grid slightly for tiny screens */
+    --floor-bottom: 1vh;        /* raise the floor a bit */
+    --floor-height: 48vh;       /* extend floor height   */
+
+    /* keep arrows/touch targets comfortable */
+    --arrow-size: clamp(60px, 18vw, 84px);  /* min 60px, scale up with viewport */
+    --controls-gap: clamp(8px, 2.5vw, 14px);/* spacing between arrow buttons     */
+    --controls-bottom: 2.5vh;               /* distance from bottom edge         */
+    --controls-side-pad: 10px;              /* side padding to avoid edges       */
+
+    /*--judge-y: 65%; /* move line even lower */
+    /*--judge-rel: 68%;  /* a bit lower on small phones */
+  }
+
+  .brand {
+    /* keep brand on one line and allow ellipsis on tiny widths */
+    font-size: clamp(0.80rem, 3.6vw, 0.95rem); /* responsive text size     */
+    letter-spacing: 0.5px;                      /* slightly tighter tracking */
+    max-width: calc(100% - 64px);               /* reserve room for burger   */
+    overflow: hidden;                            /* clip overflow             */
+    text-overflow: ellipsis;                     /* show … when too long      */
+    white-space: nowrap;                         /* single line               */
+  }
+
+  .topbar {
+    /* safe-area insets on iOS/Android */
+    padding-right: max(12px, env(safe-area-inset-right)); /* respect right notch */
+    padding-left:  max(12px, env(safe-area-inset-left));  /* respect left notch  */
+  }
+}
+
+/* ≤991.98px — burger mode (mobile/tablet) */
+@media (max-width: 991.98px) {
+  .navbar-toggler.hamburger {
+    display: inline-grid; /* show burger in burger band */
+  }
+
+  .topbar .navbar-collapse:not(.show) {
+    display: none !important; /* ensure closed state actually hides */
+  }
+
+  /* Float the panel under the header; clamp width to viewport and safe areas */
+  .topbar .navbar-collapse {
+    position: absolute;
+    top: calc(var(--topbar-h) + 6px);
+    inset-inline-end: max(12px, env(safe-area-inset-right));
+    inset-inline-start: auto;
+    width: max-content;
+    max-width: calc(100vw - (env(safe-area-inset-left) + env(safe-area-inset-right) + 24px));
+    padding: 0;
+    margin: 0;
+    background: transparent; /* buttons already have glass */
+    z-index: 40; /* under toggler (50), above the stage */
+  }
+
+  .topbar .navbar-collapse.show {
+    display: block !important; /* visible when open */
+  }
+
+  .topbar .navbar-collapse .navbar-nav.nav-list {
+    display: flex;                    /* flex container */
+    flex-direction: column !important;/* stack vertically */
+    align-items: flex-end;            /* right align buttons */
+    gap: 8px;                         /* spacing between buttons */
+    padding: 0;                       /* remove default padding */
+    margin: 0;                        /* remove default margin */
+    list-style: none;                 /* no bullets */
+    white-space: nowrap;              /* single-line labels */
+  }
+
+  .nav-list {
+    display: flex;                    /* ensure vertical even if class moves */
+    flex-direction: column;           /* stack */
+    align-items: flex-end;            /* right align */
+    gap: 8px;                         /* spacing */
+    margin: 0;                        /* reset margin */
+    padding: 0;                       /* reset padding */
+    list-style: none;                 /* no bullets */
+    white-space: nowrap;              /* single-line labels */
+  }
+
+
+  :root {
+    /* give HUD a touch more room on these sizes */
+    --hud-stack-h: clamp(200px, 24vw, 220px); /* scales slightly with width */
+    
+  }
+}
+
+/* =========================================================
+   ≥992px — desktop (lg and up)
+   - Burger hidden, collapse inline inside topbar.
+========================================================= */
+@media (min-width: 992px) {
+
+ 
+
+  .navbar-toggler.hamburger {
+    display: none !important; /* hide burger on desktop */
+  }
+
+  .topbar .navbar-collapse {
+    position: static;          /* back in the flow */
+    display: flex !important;  /* visible row */
+    width: auto;               /* shrink to contents */
+    padding: 0;                /* remove extra padding */
+    margin: 0;                 /* remove extra margin */
+  }
+
+  .topbar .navbar-collapse .navbar-nav.nav-list {
+    display: flex;             /* single row */
+    flex-direction: row !important; /* horizontal items */
+    align-items: center;       /* vertical center */
+    flex-wrap: nowrap;         /* no wrap */
+    gap: 10px;                 /* spacing between items */
+    padding: 0;                /* reset padding */
+    margin: 0;                 /* reset margin */
+  }
+
+  
+}
+
+/* =========================================================
+   ≥1200px — xl tuning
+   - Keep control group compact and centered.
+========================================================= */
+@media (min-width: 1200px) {
+  :root {
+    --controls-max-w: 640px;  /* slightly narrower for visual balance */
+  }
+}
+
+/* =========================================================
+   ≥1400px — xxl tuning (replaces old 1600)
+   - Further tighten the control cluster at very wide screens.
+========================================================= */
+@media (min-width: 1400px) {
+  :root {
+    --controls-max-w: 600px;  /* bring arrows closer together */
+  }
+}
+
+/* =========================================================
+   Rotate overlay — consolidated to Bootstrap MQs
+   -Show rotate overlay only on small devices in landscape,
+   or when the viewport is very short.
+   - Hard-hide on desktop and wider.
+========================================================= */
+@media (max-width: 767.98px) and (orientation: landscape),
+       (max-height: 480px) {
+  #rotateOverlay {
+    display: flex;  /* visible only in these cases */
+  }
+}
+
+/* Hide overlay on tablet/desktop widths */
+@media (min-width: 768px) {
+  #rotateOverlay {
+    display: none !important;
+  }
+  /* =========================================
+   Dismissal override
+   - JS sets body[data-rotate-dismissed="true"] after user clicks "Close window".
+   - This rule force-hides overlay until orientation resets to portrait.
+========================================= */
+body[data-rotate-dismissed="true"] #rotateOverlay {
+  display: none !important;   /* force hide regardless of media query */
+}
+}

@@ -372,7 +372,6 @@ function initNavbarCollapseSync() {
   collapseEl.addEventListener('shown.bs.collapse', markOpen);
   collapseEl.addEventListener('hidden.bs.collapse', markClose);
 
-  togglerEl.addEventListener('click', () => { collapse.toggle(); });
 
   // Normalize state when crossing the lg breakpoint
   const mqLgUp = window.matchMedia('(min-width: 992px)');

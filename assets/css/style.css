@@ -1,551 +1,587 @@
-/* root variables: theme colors, sizes, layout spacing */
+/* ================================
+   Root variables: theme & layout
+   - Mobile-first units (rem, %)
+   - Keep dvh/svh only where needed
+================================ */
 :root {
-  --topbar-h: 64px;                     /* navbar height */
-  --bg: #0b1221;                        /* page background color */
-  --ink: #f5f7ff;                       /* base text color */
-  --muted: #a9b3d3;                     /* secondary text */
+  /* Sizes */
+  --topbar-h: 4rem;
+  --hud-gap: 0.625rem;
+  --hud-pad-x: 0.5rem;
+  --hud-stack-h: 2rem;
 
-  --neon-pink:   #ff4dd2;               /* pink glow */
-  --neon-purple: #a64dff;               /* purple frames */
-  --neon-cyan:   #00ffd5;               /* cyan accents */
-  --neon-green:  #39ff14;               /* left hue */
-  --neon-orange: #ffc04d;               /* down hue */
-  --neon-red:    #fd0404;               /* hearts red */
+  /* Colors */
+  --bg: #0b1221;
+  --ink: #f5f7ff;
+  --muted: #a9b3d3;
 
-  --label-left:  var(--neon-green);     /* left label color */
-  --label-up:    #7af3e1;               /* up label color */
-  --label-down:  var(--neon-orange);    /* down label color */
-  --label-right: var(--neon-pink);      /* right label color */
+  --neon-pink: #ff4dd2;
+  --neon-purple: #a64dff;
+  --neon-cyan: #00ffd5;
+  --neon-green: #39ff14;
+  --neon-orange: #ffc04d;
+  --neon-red: #fd0404;
 
-  --font-hud: 'Press Start 2P', monospace; /* UI font */
-  --font-score: 'VT323', monospace;        /* digits font */
-  --text-glow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan); /* text halo */
+  /* Direction label hues */
+  --label-left: var(--neon-green);
+  --label-up: var(--neon-cyan);
+  --label-down: var(--neon-orange);
+  --label-right: var(--neon-pink);
 
-  --hud-gap: 10px;                      /* gap between HUD rows */
-  --hud-pad-x: 8px;                     /* HUD horizontal padding */
-  --hud-stack-h: 200px;                 /* space for Lives + pills block */
-  --hud-bg: rgba(18,27,52,0.78);
-  --hud-border: rgba(166,77,255,0.45);
+  /* Fonts & glow */
+  --font-hud: "Press Start 2P", monospace;
+  --font-score: "VT323", monospace;
+  --text-glow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan);
 
-  --arrow-size: 92px;                   /* arrow icon size */
-  --controls-gap: 24px;                 /* spacing between arrows */
-  --controls-bottom: 3vh;               /* gap from bottom edge */
-  --ctrl-label-size: 16px;              /* arrow label size */
-  --controls-zone-h: calc(var(--arrow-size) + 40px); /* reserved height for arrows+labels */
+  /* Controls/Arrows */
+  --arrow-size: clamp(3.75rem, 7.5vw, 5.75rem);
+  --controls-gap: 1.5rem; 
+  --controls-bottom: 2.5rem; 
+  --ctrl-label-size: clamp(0.9rem, 1.6vw, 1rem);
+  --controls-zone-h: calc(var(--arrow-size) + 2.5rem); 
+   --controls-h: 0px; 
+  --controls-max-w: 40rem; 
+  --controls-side-pad: 0.875rem; 
 
-  --controls-max-w: 640px;              /* max width for arrow row on large screens */
-  --controls-side-pad: 14px;            /* symmetric left/right padding for arrow row */
+  /* Overlays / floor */
+  --overlay-y: 34dvh; 
+  --floor-opacity: 0.6;
+  --floor-height: clamp(18rem, 44dvh, 50rem); 
+  --floor-bottom: 0rem; 
 
-  --overlay-y: 34vh;                    /* play CTA vertical position */
-
-  --floor-opacity: 0.6;                 /* grid intensity */
-  --floor-height: 44vh;                 /* grid height */
-  --floor-bottom: 0vh;                 /* grid offset from viewport bottom */
-
-  --judge-y: 55%;                      /* vertical position of the judge line AND targets */
-  --judge-rel: 62%;                    /* judge baseline as % of the rails height (same for line + targets) */
+  /* Judge geometry */
+  --judge-y: 55%;
+  --judge-rel: 62%;
+  --rails-gap: 0.9rem; 
+  --rails-bottom: calc(var(--controls-zone-h) + var(--rails-gap));
 }
 
-/* base setup: lock viewport, apply bg, global type */
+/* =========================
+   Global base & page frame
+========================= */
 *,
 *::before,
-*::after {                                   /* predictable sizing */
-    box-sizing: border-box; 
-}    
-html, body { 
-    height: 100%;                          /* full height document */
- }
- 
- /* Prevent auto text zoom on iOS */
-html {                                      /* keep text size stable */
-  -webkit-text-size-adjust: 100%; 
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Prevent double-tap zoom on interactive UI */
-body, .controls, .ctrl-btn, .nav-btn { 
-  touch-action: manipulation;           /* disable double-tap zoom on supported browsers */
+body,
+.controls,
+.ctrl-btn,
+.nav-btn {
+  touch-action: manipulation;
 }
 
+/* Page shell */
 body {
-  background-color: var(--bg);           /* fallback background color */
-  background-image: url('../images/background.png.png'); /* background image */
-  background-repeat: no-repeat;          /* prevent tiling */
-  background-position: center;           /* center image */
-  background-size: cover;                /* cover viewport */
-  background-attachment: fixed;          /* keep background locked to viewport */
-  color: var(--ink);                     /* default text color */
-  font-family: var(--font-hud);          /* UI font */
-  text-transform: uppercase;             /* arcade case */
-  letter-spacing: 1px;                   /* slight tracking */
-  text-shadow: var(--text-glow);         /* global text glow */
-  display: grid;                         /* simple two-row layout */
-  grid-template-rows: auto 1fr;          /* navbar + content */
-  min-height: 100svh;                    /* mobile-safe viewport height */
-  overflow: hidden;                      /* disable page scroll */
-}
-.hidden { display: none !important; }    /* utility to hide elements */
+  background-color: var(--bg);
+  background-image: url("../images/background.png.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
 
-/* keep the bar one line, left-aligned, never clipping the glow */
+  color: var(--ink);
+  font-family: var(--font-hud);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--text-glow);
+
+  display: grid;
+  grid-template-rows: auto 1fr; /* navbar + content */
+  /* NOTE: dvh fallback order: set vh first, then dvh for modern */
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden; /* no page scroll */
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =========================
+   Top bar / Navbar (mobile-first)
+========================= */
 .topbar {
-  position: relative;                  /* anchor for absolute dropdown */
+  position: relative;
   top: 0;
-  z-index: 30;                         /* above stage */
-  min-height: var(--topbar-h);         /* fixed height */
-  display: flex;                       /* one row */
-  align-items: center;                 /* vertical center */
-  flex-wrap: nowrap;                   /* no wrap */
-  justify-content: flex-start;         /* brand stays left */
-  overflow: visible;                   /* never clip glow */
-  padding-left:  max(12px, env(safe-area-inset-left));   /* safe edges */
-  padding-right: max(12px, env(safe-area-inset-right));
-  background: linear-gradient(to bottom, rgba(18,27,52,.92), rgba(18,27,52,.78)); /* glass */
-  border-bottom: 2px solid rgba(166,77,255,.35);          /* neon rim */
-  backdrop-filter: blur(6px);          /* blur glass */
+  z-index: 30;
+  min-height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow: visible;
+  padding: max(0.2rem, env(safe-area-inset-top))
+    max(0.8rem, env(safe-area-inset-right)) 0.2rem
+    max(0.8rem, env(safe-area-inset-left));
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 27, 52, 0.92),
+    rgba(18, 27, 52, 0.78)
+  );
+  border-bottom: 0.125rem solid rgba(166, 77, 255, 0.35); /* was 2px */
+  backdrop-filter: blur(6px);
+  overflow-x: clip; /* prevent horizontal push */
 }
 
-/* let the collapsing panel sit under the burger, never above it */
-.topbar .navbar-collapse {
-  position: relative;                  /* stacking context under burger */
-  z-index: 1;                          /* burger wins (z=50) */
-  padding-right: 56px;                 /* leave room under burger */
-  width: 100%;                         /* expand across bar */
-  display: none;                       /* closed by default on all widths */
-}
-
-.topbar .navbar-collapse.show {
-  display: block;                /* visible when opened */
-  position: absolute;            /* drop under the bar */
-  top: 100%;                     /* directly beneath topbar */
-  right: max(12px, env(safe-area-inset-right));
-  width: auto;                   /* fit content stack */
-}
-
-
-/* keep the wordmark left, allow ellipsis on tiny widths */
+/* Brand */
 .brand {
-  margin-right: auto;                  /* push menu area right */
-  flex: 0 0 auto;                      /* do not shrink */
-  display: inline-flex;                /* emoji aligns with text */
-  align-items: center;                 /* vertical center */
-  justify-content: flex-start;         /* left inside brand box */
-  max-width: calc(100% - 72px);        /* reserve burger lane */
-  overflow: hidden;                    /* clip for ellipsis */
-  text-overflow: ellipsis;             /* show … when tight */
-  white-space: nowrap;                 /* single line */
-  padding-right: 56px;                 /* visual clearance under burger */
-   /* neon wordmark */
-  background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan)); /* neon text */
+  margin-right: 2rem;
+  flex: 1 1 auto; /* allow shrinking (prevents overflow) */
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: linear-gradient(
+    90deg,
+    var(--neon-pink),
+    var(--neon-purple),
+    var(--neon-cyan)
+  );
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;                  /* gradient text reveal */
-  font-weight: 800;                    /* arcade bold */
-  line-height: 1;                      /* tight line box */
-  text-shadow:
-    0 0 6px rgba(255,255,255,.65),
-    0 0 18px rgba(166,77,255,.55),
-    0 0 28px rgba(0,255,213,.45);      /* soft haze */
+  color: transparent;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 0 0.375rem rgba(255, 255, 255, 0.65),
+    0 0 1.125rem rgba(166, 77, 255, 0.55), 0 0 1.75rem rgba(0, 255, 213, 0.45);
 }
 
-
-/* neon burger; stays on top and morphs to X when open */
+/* Hamburger toggler (mobile/tablet) */
 .navbar-toggler.hamburger {
-  position: absolute;                             /* free from flex row */
-  top: 50%;                                       /* vertical center */
-  right: max(12px, env(safe-area-inset-right));   /* safe right */
-  transform: translateY(-50%);                    /* exact center */
-  display: inline-grid; 
-  place-content: center; 
-  gap: 4px;                                       /* tidy bars */
-  flex: 0 0 auto; 
-  line-height: 1;                                 /* compact box */
-  border: 2px solid var(--neon-purple);           /* neon frame */
-  border-radius: 10px; 
-  padding: 6px;                                   /* touch size */
-  background: rgba(10,14,28,0.55);                /* glass */
-  box-shadow: 0 0 6px rgba(166,77,255,.55), inset 0 0 10px rgba(166,77,255,.25); /* glow */
-  z-index: 50;                                    /* above dropdown */
+  position: absolute;
+  top: 50%;
+  right: max(0.75rem, env(safe-area-inset-right));
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-content: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  line-height: 1;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 0.625rem;
+  padding: 0.375rem;
+  background: rgba(10, 14, 28, 0.55);
+  box-shadow: 0 0 0.375rem rgba(166, 77, 255, 0.55),
+    inset 0 0 0.625rem rgba(166, 77, 255, 0.25);
+  z-index: 50;
 }
 
 .navbar-toggler.hamburger span {
-  display: block; 
-  width: 24px; 
-  height: 2px;                          /* bar size */
-  background: #fff; 
-  box-shadow: 0 0 6px rgba(255,255,255,.6); /* bar glow */
-  transition: transform .2s ease, opacity .2s ease;           /* morph */
+  display: block;
+  width: 1.5rem;
+  height: 0.125rem;
+  background: #fff;
+  box-shadow: 0 0 0.375rem rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* X-state toggled via body[data-nav-open] */
-body[data-nav-open] .hamburger span:nth-child(1) { transform: translateY(6px) rotate(45deg); } /* top to diag */
-body[data-nav-open] .hamburger span:nth-child(2) { opacity: 0; }                               /* hide middle */
-body[data-nav-open] .hamburger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg);}/* bottom to diag */
+/* X morph (optional JS body flag) */
+body[data-nav-open] .hamburger span:nth-child(1) {
+  transform: translateY(0.375rem) rotate(45deg);
+}
+body[data-nav-open] .hamburger span:nth-child(2) {
+  opacity: 0;
+}
+body[data-nav-open] .hamburger span:nth-child(3) {
+  transform: translateY(-0.375rem) rotate(-45deg);
+}
 
-/* collapsed nav list: vertical, right-aligned on mobile */
+/* Collapsing panel (mobile-first: hidden by default) */
+.topbar .navbar-collapse {
+  position: relative;
+  z-index: 1;
+  padding-right: 3.5rem;
+  width: 100%;
+  display: none;
+}
+
+.topbar .navbar-collapse.show {
+  display: block;
+  position: absolute;
+  top: 100%;
+  right: max(0.75rem, env(safe-area-inset-right));
+  width: auto;
+}
+
+/* Nav list (vertical stack on mobile) */
 .nav-list {
-  list-style: none;                      /* remove bullets */
-  display: flex;                         /* flex container */
-  flex-direction: column;                /* vertical stack */
-  align-items: flex-end;                 /* right align items */
-  gap: 8px;                             /* spacing */
-  padding: 10px 0;                       /* vertical padding */
-  margin: 0;                             /* reset */
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.625rem 0;
+  margin: 0;
 }
 
-/* nav buttons: neon pills */
+/* Nav buttons */
 .nav-btn {
-  appearance: none;                      /* reset button UI */
-  border: 2px solid var(--neon-purple);  /* neon frame */
-  border-radius: 10px;                   /* pill corners */
-  padding: 6px 10px;                     /* pill size */
-  background: rgba(10,14,28,0.55);       /* glass look */
-  color: var(--ink);                     /* text color */
-  font: inherit;                         /* inherit HUD font */
-  text-shadow: var(--text-glow);         /* text glow */
-  cursor: pointer;                       /* pointer on hover */
-  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease; /* micro motion */
-  white-space: nowrap;                   /* keep labels on one line */
+  appearance: none;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 0.625rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(10, 14, 28, 0.55);
+  color: var(--ink);
+  font: inherit;
+  text-shadow: var(--text-glow);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
 }
 .nav-btn:hover {
-  transform: translateY(-1px);           /* tiny lift */
-  border-color: var(--neon-cyan);        /* cyan edge */
-  box-shadow: 0 0 10px rgba(0,255,213,0.35); /* halo */
+  transform: translateY(-1px);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0.625rem rgba(0, 255, 213, 0.35);
 }
 
-
-/* --------------------------------------- */
-/* Quick Play/Pause button under the navbar */
-/* --------------------------------------- */
+/* =========================
+   Quick Play/Pause button
+========================= */
 .quick-pp {
-  position: fixed;                           /* keep the button always visible on screen */
-  top: calc(var(--topbar-h) + 8px);          /* place it just below the navbar */
-  right: max(16px, env(safe-area-inset-right));
-  width: 56px;                               /* fixed button width */
-  height: 56px;                              /* fixed button height */
-  border-radius: 80%;                        /* make it perfectly round */
-  background: var(--hud-bg);                 /* match HUD background for consistency */
-  color: var(--neon-cyan);                   /* icon color */
-  border: 4px solid var(--hud-border);       /* subtle border like HUD */
-  display: flex;                             /* center contents */
-  align-items: center;                       /* vertical centering */
-  justify-content: center;                   /* horizontal centering */
-  cursor: pointer;                           /* pointer to show interactivity */
-  z-index: 2302;                             /* above game stage, below nav menu */
+  position: fixed;
+  top: calc(var(--topbar-h) + 0.5rem);
+  right: max(1rem, env(safe-area-inset-right));
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+  border-radius: 50%;
+  background: var(--hud-bg, rgba(18, 27, 52, 0.78));
+  color: var(--neon-cyan);
+  border: 0.25rem solid var(--hud-border, rgba(166, 77, 255, 0.45));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2302;
   font-size: 1rem;
 }
-
 .quick-pp:active {
-  transform: scale(0.92);                    /* pressed down effect */
+  transform: scale(0.92);
 }
 
-/* inner icon container */
 .quick-pp .pp-icon {
-  font-size: 1rem;                           /* big neon icons */
-  color: var(--neon-pink);                   /* glowing pink color */
-  display: inline-flex;                      /* horizontal layout */
-  align-items: center;                       /* center vertically */
-  gap: 0.15rem;                              /* spacing between glyphs */
-
-  
-  text-shadow:                                 /* Pink glow around icons */
-    0 0 2px var(--neon-pink),
-    0 0 4px var(--neon-pink),
+  font-size: 1rem;
+  color: var(--neon-pink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  text-shadow: 0 0 2px var(--neon-pink), 0 0 4px var(--neon-pink),
     0 0 6px var(--neon-pink);
 }
-/* === When the burger menu is open, relocate quick-pp to the bottom-right === */
-body[data-nav-open="true"] .quick-pp {
-  top: auto;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  right:  max(12px, env(safe-area-inset-right));
+
+/* When burger is open, move the quick-pp away */
+body:has(.topbar .navbar-toggler[aria-expanded="true"]) .quick-pp,
+body[data-nav-open] .quick-pp {
+  top: auto !important;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  right: max(0.75rem, env(safe-area-inset-right));
   left: auto;
 }
 
+/* Hide quick-pp while menu is open */
+body[data-nav-open="true"] #quickPlayPause {
+  opacity: 0;
+  pointer-events: none;
+}
 
-/* ---------------- HUD: overall container ---------------- */
+/* =========================
+   HUD (fixed under navbar)
+========================= */
 .hud {
-  position: fixed;                       /* pin HUD */
-  top: var(--topbar-h);                  /* below navbar */
-  left: 0; right: 0;                     /* full width */
-  display: flex;                         /* vertical layout */
-  flex-direction: column;                /* stack rows */
-  gap: var(--hud-gap);                   /* row spacing */
-  padding-inline: var(--hud-pad-x);      /* side padding */
-  z-index: 20;                           /* above stage */
-  pointer-events: none;                  /* inert by default; opt-in below */
-  z-index: 2300;                         /* above overlay base */
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--hud-gap);
+  padding-inline: var(--hud-pad-x);
+  z-index: 2300;
+  pointer-events: none;
 }
 
-/* ---------------- HUD: bottom row (Lives) ---------------- */
 .hud-bottom {
-  order: 0;                              /* first row */
-  display: flex;                         /* layout row */
-  justify-content: center;               /* center group */
-  width: 100%;                           /* full width row */
-  pointer-events: none;                  /* keep inert */
+  order: 0;
+  display: flex;
+  justify-content: center;
+  inline-size: 100%;
+  pointer-events: none;
 }
 
-/* plain lives container */
 .hud-item.hud-item--plain {
-  pointer-events: auto;                  /* allow inner events if needed */
-  border: none;                          /* no frame */
-  background: transparent;               /* no background */
-  box-shadow: none;                      /* no glow box */
-  padding: 0;                            /* rely on content spacing */
-  text-align: center;                    /* center label+hearts */
+  pointer-events: auto;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  text-align: center;
 }
 .hud-item.hud-item--plain .hud-label {
-  display: block;                        /* own line */
-  margin-bottom: 6px;                    /* gap above hearts */
-  color: var(--neon-pink);               /* label color */
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--neon-pink);
 }
 
-/* hearts row */
 .lives {
-  display: flex;                         /* horizontal row */
-  flex-wrap: wrap;                       /* wrap when many */
-  gap: 10px;                             /* spacing */
-  justify-content: center;               /* center group */
-  align-items: center;                   /* vertical align */
-  padding: 2px;                          /* breathing room */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  justify-content: center;
+  align-items: center;
+  padding: 0.125rem;
 }
 
-/* heart visuals */
 .svg-heart {
-  width: 28px; height: 28px;             /* size */
-  fill: var(--neon-red);                 /* base color */
-  filter: drop-shadow(0 0 4px var(--neon-red)) 
-          drop-shadow(0 0 10px var(--neon-pink)); /* glow */
-  transition: opacity .25s ease, fill .25s ease;  /* smooth change */
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  fill: var(--neon-red);
+  filter: drop-shadow(0 0 0.25rem var(--neon-red))
+    drop-shadow(0 0 0.625rem var(--neon-pink));
+  transition: opacity 0.25s ease, fill 0.25s ease;
 }
-.svg-heart.full         { opacity: 1;   fill: var(--neon-red); }
-.svg-heart.threequarter { opacity: .85; fill: var(--neon-red); }
-.svg-heart.half         { opacity: .65; fill: var(--neon-red); }
-.svg-heart.quarter      { opacity: .4;  fill: var(--neon-red); }
-.svg-heart.empty        { opacity: .15; fill: var(--muted); filter: none; }
+.svg-heart.full {
+  opacity: 1;
+  fill: var(--neon-red);
+}
+.svg-heart.threequarter {
+  opacity: 0.85;
+  fill: var(--neon-red);
+}
+.svg-heart.half {
+  opacity: 0.65;
+  fill: var(--neon-red);
+}
+.svg-heart.quarter {
+  opacity: 0.4;
+  fill: var(--neon-red);
+}
+.svg-heart.empty {
+  opacity: 0.15;
+  fill: var(--muted);
+  filter: none;
+}
 
-/* ---------------- HUD: top row (metrics + toggle) ---------------- */
 .hud-top {
-  order: 1;                              /* second row */
-  display: flex;                         /* vertical layout */
-  flex-direction: column;                /* stack pills */
-  align-items: flex-start;               /* left align */
-  gap: 8px;                              /* spacing */
-  width: 100%;                           /* full row */
-  pointer-events: auto;                  /* re-enable interaction */
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  inline-size: 100%;
+  pointer-events: auto;
 }
 
-/* -------- HUD: toggle button (icon + text) -------- */
-
-
-/* HUD toggle: neon icon + text */
+/* HUD toggle */
 .hud-toggle {
-  display: inline-flex;                       
-  align-items: center;                        
-  gap: 6px;                                   /* space between icon + text */
-  padding: 4px 8px;                           /* compact button size */
-  border: 2px solid var(--neon-purple);       /* neon frame */
-  border-radius: 4px;                         /* soft corners */
-  background: rgba(12,18,36,0.75);            /* dark glass background */
-  color: var(--neon-cyan);                    /* default text color */
-  font-size: 14px;                            /* compact font size */
-  font-family: var(--font-score);             /* keep HUD font */
-  text-shadow: 0 0 5px var(--neon-cyan);      /* glowing text */
-  box-shadow: 0 0 8px var(--neon-purple);     /* neon halo */
-  cursor: pointer;                            /* pointer cursor */
-  pointer-events: auto;                       /* ensure clickable */
-  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 0.25rem;
+  background: rgba(12, 18, 36, 0.75);
+  color: var(--neon-cyan);
+  font-size: 0.875rem;
+  font-family: var(--font-score);
+  text-shadow: 0 0 0.3125rem var(--neon-cyan);
+  box-shadow: 0 0 0.5rem var(--neon-purple);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
-
-/* little arrow icon inside the button */
 .hud-toggle__icon {
-  font-size: 28px;
-  margin-left: 6px; 
-  display: inline-block; 
-  line-height: 1;           
-  transition: transform .25s ease;  /* smooth rotation */
+  font-size: 1.75rem;
+  margin-left: 0.375rem;
+  display: inline-block;
+  line-height: 1;
+  transition: transform 0.25s ease;
 }
-
-/* collapsed: arrow points right (►) */
 body[data-hud="collapsed"] .hud-toggle__icon {
   transform: rotate(0deg);
 }
-
-/* expanded: arrow points down (▼) */
 body[data-hud="expanded"] .hud-toggle__icon {
-  transform: rotate(90deg);  /* rotate to down */
+  transform: rotate(90deg);
 }
-
-/* hover and focus: brighter and pink glow */
 .hud-toggle:hover,
 .hud-toggle:focus-visible {
-  background: rgba(24,36,72,0.9);             
-  color: var(--neon-pink);                    
-  text-shadow: 0 0 6px var(--neon-pink);      
-  box-shadow: 0 0 10px var(--neon-pink), 0 0 18px var(--neon-purple);
+  background: rgba(24, 36, 72, 0.9);
+  color: var(--neon-pink);
+  text-shadow: 0 0 0.375rem var(--neon-pink);
+  box-shadow: 0 0 0.625rem var(--neon-pink), 0 0 1.125rem var(--neon-purple);
   outline: none;
 }
-
-.hud-toggle:focus-visible { 
-  outline: 2px solid var(--neon-cyan);   /* focus ring */
-  outline-offset: 2px; 
+.hud-toggle:focus-visible {
+  outline: 0.125rem solid var(--neon-cyan);
+  outline-offset: 0.125rem;
 }
 
-/* collapsed = icon points right (▸); expanded = down (▾)
-   (glyphs by JS, transforms left neutral here) */
-body[data-hud="collapsed"] .hud-toggle__icon { transform: rotate(0deg); }
-body[data-hud="expanded"]  .hud-toggle__icon { transform: rotate(0deg); }
-
-/* -------- HUD: collapsible stack (Score/Best/Level) -------- */
-/* base (expanded) state */
+/* HUD stack (collapsible) */
 .hud-stack {
-  display: flex;                         /* vertical list of pills */
-  flex-direction: column;                /* stack */
-  gap: 8px;                              /* spacing between pills */
-  overflow: hidden;                      /* clip when collapsed */
-  max-height: 520px;                     /* tall enough to show all */
-  opacity: 1;                            /* visible */
-  transition: max-height .25s ease, opacity .2s ease; /* smooth open/close */
-  pointer-events: auto;                  /* interactive when visible */
-}
-
-/* collapsed visual state (driven by body[data-hud]) */
-body[data-hud="collapsed"] .hud-stack {
-  max-height: 0;                         /* closed height */
-  opacity: 0;                            /* fade out */
-  pointer-events: none;                  /* inert when hidden */
-}
-
-/* -------- HUD: metric pills (appearance) -------- */
-.hud-top .hud-item { 
-  pointer-events: auto;                  /* interactive pills */
-}
-
-.hud-item {
-  min-width: 100px;                      /* minimum pill width */
-  padding: 8px 12px;                     /* pill padding */
-  border: 3px solid var(--neon-purple);  /* neon frame */
-  border-radius: 6px;                    /* soft corners */
-  background: rgba(18,27,52,0.8);        /* glass panel */
-  box-shadow: 0 0 12px var(--neon-purple); /* glow */
-}
-
-.hud-label {
-  font-size: 12px;                       /* label size */
-  color: var(--neon-pink);               /* label color */
-  margin-bottom: 4px;                    /* gap to metric */
-}
-
-.metric {
-  font-family: var(--font-score);        /* digits font */
-  font-size: 24px;                       /* digits size */
-  color: var(--neon-cyan);               /* digits color */
-  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink); /* digits glow */
-}
-
-/* ==== rotate overlay ==== */
-
-/* message card */
-.rb-card {
-  pointer-events: auto;                /* accept clicks */
-  padding: 16px 18px;                  /* inner spacing */
-  border: 2px solid var(--neon-purple);/* neon frame */
-  border-radius: 12px;                 /* soft corners */
-  background: rgba(10,14,28,.92);      /* glass panel */
-  color: var(--ink);                   /* readable text */
-  text-align: center;                  /* center content */
-  box-shadow:
-    0 0 14px rgba(166,77,255,.5),      /* outer glow */
-    inset 0 0 12px rgba(166,77,255,.25);/* inner glow */
-}
-
-/* small bits */
-.rb-icon  { font-size: 28px; margin-bottom: 6px; } /* emoji size + gap */
-.rb-title { font-size: 16px; margin: 0 0 6px; }    /* title line */
-.rb-text  { font-size: 13px; margin: 0 0 10px; }   /* helper line */
-
-/* “close window” pill */
-.rb-try {
-  padding: 6px 12px;                               /* click target */
-  border: 2px solid var(--neon-purple);            /* neon rim */
-  border-radius: 999px;                            /* pill shape */
-  background: rgba(10,14,28,.6);                   /* glass bg */
-  color: var(--ink);                               /* label color */
-  font: inherit;                                   /* use HUD font */
-  cursor: pointer;                                 /* pointer cursor */
-  box-shadow: 0 0 8px rgba(166,77,255,.55);        /* glow */
-}
-
-/* -----------------------------------------------
- Rotate overlay: full-screen blocker shown on small devices in landscape.
- Hidden by default; becomes visible based on orientation/height.
------------------------------------------------- */
-
-/* Rotate overlay: visible only when [aria-hidden="false"] or MQ says so */
-#rotateOverlay {
-  position: fixed;     /* pin across the whole viewport */
-  inset: 0;            /* cover everything */
-  z-index: 9999;       /* higher than any other overlay/navbar */
-  display: none;       /* base: hidden */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  max-height: 32.5rem; /* was 520px */
+  opacity: 1;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
   pointer-events: auto;
+}
+body[data-hud="collapsed"] .hud-stack {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
 
-  /* visuals */
-  background: rgba(10,10,30,0.95);
+.hud-top .hud-item {
+  pointer-events: auto;
+}
+.hud-item {
+  min-width: 6.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.1875rem solid var(--neon-purple); /* was 3px */
+  border-radius: 0.375rem;
+  background: rgba(18, 27, 52, 0.8);
+  box-shadow: 0 0 0.75rem var(--neon-purple);
+}
+.hud-label {
+  font-size: 0.75rem;
+  color: var(--neon-pink);
+  margin-bottom: 0.25rem;
+}
+.metric {
+  font-family: var(--font-score);
+  font-size: 1.5rem;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 0.3125rem var(--neon-cyan), 0 0 0.625rem var(--neon-pink);
+}
+
+/* =========================
+   Rotate overlay (ARIA/JS)
+========================= */
+.rb-card {
+  pointer-events: auto;
+  padding: 1rem 1.125rem;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 0.75rem;
+  background: rgba(10, 14, 28, 0.92);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 0 0.875rem rgba(166, 77, 255, 0.5),
+    inset 0 0 0.75rem rgba(166, 77, 255, 0.25);
+}
+.rb-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.375rem;
+}
+.rb-title {
+  font-size: 1rem;
+  margin: 0 0 0.375rem;
+}
+.rb-text {
+  font-size: 0.8125rem;
+  margin: 0 0 0.625rem;
+}
+.rb-try {
+  padding: 0.375rem 0.75rem;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 999px;
+  background: rgba(10, 14, 28, 0.6);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 0.5rem rgba(166, 77, 255, 0.55);
+}
+
+/* Fullscreen blocker (media + ARIA control) */
+#rotateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  pointer-events: auto;
+  background: rgba(10, 10, 30, 0.95);
   color: #fff;
-  display: none;       /* will be set to flex when visible */
   justify-content: center;
   align-items: center;
   text-align: center;
   flex-direction: column;
-  padding: 20px;
+  padding: 1.25rem;
   min-height: 100dvh;
 }
-
-/* JS/ARIA control */
-#rotateOverlay[aria-hidden="true"]  { display: none !important; }
-#rotateOverlay[aria-hidden="false"] { display: flex; }
-
-
-
-/* stage: reserve space for HUD above and controls below */
-.stage {
-  position: relative;                    /* anchor for absolute feedback */
-  display: flex;                         /* vertical stack */
-  flex-direction: column;                /* lane, dancer, feedback */
-  align-items: center;                   /* horizontal center */
-  justify-content: flex-start;           /* start after padding-top */
-  padding-top: var(--hud-stack-h);       /* room for lives + pills */
-  padding-bottom: calc(var(--controls-zone-h) + 10px); /* room for controls */
-  min-height: calc(100svh - var(--topbar-h)); /* fill below navbar */
+#rotateOverlay[aria-hidden="true"] {
+  display: none !important;
+}
+#rotateOverlay[aria-hidden="false"] {
+  display: flex;
 }
 
-/* prompt lane: reserved height above the dancer */
-.prompt-lane { min-height: 24px; text-align: center; } /* prompt slot */
+/* =========================
+   Stage & playfield cluster
+========================= */
+/* Make the main content claim the viewport below the topbar */
+main#game {
+  min-block-size: calc(100svh - var(--topbar-h));
+  display: block;
+}
 
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 
-/* ===========
-   Judge line
-  =========== */
-/* judge line: invisible measurement hook for JS (same baseline as ::after) */
+  padding-top: 2rem;
+  padding-bottom: var(--rails-bottom);
+  min-block-size: calc(100svh - var(--topbar-h));
+
+  /* Fill below navbar – track the *dynamic* viewport height */
+  min-block-size: calc(100svh - var(--topbar-h));
+  
+}
+
+.prompt-lane {
+  min-height: 1.5rem;
+  text-align: center;
+}
+
+/* Judge line (measurement hook) */
 .judge-line {
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;                 /* must have height so center != top */
-  top: var(--judge-rel);        /* same vertical baseline as the visual line */
-  transform: translateY(-1px);  /* center a 2px line on the baseline */
-  opacity: 0;                   /* invisible */
-  pointer-events: none;         /* inert */
-  z-index: 13;                  /* same layer as the visual line */
+  height: 0.125rem;
+  top: var(--judge-rel);
+  transform: translateY(-1px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 13;
 }
 
-/* real neon line, anchored to rails coordinate system */
+/* Visual judge line */
 .stage .rails::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;
-  top: var(--judge-rel);            /* <— SAME baseline as targets */
-  transform: translateY(-1px);      /* crisp centering on 2px line */
+  height: 0.125rem;
+  top: var(--judge-rel);
+  transform: translateY(-1px);
   background: linear-gradient(
     to right,
     rgba(0, 255, 213, 0) 0%,
@@ -555,138 +591,148 @@ body[data-hud="collapsed"] .hud-stack {
     rgba(0, 255, 213, 0.6) 90%,
     rgba(0, 255, 213, 0) 100%
   );
-  box-shadow: 0 0 12px cyan, 0 0 24px cyan;
+  box-shadow: 0 0 0.75rem cyan, 0 0 1.5rem cyan;
   pointer-events: none;
-  z-index: 13; /* above rail lines (5) and under notes (16) */
+  z-index: 13;
 }
 
-/* Flash feedback states (optional visual confirmation) */
+/* Judge flash */
 @keyframes judgeFlashGood {
-  0%   { box-shadow: 0 0 10px rgba(57,255,20,.35); }
-  50%  { box-shadow: 0 0 24px rgba(57,255,20,.85); }
-  100% { box-shadow: 0 0 10px rgba(57,255,20,.35); }
+  0% {
+    box-shadow: 0 0 0.625rem rgba(57, 255, 20, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 1.5rem rgba(57, 255, 20, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0.625rem rgba(57, 255, 20, 0.35);
+  }
 }
 @keyframes judgeFlashMiss {
-  0%   { box-shadow: 0 0 10px rgba(253,4,4,.35); }
-  50%  { box-shadow: 0 0 24px rgba(253,4,4,.85); }
-  100% { box-shadow: 0 0 10px rgba(253,4,4,.35); }
+  0% {
+    box-shadow: 0 0 0.625rem rgba(253, 4, 4, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 1.5rem rgba(253, 4, 4, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0.625rem rgba(253, 4, 4, 0.35);
+  }
+}
+.stage .rails.flash-good::after {
+  animation: judgeFlashGood 0.28s ease-out;
+}
+.stage .rails.flash-miss::after {
+  animation: judgeFlashMiss 0.28s ease-out;
 }
 
-
-.stage .rails.flash-good::after { animation: judgeFlashGood .28s ease-out; }
-.stage .rails.flash-miss::after { animation: judgeFlashMiss .28s ease-out; }
-
-/* Reduced motion: disable flashing */
 @media (prefers-reduced-motion: reduce) {
   .stage .rails.flash-good::after,
-  .stage .rails.flash-miss::after { animation: none; } /* removes flashes for reduced motion */
+  .stage .rails.flash-miss::after {
+    animation: none;
+  }
 }
 
-/* ============
-   JUDGE TARGET(rings) 
-  ============= */
+/* Judge targets (rings) */
 .judge-target {
   position: absolute;
   left: 50%;
-  top: var(--judge-rel);                 /* same vertical baseline as .judge-line */
-  transform: translate(-50%, -50%);    /* center the circle right on the line */
-
-  width: 26px;
-  height: 26px;
+  top: var(--judge-rel);
+  transform: translate(-50%, -50%);
+  inline-size: 1.625rem; /* 26px */
+  block-size: 1.625rem;
   border-radius: 999px;
-  background: rgba(255,255,255,0.04);
-  border: 2px solid currentColor;
-  box-shadow: 0 0 8px currentColor, 0 0 18px currentColor;
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.125rem solid currentColor;
+  box-shadow: 0 0 0.5rem currentColor, 0 0 1.125rem currentColor;
   pointer-events: none;
   z-index: 15;
-  transform: translate(-50%, -50%);  /* exact centering on the baseline */
 
-  /* ring sizes for pseudo-elements */
-  --r0: 26px;
-  --r1: 40px;
-  --r2: 56px;
+  --r0: 1.625rem;
+  --r1: 2.5rem;
+  --r2: 3.5rem;
 }
-
-/* Middle ring */
 .judge-target::before {
   content: "";
-  position: absolute; top: 50%; left: 50%;
-  width: var(--r1); height: var(--r1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: var(--r1);
+  block-size: var(--r1);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 2px solid color-mix(in srgb, currentColor 85%, white 15%);
-  opacity: .65;
-  box-shadow:
-    0 0 10px currentColor,
-    0 0 22px color-mix(in srgb, currentColor 85%, white 15%);
+  border: 0.125rem solid color-mix(in srgb, currentColor 85%, white 15%);
+  opacity: 0.65;
+  box-shadow: 0 0 0.625rem currentColor,
+    0 0 1.375rem color-mix(in srgb, currentColor 85%, white 15%);
 }
-
-/* Outer ring */
 .judge-target::after {
   content: "";
-  position: absolute; top: 50%; left: 50%;
-  width: var(--r2); height: var(--r2);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: var(--r2);
+  block-size: var(--r2);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 2px solid color-mix(in srgb, currentColor 70%, white 30%);
-  opacity: .40;
-  box-shadow:
-    0 0 12px currentColor,
-    0 0 28px color-mix(in srgb, currentColor 70%, white 30%);
+  border: 0.125rem solid color-mix(in srgb, currentColor 70%, white 30%);
+  opacity: 0.4;
+  box-shadow: 0 0 0.75rem currentColor,
+    0 0 1.75rem color-mix(in srgb, currentColor 70%, white 30%);
+}
+.jt-left {
+  color: var(--label-left);
+}
+.jt-up {
+  color: var(--label-up);
+}
+.jt-down {
+  color: var(--label-down);
+}
+.jt-right {
+  color: var(--label-right);
 }
 
-
-/* Direction colors for targets (reuse note hues) */
-.jt-left  { color: var(--label-left); }   /* green hue for LEFT lane */
-.jt-up    { color: var(--label-up); }     /* mint/cyan hue for UP lane */
-.jt-down  { color: var(--label-down); }   /* orange hue for DOWN lane */
-.jt-right { color: var(--label-right); }  /* pink hue for RIGHT lane */
-
-/* =======================================
-   Judge ticks container – ALIGNMENT FIX
-   - Uses the exact same width model as .rails / .judge-line
-   - Places 4 cells (Left, Up, Down, Right) dead-center over each rail
-   ======================================= */
+/* Judge ticks wrapper — same width model as rails/controls */
 .judge-ticks {
-  position: absolute;                 /* lock to playfield */
-  top: var(--judge-y);                /* same baseline as the judge line */
+  position: absolute;
+  top: var(--judge-y);
   left: 50%;
-  transform: translate(-50%, -50%);   /* center on the line */
-
-  max-width: var(--controls-max-w);
-    width: calc(
-      100% -
-      (max(var(--controls-side-pad), env(safe-area-inset-left)) +
-       max(var(--controls-side-pad), env(safe-area-inset-right)))
-    );
-
-  height: 0;                          /* targets are centered, no height needed */
+  transform: translate(-50%, -50%);
+  max-inline-size: var(--controls-max-w);
+  inline-size: calc(
+    100% -
+      (
+        max(var(--controls-side-pad), env(safe-area-inset-left)) +
+          max(var(--controls-side-pad), env(safe-area-inset-right))
+      )
+  );
+  block-size: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 equal columns = 4 rails */
+  grid-template-columns: repeat(4, 1fr);
   pointer-events: none;
-  z-index: 11;                         /* above the judge line but under notes */
+  z-index: 11;
 }
-
-/* each target is centered in its cell */
 .judge-ticks .judge-target {
   justify-self: center;
   align-self: center;
 }
 
-
-/* === Rails: share the exact same horizontal model as controls/judge === */
 .stage .rails {
   position: absolute;
-  top: calc(var(--topbar-h) + 8px);
-  bottom: calc(var(--controls-zone-h) + 120px);
 
-  /* Center via transform and use the same width calc as controls/judge */
+  /* vertical anchoring: from the HUD stack to the controls area */
+  top: 2rem;
+  bottom: var(--rails-bottom);
+  /* horizontal model stays the same */
   left: 50%;
   transform: translateX(-50%);
   width: calc(
     100% -
-    (max(var(--controls-side-pad), env(safe-area-inset-left)) +
-     max(var(--controls-side-pad), env(safe-area-inset-right)))
+      (
+        max(var(--controls-side-pad), env(safe-area-inset-left)) +
+          max(var(--controls-side-pad), env(safe-area-inset-right))
+      )
   );
   max-width: var(--controls-max-w);
 
@@ -694,213 +740,228 @@ body[data-hud="collapsed"] .hud-stack {
   grid-template-columns: repeat(4, 1fr);
   align-items: stretch;
   column-gap: var(--controls-gap);
-
   margin: 0;
   padding: 0;
-
   pointer-events: none;
   z-index: 14;
 }
 
-
-/* Each rail provides the positioning context for line + target + notes */
 .rail {
   position: relative;
   display: flex;
   justify-content: center;
 }
-
-/* Vertical neon line (unchanged look) */
 .rail-line {
-  width: 2px;
-  height: 100%;
-  background: rgba(255,255,255,.9);
-  box-shadow:
-    0 0 8px  rgba(255,255,255,.75),
-    0 0 16px rgba(0,255,213,.25);
+  inline-size: 0.125rem;
+  block-size: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.75),
+    0 0 1rem rgba(0, 255, 213, 0.25);
   border-radius: 1px;
   z-index: 5;
 }
 
-
-/* Notes (orbs) – fall using GPU transform all the way to rail bottom */
+/* Notes (orbs) */
 .note {
-  position: absolute;                    /* positioned inside .rail */
-  top: 0;                                /* anchor at rail top (not animated) */
-  left: 50%;                             /* horizontally centered in rail */
-  transform: translate(-50%, 0);         /* baseline; animation overrides transform */
-  width: 40px;                           /* constant orb size */
-  height: 40px;                          /* constant orb size */
-  border-radius: 999px;                  /* circular shape */
-  background: currentColor;              /* color comes from direction class */
-  opacity: 0.98;                         /* crisp but not fully opaque */
-  z-index: 16;                           /* above rails and judge line */
-  pointer-events: none;                  /* decorative, not interactive */
-  box-shadow:
-    0 0 10px currentColor,               /* core glow */
-    0 0 24px currentColor,               /* mid glow */
-    0 0 40px color-mix(in srgb, currentColor 80%, white 20%); /* outer bloom */
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.98;
+  z-index: 16;
+  pointer-events: none;
+  box-shadow: 0 0 0.625rem currentColor, 0 0 1.5rem currentColor,
+    0 0 2.5rem color-mix(in srgb, currentColor 80%, white 20%);
 
-  /* runtime vars set by JS */
-  --drop-distance-judge: 0px;            /* Y to judgeline center */
-  --drop-distance-bottom: 0px;           /* Y to rail bottom (note TOP at bottom) */
+  --drop-distance-judge: 0px;
+  --drop-distance-bottom: 0px;
 
-  animation-name: fallNote;              /* uses transform to fall */
-  animation-timing-function: linear;     /* steady speed */
-  animation-fill-mode: forwards;         /* stays at end position */
-  will-change: transform;                /* hint compositor */
+  animation-name: fallNote;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  will-change: transform;
+}
+.note-left {
+  color: var(--label-left);
+}
+.note-up {
+  color: var(--label-up);
+}
+.note-down {
+  color: var(--label-down);
+}
+.note-right {
+  color: var(--label-right);
 }
 
-/* Direction color mapping (keep neon hues) */
-.note-left  { color: var(--label-left);  } /* neon green */
-.note-up    { color: var(--label-up);    } /* mint/cyan */
-.note-down  { color: var(--label-down);  } /* neon orange */
-.note-right { color: var(--label-right); } /* neon pink */
-
-/* Falling animation – go all the way to rail bottom */
 @keyframes fallNote {
-  from { transform: translate(-50%, -60px); }
-  to   { transform: translate(-50%, var(--drop-distance-bottom)); }
+  from {
+    transform: translate(-50%, -3.75rem);
+  } /* was -60px */
+  to {
+    transform: translate(-50%, var(--drop-distance-bottom));
+  }
+}
+body[data-paused="true"] .rail .note {
+  animation-play-state: paused !important;
 }
 
-body[data-paused="true"] .rail .note { 
-  animation-play-state: paused !important; /* hard pause current CSS animation frame */
-}
-
-/* dancer: lock the cat just above the control labels */
+/* Dancer (SVG cat) */
 .dancer {
-  position: fixed;                              /* anchor to the viewport */
-  left: 50%;                                    /* center horizontally */
-  bottom: calc(var(--controls-zone-h) + 18px);  /* sit just above labels */
-  transform: translateX(-50%);                  /* true horizontal center */
-  z-index: 12;                                  /* above floor, below overlay */
-  margin: 0;                                    /* no flow-based margins */
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--controls-zone-h) + 1.125rem); 
+  transform: translateX(-50%);
+  z-index: 12;
+  margin: 0;
+  inline-size: clamp(7.5rem, 35vw, 10rem); /* fluid width */
+}
+.dancer svg {
+  inline-size: 100%;
+  block-size: auto;
 }
 
-/* feedback: placed over the dancer area */
+/* Feedback text */
 .feedback {
-  position: absolute;                  /* layered over stage */
-  top: calc(var(--hud-stack-h) + 8px); /* under lives row */
-  left: 50%; transform: translateX(-50%); /* horizontal center */
-  min-height: 22px;                    /* consistent line box */
-  text-align: center;                  /* center text */
-  pointer-events: none;                /* non-interactive */
+  position: absolute;
+  top: calc(var(--hud-stack-h) + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  min-block-size: 1.375rem;
+  text-align: center;
+  pointer-events: none;
 }
 
-/* controls: fixed bottom row, centered container, four equal columns */
+/* Controls row */
 .controls {
-  position: fixed;                     /* pin to viewport bottom */
-  left: 0; right: 0;                   /* full row */
-  margin-left: auto; 
-  margin-right: auto;                  /* center container */
-  max-width: var(--controls-max-w);    /* keep group tight on large screens */
-  bottom: var(--controls-bottom);      /* lift from bottom edge */
-  display: grid;                       /* grid layout */
-  grid-template-columns: repeat(4, 1fr); /* one row with four equal tracks */
-  align-items: center;                 /* vertical centering in cells */
-  justify-items: center;               /* horizontal centering in cells */
-  gap: var(--controls-gap);            /* spacing between arrows */
-  box-sizing: border-box;              /* include padding in width */
-  padding-left:  max(var(--controls-side-pad), env(safe-area-inset-left));   /* equal left gap */
-  padding-right: max(var(--controls-side-pad), env(safe-area-inset-right));  /* equal right gap */
-  padding-bottom: max(8px, env(safe-area-inset-bottom)); /* safe bottom inset */
-  z-index: 15;                         /* above neon floor */
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  max-inline-size: var(--controls-max-w);
+  bottom: var(--controls-bottom);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  justify-items: center;
+  gap: var(--controls-gap);
+  box-sizing: border-box;
+  padding-inline: max(var(--controls-side-pad), env(safe-area-inset-left))
+    max(var(--controls-side-pad), env(safe-area-inset-right));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  z-index: 15;
 }
 
-/* control button: label above icon, no boxes */
 .ctrl-btn {
-  width: 100%;                          /* fill grid track */
-  display: flex;                        /* vertical stack */
-  flex-direction: column;               /* label then icon */
-  align-items: center;                  /* center content */
-  gap: 8px;                             /* spacing */
-  background: transparent;              /* no background box */
-  border: 0;                            /* clean edges */
-  cursor: pointer;                      /* pointer on hover */
-  outline: none;                        /* custom focus handling */
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  outline: none;
 }
-
-/* control label: above icons with glow */
 .ctrl-btn .label {
-  order: 0;                             /* first in stack */
-  font-size: var(--ctrl-label-size);    /* label size */
-  text-shadow: var(--text-glow);        /* label glow */
+  order: 0;
+  font-size: var(--ctrl-label-size);
+  text-shadow: var(--text-glow);
+}
+.arrow-icon {
+  inline-size: var(--arrow-size);
+  block-size: var(--arrow-size);
+  overflow: visible;
+}
+.ctrl-btn.left {
+  color: var(--label-left);
+}
+.ctrl-btn.up {
+  color: var(--label-up);
+}
+.ctrl-btn.down {
+  color: var(--label-down);
+}
+.ctrl-btn.right {
+  color: var(--label-right);
+}
+.ctrl-btn.left .label {
+  color: var(--label-left);
+}
+.ctrl-btn.up .label {
+  color: var(--label-up);
+}
+.ctrl-btn.down .label {
+  color: var(--label-down);
+}
+.ctrl-btn.right .label {
+  color: var(--label-right);
 }
 
-/* arrow icon: allow glow to overflow bounds */
-.arrow-icon { width: var(--arrow-size); height: var(--arrow-size); overflow: visible; } /* prevent clipping */
-
-/* direction hues via currentColor for glow and labels */
-.ctrl-btn.left  { color: var(--label-left);  }
-.ctrl-btn.up    { color: var(--label-up);    }
-.ctrl-btn.down  { color: var(--label-down);  }
-.ctrl-btn.right { color: var(--label-right); }
-.ctrl-btn.left  .label { color: var(--label-left);  }
-.ctrl-btn.up    .label { color: var(--label-up);    }
-.ctrl-btn.down  .label { color: var(--label-down);  }
-.ctrl-btn.right .label { color: var(--label-right); }
-
-/* arrow outline: DDR white stroke without fill */
 .arrow-main {
-  fill: none;                           /* transparent interior */
-  stroke: #fff;                         /* white border */
-  stroke-width: 15px;                   /* thick outline */
-  stroke-linejoin: round;               /* smooth corners */
-  stroke-linecap: round;                /* round ends */
-  transition: transform .12s ease;      /* subtle motion */
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.9375rem; /* 15px */
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: transform 0.12s ease;
 }
-
-/* arrow glow: dedicated glow polygon (no stroke) */
 .arrow-glow {
-  filter: drop-shadow(0 0 6px #fff)     /* inner white pop */
-          drop-shadow(0 0 14px currentColor); /* colored halo */
-  transition: transform .12s ease, filter .12s ease; /* motion + intensity */
+  filter: drop-shadow(0 0 0.375rem #fff) drop-shadow(0 0 0.875rem currentColor);
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
-
-/* arrow hover: stronger glow and subtle scale */
 .ctrl-btn:hover .arrow-glow {
-  transform: scale(1.12);               /* small expansion */
-  filter:
-    drop-shadow(0 0 10px #fff)          /* brighter core */
-    drop-shadow(0 0 28px currentColor); /* stronger halo */
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 0.625rem #fff) drop-shadow(0 0 1.75rem currentColor);
 }
 .ctrl-btn:hover .arrow-main {
-  transform: scale(1.06);               /* outline follows slightly */
+  transform: scale(1.06);
 }
 .ctrl-btn:active .arrow-glow {
-  transform: scale(1.16);               /* press feedback */
-  filter:
-    drop-shadow(0 0 12px #fff)
-    drop-shadow(0 0 34px currentColor); /* extra halo on press */
+  transform: scale(1.16);
+  filter: drop-shadow(0 0 0.75rem #fff) drop-shadow(0 0 2.125rem currentColor);
 }
-
-/* optional active pulse (can be toggled via JS) */
-@keyframes neonPulse { 0%,100% { 
-  filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px currentColor);} 50% { 
-  filter: drop-shadow(0 0 12px #fff) drop-shadow(0 0 24px currentColor);} 
-}
-@keyframes textPulse { 0%,100% { 
-  text-shadow: 0 0 6px #fff,0 0 10px #fff,1px 1px 2px #000;} 50% { 
-    text-shadow: 0 0 12px #fff,0 0 22px currentColor,1px 1px 2px #000;} 
+@keyframes neonPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0.375rem #fff)
+      drop-shadow(0 0 0.875rem currentColor);
   }
-.ctrl-btn.active .arrow-glow { 
-  animation: neonPulse .8s infinite; 
-  transform: scale(1.1);                  /* breathing glow */
+  50% {
+    filter: drop-shadow(0 0 0.75rem #fff) drop-shadow(0 0 1.5rem currentColor);
+  }
 }
-.ctrl-btn.active .label { 
-  animation: textPulse .8s infinite; 
-  transform: scale(1.1);                  /* breathing text */
+@keyframes textPulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0.375rem #fff, 0 0 0.625rem #fff, 1px 1px 2px #000;
+  }
+  50% {
+    text-shadow: 0 0 0.75rem #fff, 0 0 1.375rem currentColor, 1px 1px 2px #000;
+  }
+}
+.ctrl-btn.active .arrow-glow {
+  animation: neonPulse 0.8s infinite;
+  transform: scale(1.1);
+}
+.ctrl-btn.active .label {
+  animation: textPulse 0.8s infinite;
+  transform: scale(1.1);
 }
 
-/* === Overlay base: click-through background; only its inner panels are clickable === */
+/* =========================
+   Overlay (CTA / results)
+========================= */
 .overlay {
   position: fixed;
-  inset: var(--topbar-h) 0 var(--controls-zone-h) 0; /* sits between topbar and controls zone */
-  z-index: 2200;                                     /* above stage, below navbar/rotate overlay */
-  pointer-events: none;                              /* let clicks pass through the backdrop */
+  inset: var(--topbar-h) 0 var(--controls-zone-h) 0;
+  z-index: 2200;
+  pointer-events: none;
 }
-
-/* Make the overlay's own buttons/panels clickable */
 .overlay .play-cta,
 #resultsCta,
 #gameOverCta,
@@ -908,734 +969,568 @@ body[data-paused="true"] .rail .note {
   pointer-events: auto;
 }
 
-.overlay.hidden { 
-  display: none;                        /* hidden during gameplay */
+.overlay.hidden {
+  display: none;
 }
 
 .play-cta {
-  position: absolute;                   /* place freely inside overlay */
-  top: var(--overlay-y);                /* vertical position */
-  left: 50%; transform: translateX(-50%); /* center horizontally */
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  gap: 10px;                            /* stack items */
-  pointer-events: auto;                 /* clickable */
+  position: absolute;
+  top: var(--overlay-y);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  pointer-events: auto;
 }
-
 .play-btn {
-  width: 96px; height: 96px;            /* circle size */
-  border-radius: 50%;                   /* round shape */
-  border: 4px solid var(--neon-cyan);   /* neon ring */
-  background: rgba(10,14,28,0.55);      /* glass background */
-  cursor: pointer;                      /* pointer cursor */
-  position: relative;                   /* anchor triangle */
-  box-shadow: 0 0 12px var(--neon-cyan);/* cyan glow */
+  inline-size: 6rem;
+  block-size: 6rem;
+  border-radius: 50%;
+  border: 0.25rem solid var(--neon-cyan);
+  background: rgba(10, 14, 28, 0.55);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 0.75rem var(--neon-cyan);
 }
-
-/* Center the icons inside the circular play button */
 .play-btn .icon {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 42px;                 /* icon size */
+  font-size: 2.625rem;
   line-height: 1;
-  color: var(--neon-cyan);         
-  text-shadow: 0 0 12px var(--neon-cyan);
-  display: none;                    
+  color: var(--neon-cyan);
+  text-shadow: 0 0 0.75rem var(--neon-cyan);
+  display: none;
 }
-
-/* Paused → show PLAY  */
+/* Paused → show PLAY */
 body[data-paused="true"] #overlay .play-btn .icon-play {
   display: inline-block;
 }
-
-/* Running/Countdown → show PAUSE  */
+/* Running/Countdown → show PAUSE */
 body:not([data-paused]) #overlay .play-btn .icon-pause {
   display: inline-block;
 }
 
-
-.play-btn:hover { 
-  border-color: var(--neon-pink); 
-  box-shadow: 0 0 12px var(--neon-pink);   /* hover tint */
+.play-btn:hover {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 0.75rem var(--neon-pink);
+}
+.play-label {
+  font-size: 1.25rem;
+  color: var(--ink);
+  text-shadow: var(--text-glow);
+  white-space: pre-line;
+  text-align: center;
 }
 
-.play-label { 
-  font-size: 20px; 
-  color: var(--ink); 
-  text-shadow: var(--text-glow);            /* label */
-  white-space: pre-line;   /* render '\n' as actual line breaks */
-  text-align: center;      /* center multi-line text under the round button */
+/* Overlay cards sizing */
+#overlay .rb-card,
+#resultsCta .rb-card,
+#gameOverCta .rb-card {
+  min-inline-size: 16.25rem; /* 260px */
+  max-inline-size: 90vw;
+  margin-inline: auto;
 }
 
-
-
-/* subtle neon accents for the SVG cat */
-#hat-band { 
-  fill: var(--label-left); 
-  filter: drop-shadow(0 0 3px var(--label-left)) drop-shadow(0 0 6px var(--label-left));/* hat band glow */
- } 
-
-#bowtie > * { 
-  fill: var(--label-left);           /* bow tie color */
-} 
-
-#bowtie { 
-  filter: drop-shadow(0 0 6px var(--label-left));  /* bow tie glow */
-} 
-
-#glasses rect { 
-  stroke: var(--label-left); 
-  stroke-width: 1.25px; 
-  filter: drop-shadow(0 0 3px rgba(0,0,0,.6)) drop-shadow(0 0 5px var(--label-left));   /* glasses rim glow */
+/* =========================
+   SVG cat neon accents
+========================= */
+#hat-band {
+  fill: var(--label-left);
+  filter: drop-shadow(0 0 0.1875rem var(--label-left))
+    drop-shadow(0 0 0.375rem var(--label-left));
+}
+#bowtie > * {
+  fill: var(--label-left);
+}
+#bowtie {
+  filter: drop-shadow(0 0 0.375rem var(--label-left));
+}
+#glasses rect {
+  stroke: var(--label-left);
+  stroke-width: 1.25px;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 5px var(--label-left));
+}
+#glasses rect:nth-child(3) {
+  filter: none;
+  stroke-width: 1px;
 }
 
-#glasses rect:nth-child(3) { 
-  filter: none; 
-  stroke-width: 1px;               /* bridge calmer */
-}
-
-
-/* neon floor: decorative perspective grid under scene */
+/* =========================
+   Neon floor (decorative)
+========================= */
 body::before {
-  content: "";                          /* required pseudo-element */
-  position: fixed;                      /* pinned to viewport */
-   left: 0; right: 0;                    /* full width */
-  bottom: var(--floor-bottom);          /* vertical offset */
-  height: var(--floor-height);          /* plane height */
-  z-index: 0;                           /* behind game UI */
-  pointer-events: none;                 /* non-interactive */
-  background:
-    repeating-linear-gradient(          /* horizontal lines */
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--floor-bottom);
+  block-size: var(--floor-height);
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
       to top,
-      rgba(0,255,213,0.25) 0px,
-      rgba(0,255,213,0.25) 2px,
-      transparent 2px,
-      transparent 28px
+      rgba(0, 255, 213, 0.25) 0,
+      rgba(0, 255, 213, 0.25) 0.125rem,
+      transparent 0.125rem,
+      transparent 1.75rem
     ),
-    repeating-linear-gradient(          /* vertical lines */
+    repeating-linear-gradient(
       to right,
-      rgba(0,255,213,0.25) 0px,
-      rgba(0,255,213,0.25) 2px,
-      transparent 2px,
-      transparent 36px
+      rgba(0, 255, 213, 0.25) 0,
+      rgba(0, 255, 213, 0.25) 0.125rem,
+      transparent 0.125rem,
+      transparent 2.25rem
     );
-  transform: perspective(700px) rotateX(62deg); /* faux 3D plane */
-  transform-origin: bottom center;               /* hinge at bottom */
-  filter: drop-shadow(0 0 10px rgba(0,255,213,.5)); /* glow */
-  opacity: var(--floor-opacity);        /* intensity */
+  transform: perspective(700px) rotateX(62deg);
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 0.625rem rgba(0, 255, 213, 0.5));
+  opacity: var(--floor-opacity);
 }
 
-/* =========================================================
-   DANCER MOVES (GPU-only transforms)
-   - JS toggles: .move-left / .move-right / .move-up / .move-down on #dancer
-   - Animate the inner SVG, not #dancer (to preserve base centering transform)
-   - Sub-elements by ID: #hat-top, #hat-band, #hat-brim, #arm-left, #arm-right, #body, #belly, #tail
-========================================================= */
-
-/* ----------------------------------------
-   SVG transform helpers
-   - Keep transforms local and predictable
----------------------------------------- */
+/* =========================
+   Dancer moves (animations)
+   (kept; units neutral)
+========================= */
 #dancer svg * {
-  transform-box: fill-box;              /* compute transforms relative to element’s own box */
-  transform-origin: center;             /* default pivot = center */
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-/* ----------------------------------------
-   Pose switch (front ↔ back for DOWN)
-   - Default: show front pose
-   - When .move-down is active: fade to back/twerk pose
----------------------------------------- */
 #dancer #pose-front {
-  opacity: 1;                            /* fully visible */
-  pointer-events: auto;                  /* clickable if needed */
-  transition: opacity 120ms ease;        /* smooth fade */
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 120ms ease;
 }
-#dancer #pose-down  {
-  opacity: 0;                            /* hidden */
-  pointer-events: none;                  /* disabled */
-  transition: opacity 120ms ease;        /* smooth fade */
+#dancer #pose-down {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 #dancer.move-down #pose-front {
-  opacity: 0;                            /* fade out front */
-  pointer-events: none;                  /* disable */
+  opacity: 0;
+  pointer-events: none;
 }
-#dancer.move-down #pose-down  {
-  opacity: 1;                            /* fade in back */
-  pointer-events: auto;                  /* enable */
+#dancer.move-down #pose-down {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-/* =============================
-   DANCER MOVES – LEFT / RIGHT (v2)
-   - Stronger slide distance
-   - Arm pivots fixed at shoulder
-   - Deeper hat tip
-   - Synced timings
-============================= */
-
-/* --- Arm pivots (static) ---
-   Put the hinge at the shoulder (top inner corner of each arm)
----------------------------------------- */
+/* Arm pivots */
 #dancer svg #arm-left,
 #dancer svg #arm-right {
-  transform-box: fill-box;               /* use element’s own bbox for transforms */
+  transform-box: fill-box;
 }
 #dancer svg #arm-left {
-  transform-origin: 100% 0%;             /* left arm: top-right corner as pivot */
+  transform-origin: 100% 0%;
 }
 #dancer svg #arm-right {
-  transform-origin: 0% 0%;               /* right arm: top-left corner as pivot */
+  transform-origin: 0% 0%;
 }
 
-/* ----------------------------------------
-   LEFT: long slide + left-arm reach + deep hat tip
----------------------------------------- */
-
-/* slide body (animate inner SVG, not wrapper) */
+/* LEFT move */
 @keyframes moveLeftK {
   0% {
-    transform: translateX(0) rotate(0deg);              /* neutral */
+    transform: translateX(0) rotate(0deg);
   }
   60% {
-    transform: translateX(-140px) rotate(-9deg);        /* deep slide to left line + subtle body tilt */
+    transform: translateX(-8.75rem) rotate(-9deg);
   }
   100% {
-    transform: translateX(0) rotate(0deg);              /* return to neutral */
+    transform: translateX(0) rotate(0deg);
   }
 }
-
-/* left arm reaches up toward the hat */
 @keyframes armReachLeftK {
-  0%   { 
-    transform: rotate(0deg) scaleY(1.00); 
-  }   
-  60%  { 
-    transform: rotate(95deg) scaleY(1.06); 
-  }  
-  100% { 
-    transform: rotate(80deg) scaleY(1.00); 
-  }  
+  0% {
+    transform: rotate(0) scaleY(1);
+  }
+  60% {
+    transform: rotate(95deg) scaleY(1.06);
+  }
+  100% {
+    transform: rotate(80deg) scaleY(1);
+  }
 }
-
-/* RIGHT arm: tuck in toward belly  */
 @keyframes armTuckRightK {
-  0%   { 
-    transform: rotate(0deg) scaleY(1.00); 
-  }  
-  60%  { 
-    transform: rotate(95deg) scaleY(1.06); 
-  }   
-  100% { 
-    transform: rotate(80deg) scaleY(1.00); 
-  }   
+  0% {
+    transform: rotate(0) scaleY(1);
+  }
+  60% {
+    transform: rotate(95deg) scaleY(1.06);
+  }
+  100% {
+    transform: rotate(80deg) scaleY(1);
+  }
 }
-
-/* hat tips up-left (stronger) */
 @keyframes hatTipLeftK {
   0% {
-    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+    transform: translate(0, 0) rotate(0);
   }
   50% {
-    transform: translate(-24px, -14px) rotate(-28deg);  /* deeper tip up-left */
+    transform: translate(-1.5rem, -0.875rem) rotate(-28deg);
   }
   100% {
-    transform: translate(0, 0) rotate(0deg);            /* settle */
+    transform: translate(0, 0) rotate(0);
   }
 }
-
-/* apply LEFT animations (synced, gentle delay on hat) */
 #dancer.move-left svg {
-  animation: moveLeftK 0.65s ease-in-out both;          /* main slide */
+  animation: moveLeftK 0.65s ease-in-out both;
 }
-
 #dancer.move-left #arm-left {
-  animation: armReachLeftK 0.65s ease-in-out both;      /* arm reach */
+  animation: armReachLeftK 0.65s ease-in-out both;
 }
-
 #dancer.move-left #arm-right {
-  animation: armTuckRightK 0.65s ease-in-out both;  /* tuck mot magen */
+  animation: armTuckRightK 0.65s ease-in-out both;
 }
-
 #dancer.move-left #hat-top,
 #dancer.move-left #hat-band,
 #dancer.move-left #hat-brim {
-  animation: hatTipLeftK 0.68s ease-in-out 0.06s both;  /* tiny delay so hand gets there first */
+  animation: hatTipLeftK 0.68s ease-in-out 0.06s both;
 }
 
-
-/* ----------------------------------------
-   RIGHT: long slide + right-arm reach + deep hat tip
----------------------------------------- */
-
-/* slide body (mirror) */
+/* RIGHT move */
 @keyframes moveRightK {
   0% {
-    transform: translateX(0) rotate(0deg);              /* neutral */
+    transform: translateX(0) rotate(0);
   }
   60% {
-    transform: translateX(140px) rotate(9deg);          /* deep slide right + subtle body tilt */
+    transform: translateX(8.75rem) rotate(9deg);
   }
   100% {
-    transform: translateX(0) rotate(0deg);              /* return to neutral */
+    transform: translateX(0) rotate(0);
   }
 }
-
-/* RIGHT move: make right arm reach UP-RIGHT (counter-clockwise = negative in SVG) */
 @keyframes armReachRightK {
-  0%   { 
-    transform: rotate(0deg) scaleY(1);          /* down by the side */
+  0% {
+    transform: rotate(0) scaleY(1);
   }
-  60%  { 
-    transform: rotate(-95deg) scaleY(1.06);    /* strong reach upward-right */
+  60% {
+    transform: rotate(-95deg) scaleY(1.06);
   }
-  100% { 
-    transform: rotate(-80deg) scaleY(1);        /* hold slightly below max */
+  100% {
+    transform: rotate(-80deg) scaleY(1);
   }
 }
-
-/* Apply on RIGHT move */
-#dancer.move-right #arm-right {
-  animation: armReachRightK 0.65s ease-in-out both; /* synced with your slide */
-}
-
-/* RIGHT move: LEFT arm tucks clearly over belly
-   - small clockwise rotate (+deg)
-   - strong translate inward (+x) and up (-y) */
 @keyframes armTuckLeftK {
   0% {
-    transform: rotate(0deg) scaleY(1.00);               /* down by side */
+    transform: rotate(0) scaleY(1);
   }
   60% {
-    transform: rotate(-95deg) scaleY(1.06);             /* strong reach upward-left */
+    transform: rotate(-95deg) scaleY(1.06);
   }
   100% {
-    transform: rotate(-80deg) scaleY(1.00);             /* hold slightly below max */
+    transform: rotate(-80deg) scaleY(1);
   }
 }
-
-/* apply on RIGHT move (high specificity to win) */
-#dancer.move-right svg #arm-left {
-  animation: armTuckLeftK 0.65s ease-in-out both;
-}
-
-/* hat tips up-right (stronger) */
 @keyframes hatTipRightK {
   0% {
-    transform: translate(0, 0) rotate(0deg);            /* neutral hat */
+    transform: translate(0, 0) rotate(0);
   }
   50% {
-    transform: translate(24px, -14px) rotate(28deg);    /* deeper tip up-right */
+    transform: translate(1.5rem, -0.875rem) rotate(28deg);
   }
   100% {
-    transform: translate(0, 0) rotate(0deg);            /* settle */
+    transform: translate(0, 0) rotate(0);
   }
 }
-
-/* apply RIGHT animations (synced, gentle delay on hat) */
 #dancer.move-right svg {
-  animation: moveRightK 0.65s ease-in-out both;         /* main slide */
+  animation: moveRightK 0.65s ease-in-out both;
 }
-
 #dancer.move-right #arm-right {
-  animation: armReachRightK 0.65s ease-in-out both;     /* arm reach */
+  animation: armReachRightK 0.65s ease-in-out both;
 }
-
+#dancer.move-right #arm-left {
+  animation: armTuckLeftK 0.65s ease-in-out both;
+}
 #dancer.move-right #hat-top,
 #dancer.move-right #hat-band,
 #dancer.move-right #hat-brim {
-  animation: hatTipRightK 0.68s ease-in-out 0.06s both; /* tiny delay on hat */
+  animation: hatTipRightK 0.68s ease-in-out 0.06s both;
 }
 
-
-/* ========================================
-   UP: jump + arms up + micro wobble
-   - Arms rotate ~90–100° with shoulder-ish pivots
-======================================== */
-/* Jump up with squash + shake wobble */
-@keyframes jumpUpK { 
+/* UP move */
+@keyframes jumpUpK {
   0% {
-    transform: translateY(0) scaleY(1) rotate(0deg);         /* neutral */
+    transform: translateY(0) scaleY(1) rotate(0);
   }
   20% {
-    transform: translateY(-28px) scaleY(0.90) rotate(3deg);  /* strong lift + tilt right */
+    transform: translateY(-1.75rem) scaleY(0.9) rotate(3deg);
   }
   40% {
-    transform: translateY(-18px) scaleY(1.04) rotate(-3deg); /* wobble left */
+    transform: translateY(-1.125rem) scaleY(1.04) rotate(-3deg);
   }
   60% {
-    transform: translateY(-10px) scaleY(0.98) rotate(2deg);  /* rebound tilt */
+    transform: translateY(-0.625rem) scaleY(0.98) rotate(2deg);
   }
   80% {
-    transform: translateY(-4px) scaleY(1.02) rotate(-2deg);  /* micro shake */
+    transform: translateY(-0.25rem) scaleY(1.02) rotate(-2deg);
   }
   100% {
-    transform: translateY(0) scaleY(1) rotate(0deg);         /* settle */
+    transform: translateY(0) scaleY(1) rotate(0);
   }
 }
-
-/* Left arm: up-left (mirror of LEFT-reach) */
 @keyframes armUpLeftK {
-  0%   {
-    transform: rotate(0deg)   scaleY(1.00);                     /* down at side */
+  0% {
+    transform: rotate(0) scaleY(1);
   }
-  60%  { 
-    transform: rotate(95deg)  scaleY(1.06);                     /* strong reach up-left */
+  60% {
+    transform: rotate(95deg) scaleY(1.06);
   }
-  100% { 
-    transform: rotate(80deg)  scaleY(1.00);                     /* hold slightly below max */
+  100% {
+    transform: rotate(80deg) scaleY(1);
   }
 }
-
-/* Right arm: up-right (mirror of RIGHT-reach) */
 @keyframes armUpRightK {
-  0%   { 
-    transform: rotate(0deg)   scaleY(1.00);                   /* down at side */
-  } 
-  60%  { 
-    transform: rotate(-95deg) scaleY(1.06);                   /* strong reach up-right */
+  0% {
+    transform: rotate(0) scaleY(1);
   }
-  100% { 
-    transform: rotate(-80deg) scaleY(1.00);                  /* hold slightly below max */
+  60% {
+    transform: rotate(-95deg) scaleY(1.06);
+  }
+  100% {
+    transform: rotate(-80deg) scaleY(1);
   }
 }
-
 #dancer.move-up svg {
-  animation: jumpUpK 0.70s cubic-bezier(.25,.9,.3,1.0); /* jump on the SVG */
+  animation: jumpUpK 0.7s cubic-bezier(0.25, 0.9, 0.3, 1);
 }
 #dancer.move-up #arm-left {
-  animation: armUpLeftK 0.7s ease-out;             /* raise left arm */
+  animation: armUpLeftK 0.7s ease-out;
 }
 #dancer.move-up #arm-right {
-  animation: armUpRightK 0.7s ease-out;            /* raise right arm */
+  animation: armUpRightK 0.7s ease-out;
 }
 
-/* ========================================
-   DOWN MOVE (Back Pose)
-   - Switches from front → back pose
-   - Adds squat, twerk, and tail wag
-======================================== */
-
-/* ---------------------------
-   Squat animation
-   - Applies to entire SVG
-   - Creates squat + rebound
---------------------------- */
+/* DOWN move */
 @keyframes squatDownK {
-  0%   { transform: translateY(0) scale(1) rotate(0deg); }       /* neutral */
-  35%  { transform: translateY(18px) scale(0.96) rotate(-2deg); }/* squat down */
-  70%  { transform: translateY(10px) scale(1.02) rotate(2deg); } /* rebound */
-  100% { transform: translateY(0) scale(1) rotate(0deg); }       /* settle */
+  0% {
+    transform: translateY(0) scale(1) rotate(0);
+  }
+  35% {
+    transform: translateY(1.125rem) scale(0.96) rotate(-2deg);
+  }
+  70% {
+    transform: translateY(0.625rem) scale(1.02) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0);
+  }
 }
-
-/* ---------------------------
-   Twerk animation
-   - Applies to back body (#butt-back)
-   - Wiggles hip left-right
---------------------------- */
 @keyframes twerkK {
-  0%   { transform: rotate(0deg) translateY(0); }
-  20%  { transform: rotate(10deg) translateY(2px); }   /* push right harder */
-  40%  { transform: rotate(-10deg) translateY(-2px); } /* push left harder */
-  60%  { transform: rotate(8deg) translateY(2px); }    /* rebound right */
-  80%  { transform: rotate(-8deg) translateY(-2px); }  /* rebound left */
-  100% { transform: rotate(0deg) translateY(0); }      /* settle */
+  0% {
+    transform: rotate(0) translateY(0);
+  }
+  20% {
+    transform: rotate(10deg) translateY(0.125rem);
+  }
+  40% {
+    transform: rotate(-10deg) translateY(-0.125rem);
+  }
+  60% {
+    transform: rotate(8deg) translateY(0.125rem);
+  }
+  80% {
+    transform: rotate(-8deg) translateY(-0.125rem);
+  }
+  100% {
+    transform: rotate(0) translateY(0);
+  }
 }
-
-/* ---------------------------
-   Tail wag animation
-   - Applies to #tail-back
-   - Swings tail side-to-side
---------------------------- */
 @keyframes tailWagK {
-  0%   { transform-origin: 0% 50%; transform: rotate(0deg); }   /* center */
-  25%  { transform-origin: 0% 50%; transform: rotate(20deg); }  /* wag right */
-  50%  { transform-origin: 0% 50%; transform: rotate(-16deg);}  /* wag left */
-  75%  { transform-origin: 0% 50%; transform: rotate(12deg); }  /* rebound */
-  100% { transform-origin: 0% 50%; transform: rotate(0deg); }   /* settle */
+  0% {
+    transform-origin: 0% 50%;
+    transform: rotate(0);
+  }
+  25% {
+    transform-origin: 0% 50%;
+    transform: rotate(20deg);
+  }
+  50% {
+    transform-origin: 0% 50%;
+    transform: rotate(-16deg);
+  }
+  75% {
+    transform-origin: 0% 50%;
+    transform: rotate(12deg);
+  }
+  100% {
+    transform-origin: 0% 50%;
+    transform: rotate(0);
+  }
 }
-
-/* ---------------------------
-   Apply animations when DOWN is active, Synced durations 
---------------------------- */
 #dancer.move-down svg {
-  animation: squatDownK 0.8s ease-out;            /* squat */
+  animation: squatDownK 0.8s ease-out;
 }
-
-/* Back body animations */
 #dancer.move-down #butt-back {
-  animation: twerkK 0.8s 0.7s ease-in-out;      /* but-wiggle */
+  animation: twerkK 0.8s 0.7s ease-in-out;
 }
 #dancer.move-down #tail-back {
-  animation: tailWagK 0.8s ease-in-out 0ms 1;     /* tail-wiggle */
+  animation: tailWagK 0.8s ease-in-out 0ms 1;
 }
 
-/* ----------------------------------------
-   Reduced motion (accessibility)
----------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  /* Disable body slide/jump animations */
-  #dancer.move-left  svg,
+  #dancer.move-left svg,
   #dancer.move-right svg,
-  #dancer.move-up    svg {
+  #dancer.move-up svg {
     animation: none;
   }
-
-  /* Disable arm + hat animations for LEFT/RIGHT/UP */
-  #dancer.move-left  #hat-top,
-  #dancer.move-left  #hat-band,
-  #dancer.move-left  #hat-brim,
+  #dancer.move-left #hat-top,
+  #dancer.move-left #hat-band,
+  #dancer.move-left #hat-brim,
   #dancer.move-right #hat-top,
   #dancer.move-right #hat-band,
   #dancer.move-right #hat-brim,
-  #dancer.move-up    #arm-left,
-  #dancer.move-up    #arm-right {
+  #dancer.move-up #arm-left,
+  #dancer.move-up #arm-right {
     animation: none;
   }
-
-  /* Disable animations for DOWN back pose + tail */
   #dancer.move-down svg #pose-down,
   #dancer.move-down svg #tail-back {
     animation: none;
   }
-
-  /* Visual feedback only: brighten dancer slightly */
   #dancer {
-    filter: brightness(1.0);              /* normal brightness */
-    transition: filter 120ms linear;      /* smooth brightness change */
+    filter: brightness(1);
+    transition: filter 120ms linear;
   }
   #dancer[class*="move-"] {
-    filter: brightness(1.15);             /* brighten during any move */
+    filter: brightness(1.15);
   }
 }
 
+/* =========================
+   Media queries (Bootstrap)
+========================= */
 
-
-/* ========== MEDIA QUERIES (Bootstrap-aligned) ========== */
-
-/*  ≤575.98px — small phones */
+/* ≤575.98px — small phones */
 @media (max-width: 575.98px) {
   :root {
+    /* Keep floor responsive to real viewport height on tiny devices */
+    --floor-bottom: 1rem; 
+    --floor-height: clamp(18rem, 48dvh, 52rem); 
 
-    
-    /* lift grid slightly for tiny screens */
-    --floor-bottom: 1vh;        /* raise the floor a bit */
-    --floor-height: 48vh;       /* extend floor height   */
+    --judge-y: 65%;
+    --judge-rel: 68%;
 
-    /* keep arrows/touch targets comfortable */
-    --arrow-size: clamp(60px, 18vw, 84px);  /* min 60px, scale up with viewport */
-    --controls-gap: clamp(8px, 2.5vw, 14px);/* spacing between arrow buttons     */
-    --controls-bottom: 2.5vh;               /* distance from bottom edge         */
-    --controls-side-pad: 10px;              /* side padding to avoid edges       */
+    --rails-gap: 0.75rem;
 
-    /*--judge-y: 65%; /* move line even lower */
-    /*--judge-rel: 68%;  /* a bit lower on small phones */
   }
 
   .brand {
-    /* keep brand on one line and allow ellipsis on tiny widths */
-    font-size: clamp(0.80rem, 3.6vw, 0.95rem); /* responsive text size     */
-    letter-spacing: 0.5px;                      /* slightly tighter tracking */
-    max-width: calc(100% - 64px);               /* reserve room for burger   */
-    overflow: hidden;                            /* clip overflow             */
-    text-overflow: ellipsis;                     /* show … when too long      */
-    white-space: nowrap;                         /* single line               */
+    font-size: clamp(1rem, 3vw, 0.5rem);
+    letter-spacing: 0.5px;
+    max-width: calc(100% - 4rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .topbar {
-    /* safe-area insets on iOS/Android */
-    padding-right: max(12px, env(safe-area-inset-right)); /* respect right notch */
-    padding-left:  max(12px, env(safe-area-inset-left));  /* respect left notch  */
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
   }
+
+
+
 }
 
-/* ≤991.98px — burger mode (mobile/tablet) */
-@media (max-width: 991.98px) {
+/* ≤1199.98px — burger mode (matches navbar-expand-xl) */
+@media (max-width: 1199.98px) {
   .navbar-toggler.hamburger {
-    display: inline-grid; /* show burger in burger band */
+    display: inline-grid;
   }
 
   .topbar .navbar-collapse:not(.show) {
-    display: none !important; /* ensure closed state actually hides */
+    display: none !important;
   }
 
-  /* Float the panel under the header; clamp width to viewport and safe areas */
   .topbar .navbar-collapse {
     position: absolute;
-    top: calc(var(--topbar-h) + 6px);
-    inset-inline-end: max(12px, env(safe-area-inset-right));
+    top: calc(var(--topbar-h) + 0.375rem);
+    inset-inline-end: max(0.75rem, env(safe-area-inset-right));
     inset-inline-start: auto;
     width: max-content;
-    max-width: calc(100vw - (env(safe-area-inset-left) + env(safe-area-inset-right) + 24px));
+    max-width: calc(
+      100% - (env(safe-area-inset-left) + env(safe-area-inset-right) + 1.5rem)
+    );
     padding: 0;
     margin: 0;
-    background: transparent; /* buttons already have glass */
-    z-index: 40; /* under toggler (50), above the stage */
+    background: transparent;
+    z-index: 40;
   }
-
   .topbar .navbar-collapse.show {
-    display: block !important; /* visible when open */
+    display: block !important;
   }
 
   .topbar .navbar-collapse .navbar-nav.nav-list {
-    display: flex;                    /* flex container */
-    flex-direction: column !important;/* stack vertically */
-    align-items: flex-end;            /* right align buttons */
-    gap: 8px;                         /* spacing between buttons */
-    padding: 0;                       /* remove default padding */
-    margin: 0;                        /* remove default margin */
-    list-style: none;                 /* no bullets */
-    white-space: nowrap;              /* single-line labels */
+    display: flex;
+    flex-direction: column !important;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    white-space: nowrap;
   }
 
   .nav-list {
-    display: flex;                    /* ensure vertical even if class moves */
-    flex-direction: column;           /* stack */
-    align-items: flex-end;            /* right align */
-    gap: 8px;                         /* spacing */
-    margin: 0;                        /* reset margin */
-    padding: 0;                       /* reset padding */
-    list-style: none;                 /* no bullets */
-    white-space: nowrap;              /* single-line labels */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    white-space: nowrap;
   }
 
-
-  :root {
-    /* give HUD a touch more room on these sizes */
-    --hud-stack-h: clamp(200px, 24vw, 220px); /* scales slightly with width */
-    
+  /* Reserve space for the burger only in burger mode */
+  .brand {
+    padding-right: 5rem;
+    max-width: calc(100%);
   }
+
 }
 
-/* =========================================================
-   ≥992px — desktop (lg and up)
-   - Burger hidden, collapse inline inside topbar.
-========================================================= */
-@media (min-width: 992px) {
-
- 
-
+/* ≥1200px — expand inline (matches navbar-expand-xl) */
+@media (min-width: 1200px) {
   .navbar-toggler.hamburger {
-    display: none !important; /* hide burger on desktop */
+    display: none !important;
   }
 
   .topbar .navbar-collapse {
-    position: static;          /* back in the flow */
-    display: flex !important;  /* visible row */
-    width: auto;               /* shrink to contents */
-    padding: 0;                /* remove extra padding */
-    margin: 0;                 /* remove extra margin */
+    position: static;
+    display: flex !important;
+    width: auto;
+    padding: 0;
+    margin: 0;
   }
 
   .topbar .navbar-collapse .navbar-nav.nav-list {
-    display: flex;             /* single row */
-    flex-direction: row !important; /* horizontal items */
-    align-items: center;       /* vertical center */
-    flex-wrap: nowrap;         /* no wrap */
-    gap: 10px;                 /* spacing between items */
-    padding: 0;                /* reset padding */
-    margin: 0;                 /* reset margin */
-  }
-
-  
-}
-
-/* =========================================================
-   ≥1200px — xl tuning
-   - Keep control group compact and centered.
-========================================================= */
-@media (min-width: 1200px) {
-  :root {
-    --controls-max-w: 640px;  /* slightly narrower for visual balance */
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.625rem;
+    padding: 0;
+    margin: 0;
   }
 }
 
-/* =========================================================
-   ≥1400px — xxl tuning (replaces old 1600)
-   - Further tighten the control cluster at very wide screens.
-========================================================= */
-@media (min-width: 1400px) {
-  :root {
-    --controls-max-w: 600px;  /* bring arrows closer together */
-  }
-}
-
-/* =========================================================
-   Rotate overlay — consolidated to Bootstrap MQs
-   -Show rotate overlay only on small devices in landscape,
-   or when the viewport is very short.
-   - Hard-hide on desktop and wider.
-========================================================= */
-@media (max-width: 767.98px) and (orientation: landscape),
-       (max-height: 480px) {
+/* Rotate overlay: show on small devices in landscape or very short heights */
+@media (max-width: 767.98px) and (orientation: landscape), (max-height: 480px) {
   #rotateOverlay {
-    display: flex;  /* visible only in these cases */
+    display: flex;
   }
 }
-
-/* Hide overlay on tablet/desktop widths */
 @media (min-width: 768px) {
   #rotateOverlay {
     display: none !important;
   }
-  /* =========================================
-   Dismissal override
-   - JS sets body[data-rotate-dismissed="true"] after user clicks "Close window".
-   - This rule force-hides overlay until orientation resets to portrait.
-========================================= */
-body[data-rotate-dismissed="true"] #rotateOverlay {
-  display: none !important;   /* force hide regardless of media query */
-}
-}
-
-/* =========================================
-   PATCH: navbar + quick-pp + overlay + svg
-   (drop-in, minimal overrides, mobile-first)
-   ========================================= */
-
-/* -- Topbar: add safe-area top padding (keeps brand from notch) */
-.topbar {
-  /* fallback then safe area */
-  padding-top: 8px;
-  padding-top: max(8px, env(safe-area-inset-top));
-}
-
-/* -- Quick-PP: respect right safe-area even when menu closed */
-.quick-pp {
-  /* replace fixed 16px with safe-area aware value */
-  right: max(16px, env(safe-area-inset-right));
-}
-
-/* -- Move Quick-PP away when burger menu is open
-   Uses two signals:
-   1) :has() when the toggler is aria-expanded="true"
-   2) body[data-nav-open] your JS already sets for the X morph
-*/
-body:has(.topbar .navbar-toggler[aria-expanded="true"]) .quick-pp,
-body[data-nav-open] .quick-pp {
-  /* push to bottom-right, away from the open menu */
-  top: auto !important;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  right:  max(12px, env(safe-area-inset-right));
-  left: auto;
-}
-
-/* -- Overlay result cards: move inline min/max width into CSS */
-#overlay .rb-card,
-#resultsCta .rb-card,
-#gameOverCta .rb-card {
-  min-width: 260px;
-  max-width: 90vw;
-  margin-inline: auto;
-}
-
-/* -- Dancer: fluid width; SVG scales via CSS, not fixed attributes */
-.dancer { 
-  width: clamp(120px, 35vw, 220px);
-}
-.dancer svg {
-  width: 100%;
-  height: auto;
+  body[data-rotate-dismissed="true"] #rotateOverlay {
+    display: none !important;
+  }
 }
