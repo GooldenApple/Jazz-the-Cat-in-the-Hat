@@ -320,6 +320,8 @@ async function startLevelWithCountdown() {
     initRotateOverlay();                                          // initializes rotate overlay
     initResultOverlays();                                         // wires overlay actions
     console.log('[game] navbar/rotate wiring done');              // logs wiring
+    // Nudge orientation listeners to run once on load (safe no-op elsewhere)
+    window.dispatchEvent(new Event('orientationchange'));
 
     // bind future controls placeholder
     bindControls();                                               // calls placeholder
