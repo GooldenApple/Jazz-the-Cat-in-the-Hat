@@ -217,6 +217,9 @@ window.addEventListener('song:ready', () => {
     });                                                           // done song:ended
 
 
+
+
+
 /**
  * startLevelWithCountdown()
  * Brief: Starts the current level with a 3-second overlay countdown; keeps visuals frozen until the audio actually starts.
@@ -247,14 +250,30 @@ async function startLevelWithCountdown() {
 
 
 
-    /**
-     * Listen for "Next level" click from Results overlay.
-     * Brief: Increments level and restarts with countdown.
-     */
-    window.addEventListener('ui:nextLevel', async () => {         // reacts to next-level
-      state.level = (state.level || 1) + 1;                       // increments level
-      await startLevelWithCountdown();                            // starts next level
-    });                                                           // done next-level
+/**
+ * Listen for "Next level" click from Results overlay.
+ * Brief: Increments level, resets per-level counters, updates HUD immediately,
+ *        clears leftover notes, then starts the countdown for the new level.
+ */
+window.addEventListener('ui:nextLevel', async () => {
+  // Increment level for the upcoming run
+  state.level = (state.level || 1) + 1;     // keep the level bump
+
+  // Reset per-level counters (keep lives as-is)
+  state.score   = 0;                        // new level → fresh score
+  state.combo   = 0;                        // drop combo
+  state.maxCombo= 0;                        // drop max combo for this run
+  state.partial = 0;                        // clear partial heart damage
+
+  // Reflect the new level immediately in the HUD
+  updateHUD(getSnapshot());                 // your HUD expects a snapshot object
+
+  // Safety: remove any lingering notes before starting
+  clearAllNotes();                          // already imported from scoring.js
+
+  // Start the standard 3-2-1 countdown and run
+  await startLevelWithCountdown();
+}); 
 
 
     /**

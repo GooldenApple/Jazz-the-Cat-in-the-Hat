@@ -100,23 +100,32 @@ function initMoveControls() {
   wireMoveKeyboard();  // wires keyboard controls
 }
 
-/* Play/Pause toggle button
-   Wires the always-visible quick button so it only emits intents; lets game.js handle UI and playback. */
+/* Play/Pause toggle buttons
+   Wires both the quick button and the navbar menu button to emit intents; UI/playback is handled elsewhere. */
 function wireMenuPlayToggle() {
-  const btn = document.getElementById('quickPlayPause');             // reads quick toggle button
-  if (!btn) return;                                                  // exits if missing markup
-  if (btn.dataset.wired === 'true') return;                          // avoids double binding
-  btn.dataset.wired = 'true';                                        // marks as wired
+  // gather both possible toggles (quick + navbar)
+  const targets = [
+    document.getElementById('quickPlayPause'),  // always-visible quick button
+    document.getElementById('menuPlayToggle')   // navbar/hamburger Play/Pause button
+  ].filter(Boolean);                             // keep only existing elements
 
-  btn.addEventListener('click', () => {                              // handles button click
-    const isStarting = document.body.getAttribute('data-starting') === 'true'; // checks countdown phase
-    if (state.running || isStarting) {                               // treats countdown as running-like
-      window.dispatchEvent(new CustomEvent('ui:requestPause'));      // emits pause intent
-      return;                                                        // exits after pause
-    }
-    window.dispatchEvent(new CustomEvent('ui:requestStartRun'));     // emits start intent
-  });                                                                // ends click handler
+  if (targets.length === 0) return;              // nothing to wire
+
+  targets.forEach((btn) => {
+    if (btn.dataset.wired === 'true') return;    // avoid duplicate listeners
+    btn.dataset.wired = 'true';                  // mark as wired once
+
+    btn.addEventListener('click', () => {        // handle button click
+      const isStarting = document.body.getAttribute('data-starting') === 'true'; // countdown phase
+      if (state.running || isStarting) {         // treat countdown as running-like
+        window.dispatchEvent(new CustomEvent('ui:requestPause'));   // emit pause intent
+        return;
+      }
+      window.dispatchEvent(new CustomEvent('ui:requestStartRun'));  // emit start intent
+    });
+  });
 }
+
 
 /* ---------------------------
    Export all Input functions

@@ -65,11 +65,10 @@
   box-sizing: border-box;
 }
 
-html,
+/*html,
 body {
   height: 100%;
-  width: 100%;
-}
+}*/
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -100,8 +99,6 @@ body {
 
   display: grid;
   grid-template-rows: auto 1fr; /* navbar + content */
-  /* NOTE: dvh fallback order: set vh first, then dvh for modern */
-  min-height: 100vh;
   min-height: 100dvh;
   overflow: hidden; /* no page scroll */
 }
@@ -131,7 +128,7 @@ body {
     rgba(18, 27, 52, 0.92),
     rgba(18, 27, 52, 0.78)
   );
-  border-bottom: 0.125rem solid rgba(166, 77, 255, 0.35); /* was 2px */
+  border-bottom: 0.125rem solid rgba(166, 77, 255, 0.35); 
   backdrop-filter: blur(6px);
   overflow-x: clip; /* prevent horizontal push */
 }
@@ -191,7 +188,7 @@ body {
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* X morph (optional JS body flag) */
+/* X morph  */
 body[data-nav-open] .hamburger span:nth-child(1) {
   transform: translateY(0.375rem) rotate(45deg);
 }
@@ -436,7 +433,7 @@ body[data-hud="expanded"] .hud-toggle__icon {
   flex-direction: column;
   gap: 0.5rem;
   overflow: hidden;
-  max-height: 32.5rem; /* was 520px */
+  max-height: 32.5rem; 
   opacity: 1;
   transition: max-height 0.25s ease, opacity 0.2s ease;
   pointer-events: auto;
@@ -453,7 +450,7 @@ body[data-hud="collapsed"] .hud-stack {
 .hud-item {
   min-width: 6.25rem;
   padding: 0.5rem 0.75rem;
-  border: 0.1875rem solid var(--neon-purple); /* was 3px */
+  border: 0.1875rem solid var(--neon-purple); 
   border-radius: 0.375rem;
   background: rgba(18, 27, 52, 0.8);
   box-shadow: 0 0 0.75rem var(--neon-purple);
@@ -545,6 +542,8 @@ main#game {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+
+  margin-inline: auto;
 
   padding-top: 2rem;
   padding-bottom: var(--rails-bottom);
@@ -727,6 +726,7 @@ main#game {
   /* horizontal model stays the same */
   left: 50%;
   transform: translateX(-50%);
+
   width: calc(
     100% -
       (
@@ -828,7 +828,7 @@ body[data-paused="true"] .rail .note {
 /* Feedback text */
 .feedback {
   position: absolute;
-  top: calc(var(--hud-stack-h) + 0.5rem);
+  top: calc(var(--hud-stack-h) + 10rem);
   left: 50%;
   transform: translateX(-50%);
   min-block-size: 1.375rem;
@@ -878,16 +878,16 @@ body[data-paused="true"] .rail .note {
   overflow: visible;
 }
 .ctrl-btn.left {
-  color: var(--label-left);
+  color: var(--neon-green);
 }
 .ctrl-btn.up {
-  color: var(--label-up);
+  color: var(--neon-cyan);
 }
 .ctrl-btn.down {
-  color: var(--label-down);
+  color: var(--neon-orange);
 }
 .ctrl-btn.right {
-  color: var(--label-right);
+  color: var(--neon-pink);
 }
 .ctrl-btn.left .label {
   color: var(--label-left);
@@ -903,9 +903,9 @@ body[data-paused="true"] .rail .note {
 }
 
 .arrow-main {
-  fill: none;
+  fill: currentColor;
   stroke: #fff;
-  stroke-width: 0.9375rem; /* 15px */
+  stroke-width: 0.9375rem; 
   stroke-linejoin: round;
   stroke-linecap: round;
   transition: transform 0.12s ease;
@@ -959,7 +959,7 @@ body[data-paused="true"] .rail .note {
 .overlay {
   position: fixed;
   inset: var(--topbar-h) 0 var(--controls-zone-h) 0;
-  z-index: 2200;
+  z-index: 9998;
   pointer-events: none;
 }
 .overlay .play-cta,
@@ -1093,8 +1093,7 @@ body::before {
 }
 
 /* =========================
-   Dancer moves (animations)
-   (kept; units neutral)
+   Dance moves (animations)
 ========================= */
 #dancer svg * {
   transform-box: fill-box;
@@ -1408,7 +1407,6 @@ body::before {
 /* ≤575.98px — small phones */
 @media (max-width: 575.98px) {
   :root {
-    /* Keep floor responsive to real viewport height on tiny devices */
     --floor-bottom: 1rem; 
     --floor-height: clamp(18rem, 48dvh, 52rem); 
 
