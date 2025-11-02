@@ -23,7 +23,19 @@ import {
   initResultOverlays,
   setOverlayIcon,
   initTopbarAutoHeight,
+
 } from './ui.js';
+
+// audio glue
+import {
+  ensureContext,      /* create/get shared AudioContext + master gain */
+  loadAudioBuffer,    /* fetch & decode -> AudioBuffer (cached) */
+  playBuffer,         /* play current/given buffer via master */
+  stop,               /* stop current source */
+  getSongTimeMs,      /* current playback time in ms */
+  setMasterVolume,    /* master volume 0..1 */
+  isPlaying           /* boolean, playing flag */
+} from './audio.js';
 
 // inputs (maps buttons/keyboard to game intents)
 import { initMoveControls, wireMenuPlayToggle } from './input.js'; // exposes input setup
@@ -35,6 +47,27 @@ import { startSongById, stopSong } from './songPlayer.js'; // song engine entry 
 
 // --- TEMP DEBUG: module loaded ---
 console.log('[game] module loaded'); // prints that this module loaded
+
+/* ----------------------------------------
+   Read countdown setting (0/3/5) safely
+---------------------------------------- */
+function getStartCountdownSeconds() {
+  // First, try the live bag written by UI 
+  const w = Number(window.__settings?.countdown);
+  if (Number.isFinite(w)) return w;
+
+  // Fallback: read from localStorage 
+  try {
+    const raw = localStorage.getItem('settings');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const v = Number(s?.countdown);
+      if (Number.isFinite(v)) return v;
+    }
+  } catch {}
+  return 3; // final fallback
+}
+
 
 let _startingRun = false; // prevents double-start during countdown/loading
 // Track countdown timers so they can be cancelled on pause/stop
@@ -122,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
       showOverlay();                                              // ensures overlay is visible
 
       try {                                                       // attempts start
-        await startSongById(undefined, { countdownSec: 3 });      // defers to player with countdown
+        await startSongById(undefined, { countdownSec: getCountdownSec() }); // defers to player with countdown
       } catch (err) {                                             // handles start failure
         state.running = false;                                    // keeps input locked
         document.body.setAttribute('data-paused', 'true');        // keeps visuals paused
@@ -136,6 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
         _startingRun = false;                                     // releases start lock
       }
     });                                                           // done start intent listener
+/* Helper: read countdown seconds from Settings (fallback 3s) */
+function getCountdownSec() {
+  const s = window.__settings;
+  const v = s && typeof s.countdown !== 'undefined' ? Number(s.countdown) : NaN;
+  return Number.isFinite(v) && v >= 0 ? v : 3;
+}
 
 
 /* song:ready — prepare the overlay for countdown and clean panels before playback starts */
@@ -152,7 +191,7 @@ window.addEventListener('song:ready', () => {
   const baseCta = document.querySelector('#overlay .play-cta'); // get the base CTA (round button + label)
   if (baseCta) baseCta.classList.remove('hidden');        // ensure base CTA is visible (so the label shows the countdown)
 
-  runOverlayCountdown(3);                                 // start the 3 → 2 → 1 → GO! label sequence
+  runOverlayCountdown(getCountdownSec());                   // drive label by Settings
   setOverlayIcon('pause');                                // show the pause icon while the game is “starting”
   updatePlayMenuLabel();                                  // sync navbar/quick toggle text and aria state to starting/paused
 });
@@ -235,7 +274,8 @@ async function startLevelWithCountdown() {
   showOverlay();                                           // ensure the overlay layer is visible for the countdown
 
   try {
-    await startSongById(undefined, { countdownSec: 3 });   // request a 3s pre-roll and start the first registered song
+
+    await startSongById(undefined, { countdownSec: (window.__settings?.countdown ?? 3) });
   } catch (err) {
     console.error('[game] failed to start level:', err);   // log for debugging
     state.running = false;                                 // remain in paused state after failure
@@ -247,6 +287,7 @@ async function startLevelWithCountdown() {
     showOverlay();                                          // keep overlay visible so the user can retry
   }
 }
+
 
 
 

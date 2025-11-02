@@ -6,6 +6,28 @@ console.log('[ui] module loaded');
 /* ---------------------------
    UI related functions
 ---------------------------- */
+// Storage key for settings (must be declared before loadSettings/saveSettings are used)
+const SETTINGS_KEY = 'settings';
+/* ----------------------------------------
+   Screen reader live-region + srSpeak (single instance)
+---------------------------------------- */
+let srRegion = document.getElementById('srRegion');
+if (!srRegion) {
+  srRegion = document.createElement('div');
+  srRegion.id = 'srRegion';
+  srRegion.className = 'sr-only';           // har display: none visuellt men läsbar för SR
+  srRegion.setAttribute('aria-live', 'polite');
+  srRegion.setAttribute('aria-atomic', 'true');
+  document.body.appendChild(srRegion);
+}
+
+/** Announce a short message to screen readers. */
+function srSpeak(msg = '') {
+  if (!srRegion) return;
+  
+  srRegion.textContent = '';
+  setTimeout(() => { srRegion.textContent = String(msg); }, 30);
+}
 
 
 // Overlay (Play/Pause) controls 
@@ -32,6 +54,8 @@ function setOverlayLabel(text) {
   const label = document.querySelector('#overlay .play-label'); // lookup fresh
   if (label) label.textContent = text;                          // set label
 }
+
+
 
 /* ----------------------------------------
    Rotate Overlay — shared refs
@@ -194,13 +218,93 @@ function wirePlayButton() {
 };
 
 
-
-/* ----------------------------------------
-   bindControls
-   Purpose: Placeholder for any extra control wiring later.
----------------------------------------- */
+  /* ----------------------------------------
+     Purpose: Wire navbar buttons to open panels and attach close handlers.
+  ---------------------------------------- */
 function bindControls() {
-  // TODO: Add additional controls when needed (e.g., settings toggles).
+
+  const map = {                                         // maps actions to panel ids
+    tutorial: 'tutorial',                                // tutorial panel
+    settings: 'settings',                                // settings panel
+    highscore: 'highscore',                              // highscore panel
+    credits: 'credits'                                   // credits panel
+  };
+
+  document.querySelectorAll('#primaryNav .nav-btn')      // selects nav buttons
+  .forEach((btn) => {                                  // loops each button
+    const action = btn.getAttribute('data-action');    // reads action name
+    if (['tutorial','highscore','credits','settings'].includes(action)) return; // tabs live in Settings (skip here to avoid double wiring)
+    if (!map[action]) return;                             // skips non-panel actions
+    if (btn.dataset.wired === 'true') return;          // prevents double binding
+    btn.dataset.wired = 'true';                        // marks as wired
+    btn.addEventListener('click', () => {              // on click handler
+      openPanel(map[action]);                          // opens mapped panel (e.g. settings)
+    }); 
+  }); 
+
+
+  document.querySelectorAll('.ui-panel [data-close-panel]') // selects panel close btns
+    .forEach((btn) => {                                     // loops each close button
+      if (btn.dataset.wired === 'true') return;             // prevents double binding
+      btn.dataset.wired = 'true';                           // marks as wired
+      btn.addEventListener('click', () => {                 // on click handler
+        const name = btn.getAttribute('data-close-panel');  // reads target name
+        closePanel(name);                                   // hides that panel
+      });                                                   // end click
+    });                                                     // end forEach
+
+  if (!window.__panelKeysWired) {                        // singleton guard for keys
+    window.__panelKeysWired = true;                      // sets guard flag
+    window.addEventListener('keydown', (ev) => {         // global keydown listener
+      if (ev.key === 's' || ev.key === 'S') {            // checks S key
+        openPanel('settings');                           // opens Settings
+        ev.preventDefault();                             // prevents default behavior
+      }
+      if (ev.key === 'Escape') {                         // checks Esc key
+        const open = document.body.getAttribute('data-panel-open'); // reads active panel
+        if (open) closePanel(open);                      // closes active panel
+      }
+    });                                                
+  }
+ /* ----------------------------------------
+   Purpose: Open Settings to specific tab when navbar items are clicked
+---------------------------------------- */
+document.querySelectorAll('#primaryNav .nav-btn')                   // scan nav buttons
+  .forEach((btn) => {                                               // iterate buttons
+    const act = btn.getAttribute('data-action');                    // read action
+    if (!['tutorial','highscore','credits','settings'].includes(act)) return; // filter
+    if (btn.dataset.wiredSettingsTab === 'true') return;            // guard
+    btn.dataset.wiredSettingsTab = 'true';                          // mark wired
+
+    btn.addEventListener('click', (ev) => {
+  ev.preventDefault();
+
+  const targetTab = (act === 'settings' ? 'audio' : act);
+  const collapseEl = document.querySelector('.topbar .navbar-collapse');
+
+
+  // if hamburger is open, close first and open panel when menu is closed.
+  if (collapseEl && collapseEl.classList.contains('show') && window.bootstrap) {
+    const inst = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+
+    const openAfterCollapse = () => {
+      collapseEl.removeEventListener('hidden.bs.collapse', openAfterCollapse);
+      openPanel('settings');
+      selectSettingsTab(targetTab);
+    };
+
+    collapseEl.addEventListener('hidden.bs.collapse', openAfterCollapse, { once: true });
+    inst.hide();
+    return; 
+  }
+
+  // Desktop - open panel  
+  openPanel('settings');
+  selectSettingsTab(targetTab);
+});
+
+  });
+
 }
 
 
@@ -290,8 +394,6 @@ function judgeFlash(type) {
 let _feedbackTimer = null;                 // active timeout handle
 let _feedbackSeq = 0;                      // sequence to avoid stale clears
 const FEEDBACK_CLEAR_MS = 700;             // how long the text stays (ms)
-
-
 
 /* ----------------------------------------
    setFeedback
@@ -544,17 +646,12 @@ function showResultsOverlay({ level, score, maxCombo }) {
 
   const congratsEl = document.getElementById('resCongrats'); // get the headline element
   if (congratsEl) {                                         // guard: only if the element exists
-    const choices = [                                       // list of headline variants
-      'YOU DID IT!',
-      'AWESOME JOB!',
-      'YOU NAILED IT!',
-      'NICE WORK!'
-    ];
+    const choices = [ 'YOU DID IT!', 'AWESOME JOB!', 'YOU NAILED IT!', 'NICE WORK!' ]; // headline variants
     const i = Math.floor(Math.random() * choices.length);   // pick a random index
     congratsEl.textContent = choices[i];                    // set the chosen headline text
   }
 
-  const set = (sel, v) => {                                 // small helper to set text content safely
+  const set = (sel, v) => {                                 // helper to set text content safely
     const el = document.querySelector(sel);                 // query the target element
     if (el) el.textContent = v;                             // assign text when found
   };
@@ -565,7 +662,10 @@ function showResultsOverlay({ level, score, maxCombo }) {
 
   const panel = document.getElementById('resultsCta');      // get the results panel root
   if (panel) panel.classList.remove('hidden');              // unhide the results panel
+
+  srSpeak(`Level ${level ?? ''} clear. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`); // announce
 }
+
 
 
 /**
@@ -577,6 +677,7 @@ function showPauseOverlay() {
   const baseCta = document.querySelector('#overlay .play-cta');         // get the base CTA (round button + label)
   if (baseCta) baseCta.classList.remove('hidden');                      // ensure the base CTA is visible again
   setOverlayLabel('Game paused\nPress Play to resume');                 // two-line hint (CSS makes '\n' break line)
+  srSpeak('Game paused. Press Play to resume.');                        // announce for screen readers
   showOverlay();                                                        // reveal the overlay layer
 }
 
@@ -601,7 +702,10 @@ function showGameOverOverlay({ level, score, maxCombo }) {
 
   const panel = document.getElementById('gameOverCta');                  // fresh lookup of panel node
   if (panel) panel.classList.remove('hidden');                           // unhide game-over panel
+
+  srSpeak(`Game over. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`); // announce
 }
+
 
 
 
@@ -658,6 +762,321 @@ function setOverlayIcon(mode) {
   iconPause.style.display = '';
 }
 
+/* ----------------------------------------
+   Focus helpers for panels (trap + restore)
+---------------------------------------- */
+const FOCUS_SEL = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'; // focusables
+let _panelLastFocus = null;       // stores the element that had focus before opening
+let _trapHandler = null;          // keydown handler reference for removal
+
+/* Return first focusable inside a container */
+function getFirstFocusable(container) {               // container = panel root
+  const nodes = container.querySelectorAll(FOCUS_SEL); // find focusables
+  return nodes.length ? nodes[0] : null;               // first or null
+}
+
+/* Trap Tab inside container until panel is closed */
+function trapFocusIn(container) {                     // enable focus trap
+  if (_trapHandler) document.removeEventListener('keydown', _trapHandler); // cleanup previous
+  _trapHandler = (ev) => {                             // keydown handler
+    if (ev.key !== 'Tab') return;                      // only Tab
+    const list = Array.from(container.querySelectorAll(FOCUS_SEL)) // list focusables
+      .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null); // visible/enabled
+    if (!list.length) return;                          // nothing to trap
+    const first = list[0];                             // first focusable
+    const last = list[list.length - 1];                // last focusable
+    if (ev.shiftKey && document.activeElement === first) { // Shift+Tab on first → go last
+      last.focus(); ev.preventDefault();               // loop
+    } else if (!ev.shiftKey && document.activeElement === last) { // Tab on last → go first
+      first.focus(); ev.preventDefault();              // loop
+    }
+  };
+  document.addEventListener('keydown', _trapHandler);  // start trapping
+}
+
+
+/* ----------------------------------------
+   Panel controls (open/close)
+   Purpose: Pause game, open panel, trap focus; restore on close.
+---------------------------------------- */
+function openPanel(name) {
+  window.dispatchEvent(new CustomEvent('ui:requestPause'));      // pause the game behind
+  const panel = document.getElementById(`panel-${name}`);        // target panel root
+  if (!panel) return;                                            // guard
+  document.body.setAttribute('data-panel-open', name);           // mark open
+  panel.classList.remove('hidden');                              // show
+  if (name === 'settings') srSpeak('Settings opened.');
+
+  // a11y: focus management (store last, move focus inside, trap tab)
+  _panelLastFocus = document.activeElement;                      // remember current focus
+  const first = getFirstFocusable(panel)                          // first interactive
+             || panel.querySelector('[data-close-panel]')        // or its close button
+             || panel;                                           // or the panel itself
+  first?.focus();                                                // move focus in
+  trapFocusIn(panel);                                            // trap Tab
+
+  // keep existing wiring for settings
+  if (name === 'settings') {
+    wireSettingsTabs();                                          // tabs are ready
+    wireSettingsControls();                                      // form controls ready
+    renderHighScorePane();
+  }
+}
+
+function closePanel(name) {
+  const panel = document.getElementById(`panel-${name}`);        // target panel root
+  if (!panel) return;                                            // guard
+  panel.classList.add('hidden');                                 // hide
+  if (document.body.getAttribute('data-panel-open') === name) {  // clear open flag
+    document.body.removeAttribute('data-panel-open');
+  }
+  // a11y: release trap + restore focus to opener (if still in DOM)
+  if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; }
+  if (_panelLastFocus && document.contains(_panelLastFocus)) { _panelLastFocus.focus(); }
+  _panelLastFocus = null;                                        // clear ref
+}
+
+
+/* Loads settings or returns defaults (no highContrast anymore) */
+function loadSettings() {
+  const raw = localStorage.getItem(SETTINGS_KEY);              // reads stored JSON
+  if (raw) {
+    try { return JSON.parse(raw); } catch (_) {}
+  }
+  return {
+    volume: 0.8,                                               // 80% volume
+    muted: false,                                              // not muted
+    reduceMotion: false,                                       // motion allowed
+    noFlash: false,                                            // flashes allowed
+    countdown: 3                                               // 3 seconds
+  };
+}
+
+
+/* Saves settings to localStorage */
+function saveSettings(s) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));       // persists JSON
+}
+
+/* ----------------------------------------
+   Apply settings to UI/body and notify subsystems
+   Purpose: Enforce non-gameplay toggles; send simple events.
+---------------------------------------- */
+function applySettings(s) {
+  // audio: send an event; your audio system can listen or poll
+  window.dispatchEvent(new CustomEvent('audio:setMasterVolume', { // notifies audio
+    detail: { volume: s.muted ? 0 : s.volume }                    // 0 when muted
+  }));
+
+  // sets data flags for CSS/JS to react to
+if (s.reduceMotion) document.body.setAttribute('data-reduce-motion', 'true');
+else document.body.removeAttribute('data-reduce-motion');
+
+if (s.noFlash) document.body.setAttribute('data-no-flash', 'true');
+else document.body.removeAttribute('data-no-flash');
+
+
+  // expose countdown value globally for start overlay (applies next start)
+  window.__settings = window.__settings || {};                  // creates settings bag
+  window.__settings.countdown = Number(s.countdown) || 3;       // stores countdown
+}
+
+/* ----------------------------------------
+   Wire settings form controls
+   Purpose: Sync form with storage and persist on change.
+---------------------------------------- */
+function wireSettingsControls() {
+  const form = document.getElementById('settingsForm');         // grabs settings form
+  if (!form || form.dataset.wired === 'true') return;           // prevents double-bind
+  form.dataset.wired = 'true';                                  // marks wired
+
+  // query controls (no highContrast anymore)
+  const elVolume    = document.getElementById('settingsVolume');       // volume slider
+  const elMute      = document.getElementById('settingsMute');         // mute checkbox
+  const elReduce    = document.getElementById('settingsReduceMotion'); // reduce motion
+  const elNoFlash   = document.getElementById('settingsNoFlash');      // disable flashes
+  const elCountdown = document.getElementById('settingsCountdown');    // countdown select
+  const elReset     = document.getElementById('settingsResetData');    // reset button
+
+  // load current settings
+  let s = loadSettings();
+
+  // reflect values into form
+  if (elVolume)   elVolume.value   = Math.round((s.volume ?? 0.8) * 100);
+  if (elMute)     elMute.checked   = !!s.muted;
+  if (elReduce)   elReduce.setAttribute('aria-pressed', (!!s.reduceMotion) ? 'true' : 'false');
+  if (elNoFlash)  elNoFlash.setAttribute('aria-pressed', (!!s.noFlash) ? 'true' : 'false');
+  if (elCountdown)elCountdown.value= String(s.countdown ?? 3);
+
+  // apply immediately on open
+  applySettings(s);
+
+  // helpers to persist on change
+  const persist = () => {
+    saveSettings(s);
+    applySettings(s);
+  };
+
+  // listeners
+  if (elVolume) elVolume.addEventListener('input', () => {
+    s.volume = Math.max(0, Math.min(1, Number(elVolume.value) / 100));
+    persist();
+  });
+
+  if (elMute) elMute.addEventListener('change', () => {
+    s.muted = !!elMute.checked;
+    persist();
+  });
+
+  if (elReduce) elReduce.addEventListener('click', () => {
+    const next = elReduce.getAttribute('aria-pressed') !== 'true';
+    elReduce.setAttribute('aria-pressed', next ? 'true' : 'false');
+    s.reduceMotion = next;
+    persist();
+  });
+
+  if (elNoFlash) elNoFlash.addEventListener('click', () => {
+    const next = elNoFlash.getAttribute('aria-pressed') !== 'true';
+    elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false');
+    s.noFlash = next;
+    persist();
+  });
+
+
+  if (elCountdown) elCountdown.addEventListener('change', () => {
+    s.countdown = Number(elCountdown.value) || 3;
+    persist();
+  });
+
+  if (elReset) elReset.addEventListener('click', () => {
+    const ok = confirm('Reset all saved progress and settings?');
+    if (!ok) return;
+    try {
+      localStorage.clear();
+    } catch (_) {}
+    s = loadSettings();
+    if (elVolume)   elVolume.value   = Math.round(s.volume * 100);
+    if (elMute)     elMute.checked   = !!s.muted;
+    if (elReduce)   elReduce.setAttribute('aria-pressed', s.reduceMotion ? 'true' : 'false');
+    if (elNoFlash)  elNoFlash.setAttribute('aria-pressed', s.noFlash ? 'true' : 'false');
+    if (elCountdown)elCountdown.value= String(s.countdown);
+    persist();
+    alert('Game data has been reset.');
+  });
+}
+
+/* ----------------------------------------
+   High Score pane helpers
+   Purpose: Show current BEST and allow resetting it.
+---------------------------------------- */
+function renderHighScorePane() {
+  // read BEST from localStorage (fallback: HUD label)
+  const readBest = () => {
+    try {
+      // common key used by scoring; if missing, fall back to HUD
+      const fromLS = Number(localStorage.getItem('best') || 0);
+      if (!Number.isNaN(fromLS) && fromLS > 0) return fromLS;
+    } catch (_) {}
+    const hudBest = Number((document.getElementById('best')?.textContent || '0').replace(/\D+/g, '')) || 0;
+    return hudBest;
+  };
+
+  const out = document.getElementById('hiBestValue');      // output node
+  if (out) out.textContent = readBest();                   // print current BEST
+
+  const btn = document.getElementById('resetHighScore');   // reset button
+  if (btn && btn.dataset.wired !== 'true') {
+    btn.dataset.wired = 'true';
+    btn.addEventListener('click', () => {
+      const ok = confirm('Reset BEST score only?');
+      if (!ok) return;
+
+      // set BEST to 0 in storage (safe even if key absent)
+      try { localStorage.setItem('best', '0'); } catch (_) {}
+
+      // update HUD BEST if present
+      const hudBest = document.getElementById('best');
+      if (hudBest) hudBest.textContent = '0';
+
+      // refresh panel value
+      if (out) out.textContent = '0';
+    });
+  }
+}
+
+
+
+/* ----------------------------------------
+   selectSettingsTab
+   Purpose: Switch panes and hide the active tab's button in the tab bar.
+   Notes:
+   - 'settings' is treated as alias for the 'audio' pane.
+   - The active tab button gets .hidden + aria-hidden + tabindex=-1.
+---------------------------------------- */
+function selectSettingsTab(name) {
+  // Treat "settings" as the "audio" (home) pane
+  if (name === 'settings') name = 'audio';
+
+  // Grab all tab buttons and pane nodes
+  const tabs = document.querySelectorAll('.settings-tab');          
+  const panes = {
+    audio:         document.getElementById('settingsPane-audio'),
+    accessibility: document.getElementById('settingsPane-accessibility'),
+    tutorial:      document.getElementById('settingsPane-tutorial'),
+    highscore:     document.getElementById('settingsPane-highscore'),
+    credits:       document.getElementById('settingsPane-credits')
+  };
+
+  // Show target pane; hide others (with ARIA)
+  Object.entries(panes).forEach(([key, el]) => {
+    if (!el) return;
+    const show = key === name;
+    el.classList.toggle('hidden', !show);
+    el.toggleAttribute('aria-hidden', !show);
+  });
+
+  // Hide the active tab button; show the rest
+  tabs.forEach((btn) => {
+    // Button may be labeled "settings" in markup; map that to 'audio'
+    const btnName = (btn.dataset.settingsTab === 'settings') ? 'audio' : btn.dataset.settingsTab;
+    const isActive = btnName === name;
+
+    // Selection state for a11y
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+
+    // Hide the active tab button completely; restore others
+    btn.classList.toggle('hidden', isActive);
+    btn.toggleAttribute('aria-hidden', isActive);
+    btn.setAttribute('tabindex', isActive ? '-1' : '0');
+  });
+   //  if highscore tab, refresh the value
+  if (name === 'highscore') {
+    renderHighScorePane();
+  }
+}
+
+
+/* ----------------------------------------
+   Wire settings tabs
+   Purpose: Bind tab buttons once and default to 'audio' (home)
+---------------------------------------- */
+function wireSettingsTabs() {
+  const bar = document.querySelector('.settings-tabs');
+  if (!bar || bar.dataset.wired === 'true') return;   // guard duplicate
+  bar.dataset.wired = 'true';
+
+  bar.querySelectorAll('.settings-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.settingsTab || 'audio';
+      selectSettingsTab(name);
+    });
+  });
+
+  /* Default view = audio/home */
+  selectSettingsTab('audio');
+}
+
+
 
 /* ---------------------------
    Export all UI functions
@@ -680,10 +1099,9 @@ export {
   // Rotate overlay
   updateRotateOverlayAria, dismissRotateUntilPortrait, resetDismissalIfPortrait, initRotateOverlay,
   // Extra controls
-  bindControls,
+  bindControls,openPanel, closePanel,
   // HUD update
   updateHUD,
   // overlay play/paus/gameover/next
    showResultsOverlay, showGameOverOverlay, initResultOverlays, showPauseOverlay,
-
 };

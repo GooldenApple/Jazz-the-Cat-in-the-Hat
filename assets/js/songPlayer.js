@@ -4,10 +4,39 @@
 import { SONGS } from './songRegistry.js';
 import { spawnJudgedNote, state, setJudgeWindows } from './scoring.js';
 import { LEVELS, simplifyChartForLevel } from './difficulty.js';
+import './audio.js';
+
 
 let audio = null;        // active HTMLAudioElement
 let timers = [];         // active setTimeout ids
-let current = null;      // { song, chart, bpm, travelBeats, offsetMs }
+let current = null;      //  song, chart, bpm, travelBeats, offsetMs 
+/* ----------------------------------------
+   Volume bridge
+   Purpose: Mirror Settings → HTMLAudioElement.volume (0..1)
+---------------------------------------- */
+let __uiVolume = 1;                                  // cached UI volume (0..1)
+
+/* Read saved volume from localStorage ('settings') */
+function getSavedVolume() {                          // returns 0..1
+  try {
+    const s = JSON.parse(localStorage.getItem('settings') || '{}'); // read settings
+    const v = s && s.muted ? 0 : (typeof s.volume === 'number' ? s.volume : 0.8); // handle mute/volume
+    return Math.max(0, Math.min(1, Number(v) || 0));               // clamp 0..1
+  } catch (_) {
+    return 0.8;                                                     // fallback
+  }
+}
+
+/* React to Settings UI changes (ui.js → audio:setMasterVolume) */
+window.addEventListener('audio:setMasterVolume', (e) => {           // listen for UI event
+  const v = (e && e.detail && typeof e.detail.volume === 'number')  // extract volume
+    ? e.detail.volume
+    : 0;
+  __uiVolume = Math.max(0, Math.min(1, Number(v) || 0));            // cache clamped value
+  if (audio) audio.volume = __uiVolume;                              // apply live if audio exists
+});
+
+
 
 const DEBUG = true;      // set false to silence logs
 const log = (...a) => { if (DEBUG) console.log('[song]', ...a); };
@@ -62,10 +91,12 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
       ? travelBeats
       : (typeof lvl.travelBeats === 'number' ? lvl.travelBeats : chartTravelBeats);
 
-  // Prepare audio element
-  audio = new Audio(song.audio);
-  audio.preload = 'auto';
-  audio.playbackRate = Number.isFinite(lvl.playbackRate) ? lvl.playbackRate : 1.0;
+   // Prepare audio element
+  audio = new Audio(song.audio);                                      // create HTMLAudioElement
+  audio.preload = 'auto';                                             // load early
+  audio.playbackRate = Number.isFinite(lvl.playbackRate) ? lvl.playbackRate : 1.0; // speed from level
+  __uiVolume = getSavedVolume();                                      // read saved volume/mute
+  audio.volume = __uiVolume;                                          // apply initial volume
 
   current = { song, chart, bpm, travelBeats: travelBeatsEff, offsetMs };
 

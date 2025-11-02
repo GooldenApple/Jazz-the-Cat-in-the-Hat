@@ -74,10 +74,10 @@
             <button class="nav-btn" data-action="tutorial" type="button">Tutorial</button>
           </li>
           <li class="nav-item">
-            <button class="nav-btn" data-action="settings" type="button">Settings</button>
+            <button id="menuSettings" class="nav-btn" data-action="settings" type="button">Settings</button>
           </li>
           <li class="nav-item">
-            <button class="nav-btn" data-action="highscore" type="button">High Score</button>
+            <button class="nav-btn" data-action="highscore" type="button">Score</button>
           </li>
           <li class="nav-item">
             <button class="nav-btn" data-action="credits" type="button">Credits</button>
@@ -350,6 +350,25 @@
             </div>
           </div>
         </div>
+
+        <!-- Settings panel -->
+        <section id="settingsPanel" class="overlay-panel" role="dialog" aria-labelledby="settingsTitle" hidden>
+          <h2 id="settingsTitle">Settings</h2>
+
+          <div class="settings-group">
+            <label for="musicVol">Music volume</label>
+            <input id="musicVol" type="range" min="0" max="1" step="0.01">
+          </div>
+
+          <div class="settings-group">
+            <label for="sfxVol">SFX volume</label>
+            <input id="sfxVol" type="range" min="0" max="1" step="0.01">
+          </div>
+
+          <div class="settings-actions">
+            <button id="settingsClose" class="btn-cta">Close</button>
+          </div>
+        </section>
       </div>
     </main>
 
@@ -369,14 +388,152 @@
       </section>
 
       <!-- Settings -->
-      <section id="panel-settings" class="ui-panel hidden" role="dialog"
-               aria-modal="true" aria-labelledby="panel-settings-title">
-        <div class="ui-panel__card">
-          <h2 id="panel-settings-title">Settings</h2>
-          <p>Adjust difficulty, note speed and accessibility options.</p>
-          <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
-        </div>
-      </section>
+<section id="panel-settings" class="ui-panel hidden" role="dialog"
+         aria-modal="true" aria-labelledby="panel-settings-title">
+  <div class="ui-panel__card">
+    
+
+    <!-- ----------------------------------------
+     Settings tabs (Audio / Accessibility / Tutorial / High Score / Credits)
+     Purpose: Tabbed layout inside settings overlay
+----------------------------------------- -->
+<nav class="settings-tabs" aria-label="Settings sections">
+  <button class="settings-tab hidden" data-settings-tab="audio">Settings</button>
+  <button class="settings-tab" data-settings-tab="accessibility" aria-selected="false">Accessibility</button>
+  <button class="settings-tab" data-settings-tab="tutorial" aria-selected="false">Tutorial</button>
+  <button class="settings-tab" data-settings-tab="highscore" aria-selected="false">Score</button>
+  <button class="settings-tab" data-settings-tab="credits" aria-selected="false">Credits</button>
+</nav>
+
+<!-- ----------------------------------------
+     Settings panes wrapper
+     Purpose: Each pane holds one section; only one visible at a time
+----------------------------------------- -->
+<form id="settingsForm">
+  <!-- Audio pane existing Audio controls here -->
+  <section id="settingsPane-audio" class="settings-pane">
+    <h2 id="panel-settings-title">Settings</h2>
+<!-- ----------------------------------------
+  Audio controls 
+  Purpose: Master volume + mute toggle
+----------------------------------------- -->
+<fieldset>
+  <legend>Audio</legend>
+  <label for="settingsVolume">Master volume</label>
+  <input id="settingsVolume" name="settingsVolume" type="range" min="0" max="100" step="1" value="80" />
+  <label class="inline">
+    <input id="settingsMute" name="settingsMute" type="checkbox" />
+    Mute all
+  </label>
+</fieldset>
+
+  <!-- -----------------
+  Countdown 
+  Purpose: Select start countdown seconds
+------------------------------ -->
+<fieldset> <!-- group for countdown control -->
+  <legend>Countdown</legend> <!-- group title -->
+  <label for="settingsCountdown">Start countdown</label> <!-- label for select -->
+  <select id="settingsCountdown" name="settingsCountdown"> <!-- select element -->
+    <option value="0">0s</option>   <!-- allow no countdown -->
+    <option value="3">3s</option>   <!-- default -->
+    <option value="5">5s</option>   <!-- longer option -->
+  </select>
+  <p class="hint">Applies on next start.</p> <!-- helper text -->
+</fieldset>
+
+</section>
+
+  <!-- Accessibility pane  -->
+  <section id="settingsPane-accessibility" class="settings-pane hidden" aria-hidden="true">
+    <!-- ----------------------------------------
+     Accessibility & Visual
+     Purpose: Non-gameplay visual toggles
+----------------------------------------- -->
+<fieldset>
+  <legend>Accessibility & Visuals</legend>
+
+  <!-- short intro (clarifies scope & behavior) -->
+  <p class="hint">These options change visuals only and save immediately.</p>
+
+  <!-- Reduce motion -->
+  <label class="block">
+    <button id="settingsReduceMotion" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintReduceMotion">Reduce motion</button>
+  </label>
+
+  <p id="hintReduceMotion" class="hint"><br>Tones down animations to reduce distraction.</p>
+
+  <!-- Disable flashes -->
+  <label class="block">
+    <button id="settingsNoFlash" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintNoFlash">Disable screen glow and flashes</button>
+  </label>
+
+  <p id="hintNoFlash" class="hint"><br>Removes bright screen flashes and glow effects to avoid sudden light bursts.</p>
+
+  <!-- small apply note -->
+  <p class="hint"><em>Applies immediately.</em></p>
+</fieldset>
+
+</section>
+
+  <!-- Tutorial pane  -->
+  <section id="settingsPane-tutorial" class="settings-pane hidden" aria-hidden="true">
+    <fieldset>
+      <legend>Tutorial</legend>
+      <p class="hint">Make Jazz shake his azz!<br>
+        Hit the correct arrow when notes cross the neon line to make Jazz dance.
+      <br>
+        Strike combos and get bonuses!
+      </p>
+    </fieldset>
+  </section>
+
+  <!-- score pane -->
+  <section id="settingsPane-highscore" class="settings-pane hidden" aria-hidden="true">
+  <fieldset>
+    <legend>High Score</legend>
+
+    <p class="hint">Best on this device:</p>
+
+    <div class="hirow">
+      <output id="hiBestValue">0</output>
+
+      <button id="resetHighScore" type="button" class="settings-tab score-reset" title="Reset BEST score">Reset</button>
+    </div>
+    <br>
+    <p class="hint">This only resets the BEST value. Use “Reset game data…” to clear everything.</p>
+  </fieldset>
+
+  <!-- ----------------------------------------
+     Data section
+     Purpose: Reset saved progress/settings
+----------------------------------------- -->
+<fieldset>
+  <legend>Data</legend>
+  <button id="settingsResetData" type="button" class="settings-tab data-reset">Reset game data</button>
+</fieldset>
+
+</section>
+
+
+  <!-- Credits pane  -->
+  <section id="settingsPane-credits" class="settings-pane hidden" aria-hidden="true">
+    <fieldset>
+      <legend>Credits</legend>
+      <ul class="hint">
+        <li>Game: Jazz the Cat in the Hat</li>
+        <li>Frame graphic: Freepik</li>
+        <!-- add the rest of credits items here -->
+      </ul>
+    </fieldset>
+  </section>
+</form>
+
+
+    <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
+  </div>
+</section>
+
 
       <!-- High Score -->
       <section id="panel-highscore" class="ui-panel hidden" role="dialog"
@@ -397,7 +554,7 @@
           <button class="ui-panel__close" data-close-panel="credits" type="button">Close</button>
         </div>
       </section>
-    </div>
+    </div>  
 
     <!-- =========================================
          SCRIPTS (Bootstrap bundle + game modules)
@@ -411,5 +568,8 @@
 
     <!-- Dev helpers (non-production) -->
     <script type="module" src="assets/js/test.js"></script>
+    <!-- Screen reader live region (visually hidden) -->
+    <div id="srLive" class="sr-only" aria-live="polite" role="status"></div>
+
   </body>
 </html>

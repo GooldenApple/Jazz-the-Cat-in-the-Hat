@@ -54,6 +54,15 @@
   --judge-rel: 62%;
   --rails-gap: 0.9rem; 
   --rails-bottom: calc(var(--controls-zone-h) + var(--rails-gap));
+
+
+
+  /* buttons inside settings */
+  --pill-bg: rgba(255,255,255,0.04);
+  --pill-text: #fff;
+  --pill-radius: 14px;
+  --pill-border: #43f5ff; 
+  --pill-glow: rgba(67,245,255,.55);
 }
 
 /* =========================
@@ -182,7 +191,7 @@ body {
 .navbar-toggler.hamburger span {
   display: block;
   width: 1.5rem;
-  height: 0.125rem;
+  min-height: 0.125rem;
   background: #fff;
   box-shadow: 0 0 0.375rem rgba(255, 255, 255, 0.6);
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -346,9 +355,11 @@ body[data-nav-open="true"] #quickPlayPause {
 .svg-heart {
   inline-size: 1.75rem;
   block-size: 1.75rem;
-  fill: var(--neon-red);
-  filter: drop-shadow(0 0 0.25rem var(--neon-red))
-    drop-shadow(0 0 0.625rem var(--neon-pink));
+  filter: var(
+    --icon-glow,
+    drop-shadow(0 0 0.25rem var(--neon-red))
+    drop-shadow(0 0 0.625rem var(--neon-pink))
+  );
   transition: opacity 0.25s ease, fill 0.25s ease;
 }
 .svg-heart.full {
@@ -379,7 +390,8 @@ body[data-nav-open="true"] #quickPlayPause {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  inline-size: 100%;
+  inline-size: max-content;    /* shrink to content width (no full-width overlay) */
+  max-inline-size: 100%;       /* still allow wrap on very narrow screens */
   pointer-events: auto;
 }
 
@@ -467,65 +479,6 @@ body[data-hud="collapsed"] .hud-stack {
   text-shadow: 0 0 0.3125rem var(--neon-cyan), 0 0 0.625rem var(--neon-pink);
 }
 
-/* =========================
-   Rotate overlay (ARIA/JS)
-========================= */
-.rb-card {
-  pointer-events: auto;
-  padding: 1rem 1.125rem;
-  border: 0.125rem solid var(--neon-purple);
-  border-radius: 0.75rem;
-  background: rgba(10, 14, 28, 0.92);
-  color: var(--ink);
-  text-align: center;
-  box-shadow: 0 0 0.875rem rgba(166, 77, 255, 0.5),
-    inset 0 0 0.75rem rgba(166, 77, 255, 0.25);
-}
-.rb-icon {
-  font-size: 1.75rem;
-  margin-bottom: 0.375rem;
-}
-.rb-title {
-  font-size: 1rem;
-  margin: 0 0 0.375rem;
-}
-.rb-text {
-  font-size: 0.8125rem;
-  margin: 0 0 0.625rem;
-}
-.rb-try {
-  padding: 0.375rem 0.75rem;
-  border: 0.125rem solid var(--neon-purple);
-  border-radius: 999px;
-  background: rgba(10, 14, 28, 0.6);
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-  box-shadow: 0 0 0.5rem rgba(166, 77, 255, 0.55);
-}
-
-/* Fullscreen blocker (media + ARIA control) */
-#rotateOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  pointer-events: auto;
-  background: rgba(10, 10, 30, 0.95);
-  color: #fff;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  flex-direction: column;
-  padding: 1.25rem;
-  min-height: 100dvh;
-}
-#rotateOverlay[aria-hidden="true"] {
-  display: none !important;
-}
-#rotateOverlay[aria-hidden="false"] {
-  display: flex;
-}
 
 /* =========================
    Stage & playfield cluster
@@ -547,7 +500,7 @@ main#game {
 
   padding-top: 2rem;
   padding-bottom: var(--rails-bottom);
-  min-block-size: calc(100svh - var(--topbar-h));
+
 
   /* Fill below navbar – track the *dynamic* viewport height */
   min-block-size: calc(100svh - var(--topbar-h));
@@ -810,20 +763,6 @@ body[data-paused="true"] .rail .note {
   animation-play-state: paused !important;
 }
 
-/* Dancer (SVG cat) */
-.dancer {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--controls-zone-h) + 1.125rem); 
-  transform: translateX(-50%);
-  z-index: 12;
-  margin: 0;
-  inline-size: clamp(7.5rem, 35vw, 10rem); /* fluid width */
-}
-.dancer svg {
-  inline-size: 100%;
-  block-size: auto;
-}
 
 /* Feedback text */
 .feedback {
@@ -954,113 +893,6 @@ body[data-paused="true"] .rail .note {
 }
 
 /* =========================
-   Overlay (CTA / results)
-========================= */
-.overlay {
-  position: fixed;
-  inset: var(--topbar-h) 0 var(--controls-zone-h) 0;
-  z-index: 9998;
-  pointer-events: none;
-}
-.overlay .play-cta,
-#resultsCta,
-#gameOverCta,
-#overlay .rb-card {
-  pointer-events: auto;
-}
-
-.overlay.hidden {
-  display: none;
-}
-
-.play-cta {
-  position: absolute;
-  top: var(--overlay-y);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.625rem;
-  pointer-events: auto;
-}
-.play-btn {
-  inline-size: 6rem;
-  block-size: 6rem;
-  border-radius: 50%;
-  border: 0.25rem solid var(--neon-cyan);
-  background: rgba(10, 14, 28, 0.55);
-  cursor: pointer;
-  position: relative;
-  box-shadow: 0 0 0.75rem var(--neon-cyan);
-}
-.play-btn .icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2.625rem;
-  line-height: 1;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 0.75rem var(--neon-cyan);
-  display: none;
-}
-/* Paused → show PLAY */
-body[data-paused="true"] #overlay .play-btn .icon-play {
-  display: inline-block;
-}
-/* Running/Countdown → show PAUSE */
-body:not([data-paused]) #overlay .play-btn .icon-pause {
-  display: inline-block;
-}
-
-.play-btn:hover {
-  border-color: var(--neon-pink);
-  box-shadow: 0 0 0.75rem var(--neon-pink);
-}
-.play-label {
-  font-size: 1.25rem;
-  color: var(--ink);
-  text-shadow: var(--text-glow);
-  white-space: pre-line;
-  text-align: center;
-}
-
-/* Overlay cards sizing */
-#overlay .rb-card,
-#resultsCta .rb-card,
-#gameOverCta .rb-card {
-  min-inline-size: 16.25rem; /* 260px */
-  max-inline-size: 90vw;
-  margin-inline: auto;
-}
-
-/* =========================
-   SVG cat neon accents
-========================= */
-#hat-band {
-  fill: var(--label-left);
-  filter: drop-shadow(0 0 0.1875rem var(--label-left))
-    drop-shadow(0 0 0.375rem var(--label-left));
-}
-#bowtie > * {
-  fill: var(--label-left);
-}
-#bowtie {
-  filter: drop-shadow(0 0 0.375rem var(--label-left));
-}
-#glasses rect {
-  stroke: var(--label-left);
-  stroke-width: 1.25px;
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6))
-    drop-shadow(0 0 5px var(--label-left));
-}
-#glasses rect:nth-child(3) {
-  filter: none;
-  stroke-width: 1px;
-}
-
-/* =========================
    Neon floor (decorative)
 ========================= */
 body::before {
@@ -1091,6 +923,48 @@ body::before {
   filter: drop-shadow(0 0 0.625rem rgba(0, 255, 213, 0.5));
   opacity: var(--floor-opacity);
 }
+
+/* =====================
+   SVG Jazz the cat 
+========================= */
+
+/* Jazz the cat */
+.dancer {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--controls-zone-h) + 1.125rem); 
+  transform: translateX(-50%);
+  z-index: 12;
+  margin: 0;
+  inline-size: clamp(7.5rem, 35vw, 10rem); /* fluid width */
+}
+.dancer svg {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+#hat-band {
+  fill: var(--label-left);
+  filter: drop-shadow(0 0 0.1875rem var(--label-left))
+    drop-shadow(0 0 0.375rem var(--label-left));
+}
+#bowtie > * {
+  fill: var(--label-left);
+}
+#bowtie {
+  filter: drop-shadow(0 0 0.375rem var(--label-left));
+}
+#glasses rect {
+  stroke: var(--label-left);
+  stroke-width: 1.25px;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 5px var(--label-left));
+}
+#glasses rect:nth-child(3) {
+  filter: none;
+  stroke-width: 1px;
+}
+
 
 /* =========================
    Dance moves (animations)
@@ -1401,6 +1275,416 @@ body::before {
 }
 
 /* =========================
+   Rotate overlay (ARIA/JS)
+========================= */
+.rb-card {
+  pointer-events: auto;
+  padding: 1rem 1.125rem;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 0.75rem;
+  background: rgba(10, 14, 28, 0.92);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 0 0.875rem rgba(166, 77, 255, 0.5),
+    inset 0 0 0.75rem rgba(166, 77, 255, 0.25);
+}
+.rb-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.375rem;
+}
+.rb-title {
+  font-size: 1rem;
+  margin: 0 auto 0.375rem;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+}
+
+.rb-text {
+  font-size: 0.8125rem;
+  margin: 0 0 0.625rem;
+}
+
+.rb-try {
+  padding: 0.375rem 0.75rem;
+  border: 0.125rem solid var(--neon-purple);
+  border-radius: 999px;
+  background: rgba(10, 14, 28, 0.6);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 0.5rem rgba(166, 77, 255, 0.55);
+}
+
+/* Fullscreen blocker (media + ARIA control) */
+#rotateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  pointer-events: auto;
+  background: rgba(10, 10, 30, 0.95);
+  color: #fff;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  padding: 1.25rem;
+  min-height: 100dvh;
+}
+#rotateOverlay[aria-hidden="true"] {
+  display: none !important;
+}
+#rotateOverlay[aria-hidden="false"] {
+  display: flex;
+}
+
+/* =========================
+   Overlay (CTA / results)
+========================= */
+.overlay {
+  position: fixed;
+  inset: var(--topbar-h) 0 var(--controls-zone-h) 0;
+  z-index: 9998;
+  pointer-events: none;
+}
+.overlay .play-cta,
+#resultsCta,
+#gameOverCta,
+#overlay .rb-card {
+  pointer-events: auto;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.play-cta {
+  position: absolute;
+  top: var(--overlay-y);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  pointer-events: auto;
+}
+.play-btn {
+  inline-size: 6rem;
+  block-size: 6rem;
+  border-radius: 50%;
+  border: 0.25rem solid var(--neon-cyan);
+  background: rgba(10, 14, 28, 0.55);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 0.75rem var(--neon-cyan);
+}
+.play-btn .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.625rem;
+  line-height: 1;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 0.75rem var(--neon-cyan);
+  display: none;
+}
+/* Paused → show PLAY */
+body[data-paused="true"] #overlay .play-btn .icon-play {
+  display: inline-block;
+}
+/* Running/Countdown → show PAUSE */
+body:not([data-paused]) #overlay .play-btn .icon-pause {
+  display: inline-block;
+}
+
+.play-btn:hover {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 0.75rem var(--neon-pink);
+}
+.play-label {
+  font-size: 1.25rem;
+  color: var(--ink);
+  text-shadow: var(--text-glow);
+  white-space: pre-line;
+  text-align: center;
+}
+
+/* Overlay cards sizing */
+#overlay .rb-card,
+#resultsCta .rb-card,
+#gameOverCta .rb-card {
+  min-inline-size: 16.25rem; 
+  max-inline-size: 90vw;
+  margin-inline: auto;
+}
+
+/* ----------------------------------------
+   Settings overlay container
+   Purpose: Ensure the settings panel sits above the play overlay and centers content.
+---------------------------------------- */
+#panel-settings {                     /* target the settings panel root */
+  position: fixed;                    /* pin to viewport */
+  inset: 0;                           /* cover full screen */
+  display: flex;                      /* enable centering */
+  align-items: center;                /* vertical center */
+  justify-content: center;            /* horizontal center */
+  background: rgba(0, 0, 0, 0.6);     /* dimmed backdrop (like other overlays) */
+  z-index: 20000;                      /* higher than #overlay (tune if your #overlay > 1100) */
+}
+
+/* ----------------------------------------
+   Settings card look
+---------------------------------------- */
+#panel-settings .ui-panel__card {     /* the card inside settings */
+  max-width: min(680px, 92vw);        /* readable line length */
+  padding: 1.25rem 1.5rem;            /* comfortable spacing */
+  border-radius: 1rem;                /* soft corners */
+  background: rgba(8, 10, 18, 0.92);  /* dark translucent glass */
+  border: 2px solid var(--accent, #7df9ff); /* neon border using theme accent */
+  box-shadow:                           /* soft outer glow + depth */
+    0 0 24px rgba(125, 249, 255, 0.35),
+    0 12px 30px rgba(0, 0, 0, 0.45);
+  color: var(--text, #f5f7ff);        /* theme text color */
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6); /* subtle readability shadow */
+}
+
+
+.pill-btn {
+  appearance: none;
+  display: inline-block;
+  padding: .5rem .9rem;
+  border: 2px solid var(--pill-border);
+  border-radius: var(--pill-radius);
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  font: inherit;
+  letter-spacing: .03em;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05) inset,
+    0 0 18px var(--pill-glow);
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.pill-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pill-btn:active {
+  transform: translateY(0);
+}
+
+.pill-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.hs-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.hs-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Settings › High Score: make the buttons neon red */
+#settingsPane-highscore button,
+#settingsPane-highscore button.btn,
+#settingsPane-accessibility #settingsReduceMotion,
+#settingsPane-accessibility #settingsNoFlash {
+  border-color: var(--neon-red);              
+  box-shadow: 0 0 12px rgba(253, 4, 4, 0.25);
+  text-shadow: var(--text-glow);
+  
+}
+
+#settingsPane-highscore button:hover,
+#settingsPane-highscore button.btn:hover,
+#settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"],
+#settingsPane-accessibility #settingsNoFlash[aria-pressed="true"],
+#settingsPane-accessibility #settingsReduceMotion:hover,
+#settingsPane-accessibility #settingsNoFlash:hover {
+  box-shadow: 0 0 18px rgba(253, 4, 4, 0.40);
+}
+
+#settingsPane-highscore button:focus-visible,
+#settingsPane-highscore button.btn:focus-visible {
+  outline: 2px solid var(--neon-red);
+  outline-offset: 2px;
+}
+
+/* Accessibility toggles: show ON state clearly without glow */
+#settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"],
+#settingsPane-accessibility #settingsNoFlash[aria-pressed="true"] {
+  border-color: var(--neon-green, #1aff7a);
+}
+
+#settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"]:hover,
+#settingsPane-accessibility #settingsNoFlash[aria-pressed="true"]:hover {
+  border-color: var(--neon-green, #1aff7a);
+}
+
+#settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"]:focus-visible,
+#settingsPane-accessibility #settingsNoFlash[aria-pressed="true"]:focus-visible {
+  outline-color: var(--neon-green, #1aff7a);
+}
+
+
+/* ----------------------------------------
+   Settings heading
+   Purpose: Use the same strong arcade headline style as other overlays.
+---------------------------------------- */
+#panel-settings .ui-panel__card h2 {  /* settings title */
+  margin: 0 0 0.75rem 0;              /* spacing below title */
+  font-size: clamp(1.4rem, 3vw, 1.8rem); /* responsive size */
+  font-weight: 900;                   /* bold headline */
+  text-transform: uppercase;          /* arcade vibe */
+  letter-spacing: 0.04em;             /* slight tracking */
+  max-width: 100%;
+  white-space: normal;     /* allow wrapping */
+  overflow-wrap: anywhere; /* safe breaks on very narrow widths */
+  word-break: normal;      /* prefer natural breaks */
+  text-align: center;      /* mobile-first symmetry */
+  margin-left: auto;       /* keep visually centered within card */
+  margin-right: auto;
+
+}
+
+/* ----------------------------------------
+   Settings body text
+   Purpose: Match overlay copy styling.
+---------------------------------------- */
+#panel-settings .ui-panel__card p {   /* paragraph text */
+  margin: 0 0 0.75rem 0;              /* space between lines */
+  font-weight: 700;                   /* stronger weight like results text */
+  letter-spacing: 0.02em;             /* subtle tracking */
+}
+
+/* ----------------------------------------
+   Close button
+   Purpose: Style close button to feel like in-game controls.
+---------------------------------------- */
+#panel-settings .ui-panel__close {    /* close button element */
+  display: inline-block;              /* keep box model */
+  padding: 0.5rem 0.9rem;             /* touch target */
+  border-radius: 0.75rem;             /* rounded */
+  border: 2px solid var(--accent, #7df9ff); /* neon border */
+  background: rgba(0, 0, 0, 0.35);    /* translucent fill */
+  color: var(--text, #f5f7ff);        /* readable text */
+  font-weight: 800;                   /* punchy label */
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6); /* depth */
+  box-shadow: 0 0 12px rgba(125, 249, 255, 0.25); /* glow */
+  cursor: pointer;                    /* interactive affordance */
+}
+
+/* ----------------------------------------
+   Close button focus
+   Purpose: Provide a visible, theme-consistent focus ring.
+---------------------------------------- */
+#panel-settings .ui-panel__close:focus-visible {
+  outline: 2px solid var(--accent, #7df9ff); /* themed ring */
+  outline-offset: 2px;                        /* offset for clarity */
+}
+
+/* ----------------------------------------
+   Settings tabs (layout)
+   Purpose: Horizontal/wrapping tab bar with neon look
+---------------------------------------- */
+.settings-tabs {                                   /* tab bar container */
+  display: flex;                                   /* row layout */
+  flex-wrap: wrap;                                 /* wrap on small screens */
+  gap: 0.5rem;                                     /* gap between tabs */
+  margin: 0 0 0.75rem 0;                           /* space below tabs */
+  justify-content: center
+}
+
+/* ----------------------------------------
+   Settings tab button
+   Purpose: Neon-styled pill buttons consistent with theme
+---------------------------------------- */
+.settings-tab {                                    /* each tab button */
+  padding: 0.4rem 0.8rem;                          /* comfortable hit area */
+  border-radius: 0.75rem;                          /* rounded corners */
+  border: 2px solid var(--neon-cyan);              /* neon border */
+  background: rgba(0,0,0,0.35);                    /* glassy fill */
+  color: var(--ink);                                /* themed text */
+  font-weight: 800;                                 /* bold label */
+  text-shadow: var(--text-glow);                    /* neon text glow */
+  box-shadow: 0 0 12px rgba(0,255,213,0.25);        /* subtle outer glow */
+  cursor: pointer;                                  /* clickable */
+  /* prevent overflow and keep symmetric look on tiny widths */
+  max-width: 100%;
+  white-space: normal;      /* allow line break inside long labels */
+  word-break: break-word;   /* break very long words if needed */
+  text-align: center;       /* keep text visually centered */
+}
+}
+
+.settings-tab .settings-tab[aria-selected="true"] {   /* active tab state */
+  background: rgba(0,255,213,0.12);                /* stronger fill */
+  box-shadow: 0 0 18px rgba(0,255,213,0.4);        /* stronger glow */
+}
+
+
+/* ----------------------------------------
+   Settings panes spacing
+   Purpose: Show one pane at a time and add breathing room
+---------------------------------------- */
+.settings-pane {                                   /* visible pane */
+  display: block;                                   /* normal block */
+}
+.settings-pane.hidden {                             /* hidden pane */
+  display: none;                                    /* removed from flow */
+}
+#settingsForm fieldset {                            /* group box */
+  border: 2px solid rgba(255,255,255,0.08);         /* subtle outline */
+  border-radius: 0.75rem;                           /* rounded corners */
+  padding: 0.75rem;                                 /* inner padding */
+  margin: 0 0 0.75rem 0;                            /* space between groups */
+}
+#settingsForm legend {                              /* group title */
+  padding: 0 0.5rem;                                /* small padding */
+  font-weight: 900;                                 /* bold headline */
+  letter-spacing: 0.04em;                           /* arcade vibe */
+  text-transform: uppercase;                        /* headline case */
+}
+#settingsForm .hint {                               /* helper text */
+  margin: 0.375rem 0 0 0;                           /* top margin */
+  font-weight: 700;                                 /* readable weight */
+  color: var(--muted);                              /* muted tone */
+}
+
+.settings-pane legend {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* SR-only utility */
+.sr-only{
+  position:absolute !important;
+  width:1px;height:1px;margin:-1px;border:0;padding:0;
+  clip:rect(0 0 0 0);clip-path:inset(50%);
+  overflow:hidden;white-space:nowrap;
+}
+
+
+/* =========================
    Media queries (Bootstrap)
 ========================= */
 
@@ -1434,6 +1718,12 @@ body::before {
 
 
 }
+
+@media (min-width: 480px) {
+  #panel-settings .ui-panel__card h2,
+  .settings-pane legend { text-align: left; }
+}
+
 
 /* ≤1199.98px — burger mode (matches navbar-expand-xl) */
 @media (max-width: 1199.98px) {
@@ -1531,4 +1821,176 @@ body::before {
   body[data-rotate-dismissed="true"] #rotateOverlay {
     display: none !important;
   }
+}
+
+/* --- Accesibility & visuals settings --- */
+
+/* ----------------------------------------
+   Settings: Reduce Motion
+   Purpose: Cut non-essential animations to reduce motion
+---------------------------------------- */
+
+body[data-reduce-motion="true"] #dancer.move-left svg,
+body[data-reduce-motion="true"] #dancer.move-right svg,
+body[data-reduce-motion="true"] #dancer.move-up svg,
+body[data-reduce-motion="true"] #dancer.move-down svg {
+  animation: none !important;                               /* stops translation left/right/up */
+}
+
+body[data-reduce-motion="true"] .ctrl-btn.active .arrow-glow { /* controller glow */
+  animation: none !important;                                   /* stop neonPulse */
+}
+body[data-reduce-motion="true"] .ctrl-btn.active .label {       /* controller label */
+  animation: none !important;                                   /* stop textPulse */
+}
+body[data-reduce-motion="true"] .judge-ticks {                  
+  animation: none !important;                                   /* stop any tick anim */
+}
+
+body[data-reduce-motion="true"] #dancer.move-down #tail-back {
+  animation: none !important;                                   /* stop tail wag */
+}
+
+/* ----------------------------------------
+   Settings: No Flash
+   Purpose: Disable judge flash effects triggered on rails
+---------------------------------------- */
+body[data-no-flash="true"] .stage .rails.flash-good::after, /* hides 'good' flash layer */
+body[data-no-flash="true"] .stage .rails.flash-miss::after { /* hides 'miss' flash layer */
+  animation: none !important;                               /* stop flash animation */
+  opacity: 0 !important;                                    /* make layer invisible */
+  pointer-events: none;                                     /* keep it non-interactive */
+}
+
+/* no glow/bloom on orbs, rails ,judge line */
+body[data-no-flash] .note,
+body[data-no-flash] .rails .rail,
+body[data-no-flash] .judge-line {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* make orbs clear with border */
+body[data-no-flash] .note {
+  background-image: none;           
+  opacity: 0.95; 
+  border: 2px solid rgba(255,255,255,0.85);
+  outline: 0; 
+}
+
+
+body[data-no-flash] .note::before,
+body[data-no-flash] .note::after {
+  animation: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Kill all text glow when no-flash is enabled */
+body[data-no-flash] {
+  --text-glow: none;
+  --icon-glow: none;
+}
+
+body[data-no-flash] * {
+  text-shadow: none !important;   /* catch any hard-coded text-shadow values */
+}
+
+/* HUD: remove all outer glows/shadows when no-flash is on */
+body[data-no-flash] .hud,
+body[data-no-flash] .hud * {
+  box-shadow: none !important; /* kill neon HUD glows */
+}
+
+/* Overlay play/pause – remove button/icon glow */
+body[data-no-flash] .play-btn,
+body[data-no-flash] .play-btn:hover,
+body[data-no-flash] .play-btn::before,
+body[data-no-flash] .play-btn::after,
+body[data-no-flash] .icon-play,
+body[data-no-flash] .icon-pause {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Controller arrows (buttons + labels + SVG icon) */
+body[data-no-flash] .ctrl-btn,
+body[data-no-flash] .ctrl-btn *,
+body[data-no-flash] .arrow-icon {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important; /* label text */
+}
+
+/* Judge line & ticks – remove all glow */
+body[data-no-flash] .judge-line,
+body[data-no-flash] .judge-line::before,
+body[data-no-flash] .judge-line::after,
+body[data-no-flash] .judge-ticks,
+body[data-no-flash] .judge-ticks::before,
+body[data-no-flash] .judge-ticks::after,
+body[data-no-flash] .judge-target {
+  box-shadow: none !important;
+  filter: none !important;
+}
+/* kill its glow/background */
+body[data-no-flash] .stage .rails::after {
+  background: cyan !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+body[data-no-flash] .judge-target::before,
+body[data-no-flash] .judge-target::after {
+  box-shadow: none !important;
+  filter: none !important;
+  background: none !important;
+}
+
+body[data-no-flash] .arrow-glow {
+  filter: none !important;
+}
+
+body[data-no-flash] #hat-band,
+body[data-no-flash] #bowtie,
+body[data-no-flash] #glasses rect {
+  filter: none !important;
+}
+
+
+/* Cards: remove outer + inset glow */
+body[data-no-flash] #rotateOverlay .rb-card,
+body[data-no-flash] #resultsCta   .rb-card,
+body[data-no-flash] #gameOverCta  .rb-card {
+  box-shadow: none !important;
+}
+
+/* Buttons inside those cards: remove glow */
+body[data-no-flash] #rotateOverlay .rb-try,
+body[data-no-flash] #resultsCta   .rb-try,
+body[data-no-flash] #gameOverCta  .rb-try {
+  box-shadow: none !important;
+}
+
+/* Any icon in rotate card (emoji/SVG) – ensure no filter glow */
+body[data-no-flash] #rotateOverlay .rb-icon {
+  filter: none !important;
+}
+
+/* Settings overlay (card + tabs + buttons): kill glow in no-flash mode */
+body[data-no-flash] #panel-settings .ui-panel__card {
+  box-shadow: none !important; 
+}
+
+body[data-no-flash] #panel-settings .settings-tab,
+body[data-no-flash] #panel-settings .settings-tab:hover,
+body[data-no-flash] #panel-settings .settings-tab[aria-selected="true"],
+body[data-no-flash] #panel-settings .settings-tab[aria-pressed="true"] {
+  box-shadow: none !important; 
+}
+
+body[data-no-flash] #panel-settings button {
+  box-shadow: none !important;
 }
