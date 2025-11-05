@@ -78,7 +78,7 @@ function setHooks(hooks) {
 }
 
 // Best score persistence 
-const BEST_SCORE_KEY = 'bestScore';
+const BEST_SCORE_KEY = 'best';
 
 /** Load best score from storage; returns 0 if missing/invalid/unavailable */
 export function loadBestScore() {
@@ -110,7 +110,7 @@ export function setJudgeWindows(newWindows) {
 
 /* --------------------------------------------------------
    Combo multiplier
-   Returns a score multiplier based on the (new) combo length.
+   Returns a score multiplier based on the combo length.
    Tiers example: 0→1.0, ≥10→1.1, ≥25→1.2, ≥50→1.3, ≥100→1.5
 -------------------------------------------------------- */
 function getMultiplierForCombo(comboLen) {               // Compute multiplier from combo length
@@ -160,9 +160,9 @@ const judgeConfig = {
   bpm: 120,           // tempo in beats per minute (controls ETA spacing)
   travelBeats: 2.0,   // how many beats a note travels from spawn to judge line
   windows: {          // centered hit windows (in milliseconds)
-    perfect: 85,      // |Δt| ≤ 50ms → Perfect
-    great:   140,      // |Δt| ≤ 90ms → Great
-    good:   200       // |Δt| ≤ 140ms → Good
+    perfect: 85,      // |Δt| ≤ 85ms → Perfect
+    great:   140,      // |Δt| ≤ 140ms → Great
+    good:   200       // |Δt| ≤ 200ms → Good
   }
 };
 

@@ -1,7 +1,7 @@
 // songplayer.js
 //  Minimal chart-driven song player: loads audio + chart and schedules orb spawns.
 
-import { SONGS } from './songRegistry.js';
+import { SONGS, getSongForLevel } from './songRegistry.js';
 import { spawnJudgedNote, state, setJudgeWindows } from './scoring.js';
 import { LEVELS, simplifyChartForLevel } from './difficulty.js';
 import './audio.js';
@@ -59,7 +59,7 @@ function clearTimers() {
 }
 
 /**
- * startSongById(id, options)
+ * startSongById
  * Brief: Load song + chart, apply difficulty, schedule note spawns, and play audio.
  * Options:
  *  - countdownSec?: number   visual pre-roll before audio starts
@@ -85,6 +85,8 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
   const lvl = LEVELS?.[state.level] || LEVELS?.[1] || {};
   if (lvl && lvl.windows) setJudgeWindows(lvl.windows); // apply level-specific judge windows
 
+  const rate = Number.isFinite(lvl.playbackRate) ? lvl.playbackRate : 1.0;
+
   // Effective fall time (beats): options > level > chart
   const travelBeatsEff =
     typeof travelBeats === 'number'
@@ -94,7 +96,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
    // Prepare audio element
   audio = new Audio(song.audio);                                      // create HTMLAudioElement
   audio.preload = 'auto';                                             // load early
-  audio.playbackRate = Number.isFinite(lvl.playbackRate) ? lvl.playbackRate : 1.0; // speed from level
+  audio.playbackRate = rate;                                          // level playbackRate
   __uiVolume = getSavedVolume();                                      // read saved volume/mute
   audio.volume = __uiVolume;                                          // apply initial volume
 
@@ -140,19 +142,22 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
 
   // Schedule spawns relative to audio start
   const startAt = performance.now();       // wall-clock reference
-  const msPerBeat = 60000 / bpm;           // ms per beat
-  const travelMs = travelBeatsEff * msPerBeat; // lead time so orb arrives at judge
+  // Real-time timings must account for playbackRate
+  const msPerBeatEff = (60000 / bpm) / rate;     // scaled by playbackRate
+  const travelMs     = travelBeatsEff * msPerBeatEff;
+  const offsetEff    = offsetMs / rate;          // scale chart offset with playbackRate too
 
   clearTimers(); // cancel any previous schedule
 
-  // Convert an event to an absolute ms offset from audio start:
-  // Supports fields: timeMs (ms) OR beat (beats) OR time (ms).
+  // Convert an event to an absolute ms offset from audio start
+  // Supports: timeMs (ms), beat (beats), or time (ms). All scaled by playbackRate.
   const getEventTimeMs = (ev) => {
-    if (Number.isFinite(ev.timeMs)) return ev.timeMs;
-    if (Number.isFinite(ev.beat))   return ev.beat * msPerBeat;
-    if (Number.isFinite(ev.time))   return ev.time;
+    if (Number.isFinite(ev.beat))   return ev.beat * msPerBeatEff; // beats → ms (scaled)
+    if (Number.isFinite(ev.timeMs)) return ev.timeMs / rate;       // chart ms scaled
+    if (Number.isFinite(ev.time))   return ev.time / rate;         // treat as ms, scaled
     return null;
   };
+
 
   // Normalize direction field: dir | direction
   const getDir = (ev) => String(ev.dir ?? ev.direction ?? '').toLowerCase();
@@ -166,7 +171,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
     if (!Number.isFinite(eventTime)) return;                      // guard
 
   
-    const targetMs = offsetMs + eventTime;                        // judge moment (ms)
+    const targetMs = offsetEff + eventTime;                        // judge moment (ms)
     const spawnDelay = Math.max(0, targetMs - travelMs);          // delay from audio 0 → spawn
     const dueAt = startAt + spawnDelay;                           // wall-clock timestamp
     const delay = Math.max(0, dueAt - performance.now());         // non-negative delay
@@ -180,7 +185,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
   events.forEach(scheduleOne); // schedule all chart events
 
 // stop shortly after the last chart event; ensures results overlay shows
-(function scheduleChartCutoff() {
+ (function scheduleChartCutoff() {
   //compute last event time in ms
   const lastEventMs = events.reduce((max, ev) => {
     const t = getEventTimeMs(ev);
@@ -192,7 +197,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
 
   //small grace so the last note clears the judge line
   const stopPadMs = Math.round(travelMs * 0.70);
-  const plannedStopMs = offsetMs + lastEventMs + stopPadMs;
+  const plannedStopMs = offsetEff + lastEventMs + stopPadMs;
 
   // schedule hard stop on wall clock
   const stopDueAt = startAt + plannedStopMs;
@@ -219,5 +224,14 @@ function stopSong(reason = 'stopped') {
   current = null;
 }
 
+
+// Convenience: start song chosen by current level mapping
+async function startSongForLevel(level, options) {
+  const song = getSongForLevel(level);
+  return startSongById(song?.id, options);
+}
+
 /* ---- exports ---- */
-export { startSongById, stopSong };
+export { stopSong, startSongForLevel };
+
+

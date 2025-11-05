@@ -99,7 +99,7 @@ function setMasterVolume(v) {
 /* Bridge from Settings UI: apply master volume when event fires */
 window.addEventListener('audio:setMasterVolume', (e) => {
   const v = (e && e.detail && typeof e.detail.volume === 'number') ? e.detail.volume : 0;
-  try { setMasterVolume(v); } catch (_) { /* context may not exist yet */ }
+  try { setMasterVolume(v); } catch (_) { /* context not exist yet */ }
 });
 
 /* Simple playing flag getter */

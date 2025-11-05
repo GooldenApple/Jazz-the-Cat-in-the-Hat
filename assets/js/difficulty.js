@@ -5,7 +5,7 @@ export const LEVELS = {
     windows: { perfect: 110, great: 180, good: 260 }, // ms
     // Slow visuals + audio:
     travelBeats: 3.2,         // orbs speed fall
-    playbackRate: 1.0,       // slow the song a bit
+    playbackRate: 0.9,       // slow the song a bit
     // Simplicity rules:
     chordPolicy: 'single',    // never require two notes at once
     maxSimultaneous: 1,
@@ -19,7 +19,7 @@ export const LEVELS = {
     name: 'Easy',
     windows: { perfect: 100, great: 170, good: 230 },
     travelBeats: 3.0,      
-    playbackRate: 1.0,
+    playbackRate: 0.95,
     chordPolicy: 'single',
     maxSimultaneous: 1,
   
@@ -48,7 +48,7 @@ export const LEVELS = {
     name: 'Casual+',
     windows: { perfect: 85, great: 150, good: 210 },
     travelBeats: 2.8,
-    playbackRate: 1.0,
+    playbackRate: 1.1,
     chordPolicy: 'single',
     maxSimultaneous: 1,
     minGapBeats: 2.0,
@@ -57,7 +57,7 @@ export const LEVELS = {
     chordWindowMs: 38,
     allowSyncopation: false,
   },
-  //TODO add more levels
+    //TODO add more levels
 };
 
 /**
@@ -152,7 +152,7 @@ export function simplifyChartForLevel(rawNotes, bpm, lvlCfg) {
     lastByLane[ev.dir] = ev.timeMs;
   }
 
-  // 5) Optional final pass: guarantee “one note at a time” if antiSimWindowMs > 0.
+  // 5) final pass: guarantee “one note at a time” if antiSimWindowMs > 0.
   const anti = lvl.antiSimWindowMs ?? 0;
   if (anti > 0) {
     const finalOut = [];

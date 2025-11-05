@@ -6,31 +6,87 @@ console.log('[ui] module loaded');
 /* ---------------------------
    UI related functions
 ---------------------------- */
-// Storage key for settings (must be declared before loadSettings/saveSettings are used)
+// Storage key for settings, declared before loadSettings/saveSettings are used
 const SETTINGS_KEY = 'settings';
 /* ----------------------------------------
-   Screen reader live-region + srSpeak (single instance)
+   Screen reader live-region 
+   Looks for #srLive; falls back to legacy #srRegion; otherwise creates #srLive.
 ---------------------------------------- */
-let srRegion = document.getElementById('srRegion');
+let srRegion =
+  document.getElementById('srLive') ||
+  document.getElementById('srRegion');
+
 if (!srRegion) {
   srRegion = document.createElement('div');
-  srRegion.id = 'srRegion';
-  srRegion.className = 'sr-only';           // har display: none visuellt men läsbar för SR
+  srRegion.id = 'srLive';
+  srRegion.className = 'sr-only';
+  srRegion.setAttribute('role', 'status');
   srRegion.setAttribute('aria-live', 'polite');
   srRegion.setAttribute('aria-atomic', 'true');
   document.body.appendChild(srRegion);
+} else {
+  // Normalize attributes for existing node
+  srRegion.id = 'srLive';
+  srRegion.classList.add('sr-only');
+  srRegion.setAttribute('role', 'status');
+  srRegion.setAttribute('aria-live', 'polite');
+  srRegion.setAttribute('aria-atomic', 'true');
 }
 
 /** Announce a short message to screen readers. */
 function srSpeak(msg = '') {
   if (!srRegion) return;
-  
   srRegion.textContent = '';
+  // force a DOM mutation in a separate task so AT re-announces
   setTimeout(() => { srRegion.textContent = String(msg); }, 30);
 }
 
+/* ----------------------------------------
+   Note metrics: measure once, cache, and re-measure on layout changes.
+---------------------------------------- */
+let _noteBox = { w: 40, h: 40 }; // safe defaults until first measure
 
-// Overlay (Play/Pause) controls 
+function measureNoteBox() {
+  // Create a detached note for measurement (off-screen)
+  const el = document.createElement('div');
+  el.className = 'note note-left';        // any note-* will have same size
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  el.style.top = '-9999px';
+  el.style.pointerEvents = 'none';
+  document.body.appendChild(el);
+
+  const rect = el.getBoundingClientRect();
+  _noteBox = {
+    w: Math.max(1, Math.round(rect.width)),
+    h: Math.max(1, Math.round(rect.height)),
+  };
+  el.remove();
+  return _noteBox;
+}
+
+function getNoteBox() {
+  return _noteBox;
+}
+
+function scheduleReMeasureNoteBox() {
+  requestAnimationFrame(measureNoteBox);
+}
+
+// Initial measure
+if (document.readyState !== 'loading') {
+  measureNoteBox();
+} else {
+  document.addEventListener('DOMContentLoaded', measureNoteBox, { once: true });
+}
+// Re-measure when fonts load (rem-based sizes settle)
+document.fonts?.ready?.then(measureNoteBox);
+// Re-measure on viewport/orientation changes
+window.addEventListener('resize', scheduleReMeasureNoteBox);
+window.addEventListener('orientationchange', scheduleReMeasureNoteBox);
+
+
+// **Overlay (Play/Pause) controls */
 
 const overlayEl = document.getElementById('overlay');
 const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null;
@@ -190,6 +246,29 @@ function updatePlayMenuLabel() {
   }
 }
 
+/* Binds quick and navbar Play/Pause buttons to emit intents */
+// Note: Uses body flags (data-paused/data-starting);
+function wireMenuPlayToggle() {
+  const quick = document.getElementById('quickPlayPause');     // floating round button
+  const menu  = getMenuPlayToggle();                            // navbar Play/Pause
+  const targets = [quick, menu].filter(Boolean);                // keep existing ones
+
+  targets.forEach((btn) => {
+    if (btn.dataset.wired === 'true') return;                   // avoid double binding
+    btn.dataset.wired = 'true';                                 // mark as wired
+
+    btn.addEventListener('click', () => {
+      const isStarting = document.body.getAttribute('data-starting') === 'true'; // countdown phase
+      const isRunning  = !document.body.hasAttribute('data-paused');             // visuals unpaused
+      if (isStarting || isRunning) {
+        window.dispatchEvent(new CustomEvent('ui:requestPause'));                // request pause
+      } else {
+        window.dispatchEvent(new CustomEvent('ui:requestStartRun'));             // request start
+      }
+    });
+  });
+}
+
 
 
 /**
@@ -222,6 +301,8 @@ function wirePlayButton() {
      Purpose: Wire navbar buttons to open panels and attach close handlers.
   ---------------------------------------- */
 function bindControls() {
+
+  wireMenuPlayToggle();                        // wire Play/Pause buttons once (guarded by data-wired)
 
   const map = {                                         // maps actions to panel ids
     tutorial: 'tutorial',                                // tutorial panel
@@ -298,13 +379,11 @@ document.querySelectorAll('#primaryNav .nav-btn')                   // scan nav 
     return; 
   }
 
-  // Desktop - open panel  
-  openPanel('settings');
-  selectSettingsTab(targetTab);
-});
-
+    // Desktop - open panel  
+    openPanel('settings');
+    selectSettingsTab(targetTab);
   });
-
+});
 }
 
 
@@ -424,27 +503,31 @@ function setFeedback(label, flash) {
   }, FEEDBACK_CLEAR_MS);
 }
 
-// === Topbar auto-height -> updates CSS var --topbar-h ===
-// Purpose: Measure the real header height (including fonts + open/close of the burger menu)
-// and push it into CSS as --topbar-h so the stage/overlay/rails align perfectly.
-function setTopbarCSSVar() {
-  const tb = document.querySelector('.topbar');
-  if (!tb) return;
-  const h = Math.round(tb.getBoundingClientRect().height);
-  document.documentElement.style.setProperty('--topbar-h', `${h}px`);
-  // Useful hook if anything else needs to react to layout changes
-  window.dispatchEvent(new CustomEvent('ui:layoutChanged', { detail: { topbarHeight: h }}));
+/* ==========================================================
+   Layout measurements (DISABLED)
+   We do not measure header/controls or write CSS vars anymore.
+   CSS-only layout manages the vertical sizing now.
+   ========================================================== */
+
+
+/* Wires resize/orientation/font-load listeners — disabled */
+function initTopbarAutoHeight() {
+  // Fire a neutral event once so any listeners won't break.
+  try {
+    window.dispatchEvent(new CustomEvent('ui:layoutChanged', { detail: { topbarHeight: 0 } }));
+  } catch (_) { /* no-op */ }
 }
 
-// Wires resize/orientation/font-load listeners so the value stays fresh.
-function initTopbarAutoHeight() {
-  setTopbarCSSVar(); // initial measurement
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => setTopbarCSSVar());     // Re-measure once webfonts finish loading 
+/* Guard: remove any leftover inline CSS vars */
+(function guardLegacyLayoutCalls() {
+  const s = document?.documentElement?.style;
+  if (s) {
+    s.removeProperty('--topbar-h');
   }
-  window.addEventListener('resize', setTopbarCSSVar);
-  window.addEventListener('orientationchange', setTopbarCSSVar);
-}
+})();
+
+
+
 // === Navbar collapse sync (Bootstrap) ===
 // Purpose: keep body[data-nav-open] in sync with Bootstrap's collapse
 // and re-measure --topbar-h at both start and end of the transition.
@@ -459,12 +542,11 @@ function initNavbarCollapseSync() {
   const markOpen  = () => {
     document.body.setAttribute('data-nav-open', 'true');
     togglerEl.setAttribute('aria-expanded', 'true');
-    setTopbarCSSVar(); // re-measure since header height changes
+    
   };
   const markClose = () => {
     document.body.removeAttribute('data-nav-open');
     togglerEl.setAttribute('aria-expanded', 'false');
-    setTopbarCSSVar(); // re-measure after closing
   };
 
   // Fire at the start of the transition (prevents quick-PP/menu collisions)
@@ -481,12 +563,9 @@ function initNavbarCollapseSync() {
   normalizeForViewport();
   mqLgUp.addEventListener('change', normalizeForViewport);
 
-  // Force a measure shortly after toggle clicks (some devices animate height late)
-  togglerEl.addEventListener('click', () => {
-    requestAnimationFrame(() => setTimeout(setTopbarCSSVar, 50));
-  });
-
 }
+
+
 /* ----------------------------------------
    createHeart
    Purpose: Build one SVG heart with a given visual state.
@@ -568,22 +647,32 @@ function getRailsMap() {
 /* Calculates the pixel distance from the rail top to the center of the judge line */
 function getJudgeDistancePx(railEl) {
   if (!railEl) return 0; // guard
-  const stageTop = railEl.getBoundingClientRect().top; // rail top Y
-  const judge = document.querySelector('.judge-line'); // judge hook
+
+  const stageTop = railEl.getBoundingClientRect().top;
+  const judge = document.querySelector('.judge-line');
+  const { h: noteH } = getNoteBox();             // measured .note height
+
   if (!judge) {
-    return Math.max(0, railEl.clientHeight * 0.62 - 20); // fallback approximation
+    // Fallback: approximate the judge at ~--judge-rel and center the note
+    return Math.max(0, railEl.clientHeight * 0.62 - (noteH / 2));
   }
-  const targetY = judge.getBoundingClientRect().top + (judge.clientHeight / 2); // center Y
-  const dist = Math.max(0, targetY - stageTop - 9); // distance to align note center
+
+  const jr = judge.getBoundingClientRect();
+  const judgeCenterY = jr.top + (jr.height / 2);
+
+  // Distance from rail top to judge center, minus half the note height
+  const dist = Math.max(0, judgeCenterY - stageTop - (noteH / 2));
   return dist;
 }
 
+
 /* Calculates the pixel distance from the rail top to where the note ends at the bottom */
 function getBottomDistancePx(railEl) {
-  if (!railEl) return 0; // guard
-  const NOTE_H = 40; // must match CSS .note height
-  return Math.max(0, railEl.clientHeight - NOTE_H); // bottom stop
+  if (!railEl) return 0;                         // guard
+  const { h } = getNoteBox();                    // measured .note height in px
+  return Math.max(0, railEl.clientHeight - h);   // bottom stop
 }
+
 
 
 /* ----------------------------------------
@@ -1008,17 +1097,16 @@ function renderHighScorePane() {
 
 /* ----------------------------------------
    selectSettingsTab
-   Purpose: Switch panes and hide the active tab's button in the tab bar.
+   Purpose: Switch panes; keep all tab buttons visible and mark active with aria-selected.
    Notes:
    - 'settings' is treated as alias for the 'audio' pane.
-   - The active tab button gets .hidden + aria-hidden + tabindex=-1.
 ---------------------------------------- */
 function selectSettingsTab(name) {
   // Treat "settings" as the "audio" (home) pane
   if (name === 'settings') name = 'audio';
 
   // Grab all tab buttons and pane nodes
-  const tabs = document.querySelectorAll('.settings-tab');          
+  const tabs = document.querySelectorAll('.settings-tab');
   const panes = {
     audio:         document.getElementById('settingsPane-audio'),
     accessibility: document.getElementById('settingsPane-accessibility'),
@@ -1035,25 +1123,23 @@ function selectSettingsTab(name) {
     el.toggleAttribute('aria-hidden', !show);
   });
 
-  // Hide the active tab button; show the rest
+  // Keep all tab buttons visible; mark active with aria-selected
   tabs.forEach((btn) => {
-    // Button may be labeled "settings" in markup; map that to 'audio'
-    const btnName = (btn.dataset.settingsTab === 'settings') ? 'audio' : btn.dataset.settingsTab;
+    const raw = btn.dataset.settingsTab || 'audio';
+    const btnName = (raw === 'settings') ? 'audio' : raw;
     const isActive = btnName === name;
-
-    // Selection state for a11y
     btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-
-    // Hide the active tab button completely; restore others
-    btn.classList.toggle('hidden', isActive);
-    btn.toggleAttribute('aria-hidden', isActive);
-    btn.setAttribute('tabindex', isActive ? '-1' : '0');
+    btn.removeAttribute('aria-hidden');
+    btn.classList.remove('hidden');
+    btn.setAttribute('tabindex', '0'); // keep tabs focusable
   });
-   //  if highscore tab, refresh the value
+
+  // If highscore tab is active, refresh value
   if (name === 'highscore') {
     renderHighScorePane();
   }
 }
+
 
 
 /* ----------------------------------------
@@ -1087,9 +1173,9 @@ export {
   // Overlay (Play/Pause)
   overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton, setOverlayIcon,
   // Navbar Play/Pause sync
-  getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel,
+  getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel, wireMenuPlayToggle,
   // Navbar collapse (Bootstrap)
-  initNavbarCollapseSync, initTopbarAutoHeight, setTopbarCSSVar,
+  initNavbarCollapseSync, initTopbarAutoHeight,
   // Feedback / judge flash 
   judgeFlash, setFeedback,
   // Hearts

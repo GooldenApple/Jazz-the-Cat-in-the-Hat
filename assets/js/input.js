@@ -47,7 +47,7 @@ function applyMove(moveClass) {
 
 /* ----------------------------------------
    Convenience move triggers
-   Purpose: Small wrappers for clarity (used by inputs).
+   Purpose: Small wrappers for clarity.
 ---------------------------------------- */
 function doLeftMove()  { applyMove('move-left');  } // triggers left move
 function doRightMove() { applyMove('move-right'); } // triggers right move
@@ -67,8 +67,8 @@ function wireMoveButtons() {
       if (dir === 'right') { doRightMove(); gradeHit('right'); }        // plays right and judges
       if (dir === 'up')    { doUpMove();    gradeHit('up');    }        // plays up and judges
       if (dir === 'down')  { doDownMove();  gradeHit('down');  }        // plays down and judges
-    });                                                                 // ends click handler
-  });                                                                    // ends forEach
+    });
+  }); 
 }
 
 /* ----------------------------------------
@@ -88,7 +88,7 @@ function wireMoveKeyboard() {
     if (e.key === 'ArrowRight') { doRightMove(); gradeHit('right'); return; } // handles right
     if (e.key === 'ArrowUp')    { doUpMove();    gradeHit('up');    return; } // handles up
     if (e.key === 'ArrowDown')  { doDownMove();  gradeHit('down');  return; } // handles down
-  });                                                                    // ends keydown listener
+  });
 }
 
 /* ----------------------------------------
@@ -102,7 +102,7 @@ function initMoveControls() {
 
 /* Play/Pause toggle buttons
    Wires both the quick button and the navbar menu button to emit intents; UI/playback is handled elsewhere. */
-function wireMenuPlayToggle() {
+/*function wireMenuPlayToggle() {
   // gather both possible toggles (quick + navbar)
   const targets = [
     document.getElementById('quickPlayPause'),  // always-visible quick button
@@ -125,11 +125,11 @@ function wireMenuPlayToggle() {
     });
   });
 }
-
+*/
 
 /* ---------------------------
    Export all Input functions
 ---------------------------- */
 export {
-  initMoveControls, wireMenuPlayToggle, doLeftMove, doRightMove, doUpMove, doDownMove, // exposes API
+  initMoveControls, doLeftMove, doRightMove, doUpMove, doDownMove, 
 };
