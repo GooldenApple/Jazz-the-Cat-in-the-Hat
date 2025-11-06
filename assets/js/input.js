@@ -4,15 +4,12 @@ import { state, gradeHit } from './scoring.js'; // imports game state and judgin
 // --- TEMP DEBUG ---
 console.log('[input] module loaded'); // logs that this module loaded
 
-/* =============================
-   MOVE CONTROLLER (CSS-driven)
-   - Adds/removes .move-left/right/up/down on #dancer.
-   ============================= */
+// MOVE CONTROLLER (CSS-driven)
 
-/* ----------------------------------------
-   removeAllMoveClasses
-   Purpose: Ensure only one move class lives at a time.
----------------------------------------- */
+/*
+ *removeAllMoveClasses
+ *Purpose: Ensure only one move class lives at a time.
+ */
 function removeAllMoveClasses(dancer) {
   dancer.classList.remove('move-left');   // removes left class
   dancer.classList.remove('move-right');  // removes right class
@@ -20,11 +17,12 @@ function removeAllMoveClasses(dancer) {
   dancer.classList.remove('move-down');   // removes down class
 }
 
-/* ----------------------------------------
-   applyMove
-   Purpose: Force-restart CSS animation by reflow; clean up on first animation end.
-   Usage: applyMove('move-left')
----------------------------------------- */
+/**
+  *applyMove
+  *Purpose: Force-restart CSS animation by reflow; clean up on first animation end.
+  *Usage: applyMove('move-left')
+  */
+
 function applyMove(moveClass) {
   if (!state.running) return;                              // exits when game is paused
   const dancer = document.getElementById('dancer');       // reads dancer element
@@ -45,10 +43,11 @@ function applyMove(moveClass) {
   dancer.addEventListener('animationcancel', onEnd,{ once:false }); // listens for animation cancel
 }
 
-/* ----------------------------------------
-   Convenience move triggers
-   Purpose: Small wrappers for clarity.
----------------------------------------- */
+/**
+  *Convenience move triggers
+  *Purpose: Small wrappers for clarity.
+  */
+
 function doLeftMove()  { applyMove('move-left');  } // triggers left move
 function doRightMove() { applyMove('move-right'); } // triggers right move
 function doUpMove()    { applyMove('move-up');    } // triggers up move
@@ -56,25 +55,56 @@ function doDownMove()  { applyMove('move-down');  } // triggers down move
 
 /* ----------------------------------------
    wireMoveButtons
-   Purpose: Map on-screen DDR buttons to moves + judge.
+   Purpose: Map on-screen DDR buttons to moves + judge with snappy mobile touch.
+   Notes:
+   - Uses pointerdown for instant feedback on touch/pen.
+   - Filters the subsequent "ghost" click so we don't double-fire.
+   - Ignores non-left mouse buttons.
+   - Keeps keyboard activation via the click listener.
 ---------------------------------------- */
 function wireMoveButtons() {
-  document.querySelectorAll('.ctrl-btn').forEach((btn) => {            // iterates all control buttons
-    btn.addEventListener('click', () => {                               // handles click/tap
-      const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // reads direction attribute
-      if (!state.running) return;                                       // exits if paused
-      if (dir === 'left')  { doLeftMove();  gradeHit('left');  }        // plays left and judges
-      if (dir === 'right') { doRightMove(); gradeHit('right'); }        // plays right and judges
-      if (dir === 'up')    { doUpMove();    gradeHit('up');    }        // plays up and judges
-      if (dir === 'down')  { doDownMove();  gradeHit('down');  }        // plays down and judges
+  document.querySelectorAll('.ctrl-btn').forEach((btn) => {
+    const dir = String(btn.getAttribute('data-dir') || '').toLowerCase(); // read lane
+
+    // Small helper to trigger the correct move + judge
+    const fire = () => {
+      if (!state.running) return;                      // no input if paused
+      if (dir === 'left')  { doLeftMove();  gradeHit('left');  return; }
+      if (dir === 'right') { doRightMove(); gradeHit('right'); return; }
+      if (dir === 'up')    { doUpMove();    gradeHit('up');    return; }
+      if (dir === 'down')  { doDownMove();  gradeHit('down');  return; }
+    };
+
+    let lastPointerDown = 0;                           // timestamp to filter ghost clicks
+
+    // Instant response for touch/pen; preserve mouse focus behavior
+    btn.addEventListener('pointerdown', (e) => {
+      // Ignore non-left mouse buttons (right/middle)
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+      // For touch/pen, prevent default to avoid delayed "ghost" click
+      if (e.pointerType !== 'mouse' && e.cancelable) e.preventDefault();
+
+      lastPointerDown = performance.now();            // record time to filter next click
+      fire();                                         // trigger move + judge immediately
+
+      // Tiny haptic nudge on mobile (best-effort)
+      try { if (e.pointerType !== 'mouse') navigator.vibrate?.(10); } catch (_) {}
+    }, { passive: false });
+
+    // Fallback for keyboard (Space/Enter dispatches click) and mouse
+    btn.addEventListener('click', (e) => {
+      // If a pointerdown just happened, this is likely the ghost click → skip
+      if ((performance.now() - lastPointerDown) < 400) return;
+      fire();                                         // trigger for keyboard/mouse click
     });
-  }); 
+  });
 }
 
-/* ----------------------------------------
-   wireMoveKeyboard
-   Purpose: Map Arrow keys to moves + judge (no repeats).
----------------------------------------- */
+/**
+  *wireMoveKeyboard
+  *Purpose: Map Arrow keys to moves + judge (no repeats).
+*/
 function wireMoveKeyboard() {
   window.addEventListener('keydown', (e) => {                           // listens for keydown
     if (e.repeat) return;                                               // ignores repeat presses
@@ -91,45 +121,20 @@ function wireMoveKeyboard() {
   });
 }
 
-/* ----------------------------------------
-   initMoveControls
-   Purpose: Public setup to connect both input types.
----------------------------------------- */
+/**
+  *initMoveControls
+  *Purpose: Public setup to connect both input types.
+  */
+
 function initMoveControls() {
   wireMoveButtons();   // wires on-screen controls
   wireMoveKeyboard();  // wires keyboard controls
 }
 
-/* Play/Pause toggle buttons
-   Wires both the quick button and the navbar menu button to emit intents; UI/playback is handled elsewhere. */
-/*function wireMenuPlayToggle() {
-  // gather both possible toggles (quick + navbar)
-  const targets = [
-    document.getElementById('quickPlayPause'),  // always-visible quick button
-    document.getElementById('menuPlayToggle')   // navbar/hamburger Play/Pause button
-  ].filter(Boolean);                             // keep only existing elements
 
-  if (targets.length === 0) return;              // nothing to wire
 
-  targets.forEach((btn) => {
-    if (btn.dataset.wired === 'true') return;    // avoid duplicate listeners
-    btn.dataset.wired = 'true';                  // mark as wired once
+//Export all Input functions
 
-    btn.addEventListener('click', () => {        // handle button click
-      const isStarting = document.body.getAttribute('data-starting') === 'true'; // countdown phase
-      if (state.running || isStarting) {         // treat countdown as running-like
-        window.dispatchEvent(new CustomEvent('ui:requestPause'));   // emit pause intent
-        return;
-      }
-      window.dispatchEvent(new CustomEvent('ui:requestStartRun'));  // emit start intent
-    });
-  });
-}
-*/
-
-/* ---------------------------
-   Export all Input functions
----------------------------- */
 export {
   initMoveControls, doLeftMove, doRightMove, doUpMove, doDownMove, 
 };
