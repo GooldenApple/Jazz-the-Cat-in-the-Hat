@@ -1363,6 +1363,20 @@ body::before {
   display: none;
 }
 
+
+/* Center the tip text above the Play button */
+#overlay .play-tip {
+  display: block;               /* block so text-align applies cleanly */
+  text-align: center;           /* center the multi-line text */
+  max-inline-size: 92vw;        /* keep it from stretching edge-to-edge */
+  padding: 0 0.5rem;            /* tiny side breathing room */
+  line-height: 1.2;             /* readable line spacing */
+  color: var(--ink);
+  text-shadow: var(--text-glow);
+  font-size: clamp(0.9rem, 2.8vw, 1.15rem);
+}
+
+
 .play-cta {
   position: absolute;
   top: 34dvh;

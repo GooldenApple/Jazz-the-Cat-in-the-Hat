@@ -24,6 +24,7 @@ import {
   setOverlayIcon,
   initTopbarAutoHeight,
   wireMenuPlayToggle,
+  setPlayTip,
   
 
 } from './ui.js';
@@ -50,26 +51,6 @@ import { startSongForLevel, stopSong } from './songPlayer.js'; // song engine en
 // --- TEMP DEBUG: module loaded ---
 console.log('[game] module loaded'); // prints that this module loaded
 
-/* ----------------------------------------
-   Read countdown setting (0/3/5) safely
----------------------------------------- */
-/*function getStartCountdownSeconds() {
-  // First, try the live bag written by UI 
-  const w = Number(window.__settings?.countdown);
-  if (Number.isFinite(w)) return w;
-
-  // Fallback: read from localStorage 
-  try {
-    const raw = localStorage.getItem('settings');
-    if (raw) {
-      const s = JSON.parse(raw);
-      const v = Number(s?.countdown);
-      if (Number.isFinite(v)) return v;
-    }
-  } catch {}
-  return 3; // final fallback
-}
-*/
 /* ------------------
    Countdown seconds 
 -------------------- */
@@ -128,9 +109,10 @@ function runOverlayCountdown(seconds = 3) {
   }, 1000);                                          // 1 second per tick
 }
 
-/* =============================
-   DOMContentLoaded bootstrap - Wire everything once DOM is ready.
-   ============================= */
+
+
+/* DOMContentLoaded bootstrap - Wire everything once DOM is ready. */
+
 
 document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readiness
   try {                                                   // guards initialization
@@ -147,35 +129,33 @@ document.addEventListener('DOMContentLoaded', () => {     // waits for DOM readi
     updateHUD(getSnapshot());                             // paints initial HUD
     console.log('[game] initial HUD rendered');           // logs HUD paint
 
-    setOverlayLabel('Play');                              // sets default overlay label
+    setOverlayLabel('Play');                              // sets default overlay label        
+    setPlayTip('hit the correct arrow when a orb cross the neon target!'); // tip above the button
+    document.body.setAttribute('data-paused', 'true');     // marks visuals paused
+    updatePlayMenuLabel();                                  // syncs navbar/quick labels
+
+
     document.body.setAttribute('data-paused', 'true');    // marks visuals paused
     updatePlayMenuLabel();                                // syncs navbar/quick labels
     console.log('[game] paused attr set:',                // logs paused flag presence
       document.body.hasAttribute('data-paused'));         // prints boolean
 
-// Start run request → always go through startLevelWithCountdown()
-window.addEventListener('ui:requestStartRun', async () => {
-  await startLevelWithCountdown();
-});
+    // Start run request → always go through startLevelWithCountdown()
+    window.addEventListener('ui:requestStartRun', async () => {
+      await startLevelWithCountdown();
+  });
 
-/* Helper: read countdown seconds from Settings (fallback 3s) */
-/*function getCountdownSec() {
-  const s = window.__settings;
-  const v = s && typeof s.countdown !== 'undefined' ? Number(s.countdown) : NaN;
-  return Number.isFinite(v) && v >= 0 ? v : 3;
-}
-*/
 
-/* song:ready — prepare the overlay for countdown and clean panels before playback starts */
-window.addEventListener('song:ready', () => {
-  cancelOverlayCountdown();                               // stop any previous countdown timers to avoid stale label updates
-  showOverlay();                                          // make the overlay layer visible for the countdown
-  document.body.setAttribute('data-paused', 'true');      // freeze stage animations during the countdown phase
+  /* song:ready — prepare the overlay for countdown and clean panels before playback starts */
+  window.addEventListener('song:ready', () => {
+    cancelOverlayCountdown();                               // stop any previous countdown timers to avoid stale label updates
+    showOverlay();                                          // make the overlay layer visible for the countdown
+    document.body.setAttribute('data-paused', 'true');      // freeze stage animations during the countdown phase
 
   const res = document.getElementById('resultsCta');      // get Results panel
   const go  = document.getElementById('gameOverCta');     // get Game Over panel
-  if (res) res.classList.add('hidden');                   // hide Results if it was visible from a prior run
-  if (go)  go.classList.add('hidden');                    // hide Game Over if it was visible from a prior run
+    if (res) res.classList.add('hidden');                   // hide Results if it was visible from a prior run
+    if (go)  go.classList.add('hidden');                    // hide Game Over if it was visible from a prior run
 
   const baseCta = document.querySelector('#overlay .play-cta'); // get the base CTA (round button + label)
   if (baseCta) baseCta.classList.remove('hidden');        // ensure base CTA is visible (so the label shows the countdown)
@@ -186,10 +166,11 @@ window.addEventListener('song:ready', () => {
 });
 
 
-    /* =========================================
-       Song lifecycle: song:started
-       Brief: When audio actually starts, unfreeze visuals, enable input, sync UI, and hide overlay.
-       ========================================= */
+  /* 
+   *Song lifecycle: song:started
+   *Brief: When audio actually starts, unfreeze visuals, enable input, sync UI, and hide overlay.
+   */
+
     window.addEventListener('song:started', () => {               // reacts to audio start
       cancelOverlayCountdown();
       document.body.removeAttribute('data-paused');               // unfreezes visuals
@@ -201,7 +182,7 @@ window.addEventListener('song:ready', () => {
     });                                                           // done song:started
 
 
-    /** Handle a UI pause request by stopping playback with reason "paused". */
+    // Handle a UI pause request by stopping playback with reason "paused".
     window.addEventListener('ui:requestPause', () => {            // reacts to pause intent
       cancelOverlayCountdown();                                   // stop any active 3-2-1 / "GO!" timers immediately
       try { stopSong('paused'); } catch {}                        // stops playback and showPauseOverlay

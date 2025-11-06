@@ -92,10 +92,13 @@ const overlayEl = document.getElementById('overlay');
 const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null;
 const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null;
 const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null;
-/* 
-    showOverlay / hideOverlay / setOverlayLabel
-    Purpose: Visual helpers for the CTA/pause overlay.
+
+
+/**
+ *showOverlay / hideOverlay / setOverlayLabel
+ *Purpose: Visual helpers for the CTA/pause overlay.
  */
+
 function showOverlay() {
   const el = document.getElementById('overlay');     // lookup fresh
   if (el) el.classList.remove('hidden');             // reveal overlay
@@ -111,12 +114,38 @@ function setOverlayLabel(text) {
   if (label) label.textContent = text;                          // set label
 }
 
+/**
+ * setPlayTip
+ * Brief: Ensure a tip line exists above the round play button and set its text.
+ * Usage:
+ *   setPlayTip('hit the correct arrow when a orb cross the neon target!');
+ */
+
+function setPlayTip(text = '') {
+  // fresh lookups to avoid stale refs
+  const overlay = document.getElementById('overlay');              // overlay root
+  if (!overlay) return;                                            // guard if missing
+
+  const cta = overlay.querySelector('.play-cta');                  // base CTA shell
+  if (!cta) return;                                                // guard if missing
+
+  // Find or create the tip node that lives ABOVE the button
+  let tip = cta.querySelector('.play-tip');                        // existing node?
+  if (!tip) {
+    tip = document.createElement('div');                           // create it once
+    tip.className = 'play-tip';                                    // class for styling if needed
+    cta.insertBefore(tip, cta.firstChild);                         // first child → above button
+  }
+
+  tip.textContent = String(text);                                  // set/update copy
+}
 
 
-/* ----------------------------------------
-   Rotate Overlay — shared refs
-   I keep these at module scope so the helpers below can use them.
----------------------------------------- */
+/**
+ *Rotate Overlay — shared refs
+ *I keep these at module scope so the helpers below can use them.
+*/
+
 const body = document.body; // quick body ref
 const rotateOverlay = document.getElementById('rotateOverlay'); // rotate overlay root
 const rotateCloseBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; // close button
@@ -1177,7 +1206,7 @@ export {
   // HUD toggle
   HUD_MODE_KEY, getHudInlineMode, setHudInlineMode, toggleHudInline, wireHudInlineToggle,
   // Overlay (Play/Pause)
-  overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton, setOverlayIcon,
+  overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton, setOverlayIcon,setPlayTip,
   // Navbar Play/Pause sync
   getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel, wireMenuPlayToggle,
   // Navbar collapse (Bootstrap)
