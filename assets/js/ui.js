@@ -421,10 +421,10 @@ function setHudInlineMode(mode) {
 
   // visible text + icon glyph
   if (v === 'expanded') {                                              // expanded → show "collapse"
-    icon.textContent = '▾';                                            // down chevron
+    icon.textContent = '▴';                                            // down chevron
     text.textContent = 'Collapse HUD';                                 // button text
   } else {                                                             // collapsed → show "expand"
-    icon.textContent = '▸';                                            // right chevron
+    icon.textContent = '▾';                                            // right chevron
     text.textContent = 'Expand HUD';                                   // button text
   }
 }
@@ -549,7 +549,13 @@ function initNavbarCollapseSync() {
     togglerEl.setAttribute('aria-expanded', 'false');
   };
 
+  // pause game as soon as the burger starts opening
+  const pauseOnOpen = () => {
+    window.dispatchEvent(new CustomEvent('ui:requestPause'));
+  };
+
   // Fire at the start of the transition (prevents quick-PP/menu collisions)
+  collapseEl.addEventListener('show.bs.collapse',  pauseOnOpen);
   collapseEl.addEventListener('show.bs.collapse',  markOpen);
   collapseEl.addEventListener('hide.bs.collapse',  markClose);
   // Confirm at the end as well (safety)
