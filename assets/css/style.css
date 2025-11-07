@@ -92,7 +92,7 @@ body,
 /* Page shell */
 body {
   background-color: var(--bg);
-  background-image: url("../images/background.png.png");
+  background-image: url("../images/background.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -247,55 +247,53 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   box-shadow: 0 0 0.625rem rgba(0, 255, 213, 0.35);
 }
 
-/* =========================
-   Quick Play/Pause button
-========================= */
+
+/* =============================
+   Quick Play/Pause — icon-only
+   - Fully transparent background
+   - Neon glow on the glyph only
+   - Same row as topbar/HUD (tweak top if needed)
+============================= */
 .quick-pp {
-  position: fixed;
-  top: calc(4rem + 0.5rem);
-  right: max(1rem, env(safe-area-inset-right));
-  inline-size: 3.5rem;
-  block-size: 3.5rem;
-  border-radius: 50%;
-  background: var(--hud-bg, rgba(18, 27, 52, 0.78));
-  color: var(--neon-cyan);
-  border: 0.25rem solid rgba(166, 77, 255, 0.45);
-  display: grid;
-  place-items: center;
- /* align-items: center;
-  justify-content: center;*/
-  cursor: pointer;
-  z-index: 2302;
-  font-size: 1.5rem;
-  padding: 0;
+  position: fixed;                                  /* pin to viewport */
+  top: calc(var(--topbar-h, 4rem) + 2.5rem);        /* align with HUD row */
+  right: max(1rem, env(safe-area-inset-right));     /* keep safe area on iOS */
+  inline-size: 3rem;                                 /* large hit target */
+  block-size: 3rem;                                  /* same as width */
+  display: grid;                                     /* center the glyph */
+  place-items: center;                               /* center both axes */
+  background: transparent;                           /* let stage show through */
+  border: 0;                                         /* remove ring */
+  border-radius: 0;                                  /* no circle */
+  box-shadow: none;                                  /* no halo box */
+  backdrop-filter: none;                             /* no blur panel */
+  padding: 0;                                        /* no offset */
+  cursor: pointer;                                   /* clickable */
+  z-index: 2302;                                     /* above rails */
 }
+
 .quick-pp:active {
-  transform: scale(0.92);
+  transform: scale(0.95);                            /* small tap feedback */
 }
 
-
-/* Quick Play/Pause — draw the glyph via ::before; uses aria-pressed as state */
+/* Draw the icon only (no panel) */
 #quickPlayPause::before {
-  content: '▶';                      /* default = Play */
-  display: block;
-  font-size: 2rem;
-  line-height: 1;
-  letter-spacing: 0;
-  padding-bottom: 0.5rem;
-  padding-left: 0.3rem;
-  color: var(--neon-pink);
-  text-shadow: 0 0 2px var(--neon-pink), 0 0 4px var(--neon-pink), 0 0 6px var(--neon-pink);
+  content: '▶';                                      /* default = Play */
+  display: block;                                    /* allow centering */
+  font-size: 1.8rem;                                 /* icon size */
+  line-height: 1;                                    /* tight box */
+  color: var(--neon-pink, #ff4dd2);                  /* theme neon */
+  text-shadow:                                       /* neon glow */
+    0 0 2px currentColor,
+    0 0 5px currentColor,
+    0 0 8px currentColor;
+  transform: translateX(1px);                        /* optical center for triangle */
 }
 
-/* When running or during countdown (aria-pressed="true"), show Pause */
+/* When running (or during countdown) show Pause */
 #quickPlayPause[aria-pressed="true"]::before {
-  content: '⏸';
-  font-size: 2rem;
-  line-height: 1;
-  letter-spacing: 0;
-  padding-bottom: 0.5rem;
-  color: var(--neon-pink);
-  text-shadow: 0 0 2px var(--neon-pink), 0 0 4px var(--neon-pink), 0 0 6px var(--neon-pink);
+  content: '⏸';                                      /* pause bars */
+  transform: translateX(0);                          /* centered bars */
 }
 
 
@@ -303,6 +301,7 @@ body[data-nav-open] .hamburger span:nth-child(3) {
 body[data-nav-open="true"] #quickPlayPause {
   display: none;
 }
+
 
 /* =========================
    HUD (fixed under navbar)
@@ -763,6 +762,54 @@ body[data-paused="true"] .rail .note {
   min-block-size: 1.375rem;
   text-align: center;
   pointer-events: none;
+}
+
+/* ---------------------------------------------
+   Bonus feedback styling (only bonus-related text)
+---------------------------------------------- */
+.feedback.bonus { 
+  color: var(--neon-pink);                /* neon-cyan for bonus banner/text */
+  text-shadow: 0 0 12px var(--neon-pink); /* soft glow to stand out */
+  font-weight: 700;              /* make it pop */
+}
+
+.feedback.life {
+  color: var(--neon-red);                /* same color for life message (cohesive) */
+  text-shadow: 0 0 12px var(--neon-red); 
+  font-weight: 700;
+}
+
+/* tiny emphasis while body is in bonus state (no global text change) */
+body[data-bonus="true"] .feedback {
+  color: var(--neon-pink);                /* ensure feedback stays cyan during bonus */
+}
+
+/* -----------------------------------------
+   HUD: Persistent bonus banner 
+------------------------------------------ */
+#bonusBanner {
+  position: absolute;           /* float above stage */
+  top: 4rem;                    /* adjust to clear navbar/topbar */
+  left: 0;
+  right: 0;
+  display: grid;                /* center pill horizontally */
+  place-items: center;
+  pointer-events: none;         /* never blocks clicks */
+  z-index: 60;                  /* keep above feedback; raise if needed */
+}
+
+#bonusBanner[hidden] { display: none; }
+
+#bonusBanner .pill {
+  padding: .35rem .75rem;       /* compact pill */
+  border-radius: 999px;         /* full round */
+  font-weight: 700;             /* strong label */
+  text-transform: uppercase;    /* visual emphasis */
+  letter-spacing: .08em;        /* spaced look */
+  background: rgba(255, 0, 170, 0.12); /* subtle neon wash */
+  color: var(--neon-pink);               /* theme neon pink */
+  box-shadow: 0 0 .6rem currentColor; /* glow */
+  backdrop-filter: blur(2px);   /* mild glass effect */
 }
 
 /* Controls row */
@@ -2043,15 +2090,17 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
     bottom: 5.5rem;
     column-gap: 0.625rem;
   }
+
   .dancer { 
     bottom: 8rem; 
   }
  
   .brand {
   max-inline-size: calc(100% - 4.5rem);
-  padding-right: 0.5rem
+  padding-right: 0.5rem;
   padding-top: 1rem;
   }
+
 }
 
 

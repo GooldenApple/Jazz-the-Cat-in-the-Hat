@@ -145,7 +145,7 @@ window.addEventListener('audio:previewVolume', () => {      // on preview event
 });
 
 
-/* Final explicit export list (no inline exports above) */
+/* export */
 export {
   ensureContext,
   unlockAudio,

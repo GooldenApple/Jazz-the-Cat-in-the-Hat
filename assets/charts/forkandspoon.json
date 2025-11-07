@@ -1,0 +1,76 @@
+{
+  "bpm": 120,
+  "offsetMs": 2000,
+  "travelBeats": 1.8,
+  "notes": [
+    { "timeMs": 0, "dir": "up" },
+    { "timeMs": 250, "dir": "left" },
+    { "timeMs": 500, "dir": "down" },
+    { "timeMs": 750, "dir": "right" },
+
+    { "timeMs": 1000, "dir": "up" },
+    { "timeMs": 1000, "dir": "left" },
+    { "timeMs": 1000, "dir": "right" },
+    { "timeMs": 1250, "dir": "down" },
+
+    { "timeMs": 1500, "dir": "up" },
+    { "timeMs": 1750, "dir": "left" },
+    { "timeMs": 2000, "dir": "down" },
+    { "timeMs": 2250, "dir": "right" },
+
+    { "timeMs": 2500, "dir": "up" },
+    { "timeMs": 2500, "dir": "down" },
+    { "timeMs": 2875, "dir": "left" },
+    { "timeMs": 3250, "dir": "right" },
+    { "timeMs": 3625, "dir": "up" },
+
+    { "timeMs": 4000, "dir": "left" },
+    { "timeMs": 4250, "dir": "down" },
+    { "timeMs": 4500, "dir": "right" },
+    { "timeMs": 4750, "dir": "up" },
+
+    { "timeMs": 5000, "dir": "up" },
+    { "timeMs": 5000, "dir": "left" },
+    { "timeMs": 5000, "dir": "right" },
+    { "timeMs": 5375, "dir": "down" },
+    { "timeMs": 5750, "dir": "right" },
+
+    { "timeMs": 6000, "dir": "up" },
+    { "timeMs": 6250, "dir": "left" },
+    { "timeMs": 6500, "dir": "down" },
+    { "timeMs": 6750, "dir": "right" },
+
+    { "timeMs": 7000, "dir": "up" },
+    { "timeMs": 7000, "dir": "down" },
+    { "timeMs": 7000, "dir": "right" },
+    { "timeMs": 7375, "dir": "left" },
+    { "timeMs": 7750, "dir": "up" },
+
+    { "timeMs": 8000, "dir": "left" },
+    { "timeMs": 8250, "dir": "down" },
+    { "timeMs": 8500, "dir": "right" },
+    { "timeMs": 8750, "dir": "up" },
+
+    { "timeMs": 9000, "dir": "up" },
+    { "timeMs": 9000, "dir": "left" },
+    { "timeMs": 9000, "dir": "down" },
+    { "timeMs": 9375, "dir": "right" },
+    { "timeMs": 9750, "dir": "up" },
+
+    { "timeMs": 10000, "dir": "left" },
+    { "timeMs": 10375, "dir": "down" },
+    { "timeMs": 10750, "dir": "right" },
+    { "timeMs": 11125, "dir": "up" },
+
+    { "timeMs": 11500, "dir": "up" },
+    { "timeMs": 11500, "dir": "right" },
+    { "timeMs": 12000, "dir": "down" },
+    { "timeMs": 12500, "dir": "left" },
+    { "timeMs": 13000, "dir": "up" },
+
+    { "timeMs": 13500, "dir": "right" },
+    { "timeMs": 14000, "dir": "down" },
+    { "timeMs": 14500, "dir": "left" },
+    { "timeMs": 15000, "dir": "up" }
+  ]
+}
