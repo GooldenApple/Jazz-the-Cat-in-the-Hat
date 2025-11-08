@@ -1,45 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-   
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Preload background (same path as i CSS) -->
-    <link rel="preload" as="image" href="assets/images/background.avif" type="image/avif" fetchpriority="high">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Preload background (same path as in CSS) -->
+  <link rel="preload" as="image" href="assets/images/background.avif" type="image/avif" fetchpriority="high">
 
+  <!-- Document identity -->
+  <title>Jazz the Cat in the Hat</title>
+  <meta name="description" content="Rhythm-based reaction game with keyboard and touch controls.">
+  <meta name="theme-color" content="#0b1221">
+  <!-- SEO -->
+  <link rel="canonical" href="https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/">
 
-    <!-- Document identity -->
-    <title>Jazz the Cat in the Hat</title>
-    <meta name="description"
-          content="Rhythm-based reaction game with keyboard and touch controls." />
-    <!-- Fonts: preconnect + swap -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <!-- CSS libs (layout helpers) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous" />
+  <!-- Fonts: preconnect + ONE stylesheet link -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+  <!-- Preconnect for Bootstrap  -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <!-- Bootstrap JS (deferred, safe) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous"></script>
+
+  <!-- Bootstrap CSS (preload pattern) -->
+  <link rel="preload" as="style"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous"
+        onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+  </noscript>
 
-    <!-- Fonts (arcade vibe for HUD and digits) -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
-          rel="stylesheet" />
+  <!-- Project styles (must load AFTER Bootstrap so it can override) -->
+  <link rel="stylesheet" href="assets/css/style.css" />
 
-    <!-- Project styles (must load AFTER Bootstrap so it can override) -->
-    <link rel="stylesheet" href="assets/css/style.css" />
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon_io/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon_io/apple-touch-icon.png">
+  <link rel="shortcut icon" href="assets/images/favicon_io/favicon.ico">
+</head>
 
-   <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon_io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon_io/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon_io/apple-touch-icon.png">
-    <link rel="shortcut icon" href="assets/images/favicon_io/favicon.ico">
-
-
-
-  </head>
 
   <body>
     <!-- =========================================
@@ -388,12 +395,22 @@
       <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
         <!-- Base CTA (round Play/Pause button + label) -->
         <div class="play-cta">
-          <div class="play-btn" aria-hidden="true">
-            <i class="bi bi-play-fill icon icon-play" aria-hidden="true"></i>
-            <i class="bi bi-pause icon icon-pause" aria-hidden="true"></i>
+
+          <div class="play-btn" role="button" tabindex="0" aria-label="Play" aria-pressed="false">
+            <!-- Play icon -->
+            <svg class="icon icon-play" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+              <path d="M8 5v14l11-7-11-7z" fill="currentColor"></path>
+            </svg>
+            <!-- Pause icon (hidden initially) -->
+            <svg class="icon icon-pause" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" hidden>
+              <rect x="6" y="5" width="4" height="14" fill="currentColor"></rect>
+              <rect x="14" y="5" width="4" height="14" fill="currentColor"></rect>
+            </svg>
           </div>
+
           <span class="play-label">Play</span>
         </div>
+
 
         <!-- Results panel -->
         <div id="resultsCta" class="play-cta hidden" role="dialog" aria-label="Level result">
@@ -543,14 +560,6 @@
   </div>
 </section>
 
-
-
-    <!-- =========================================
-         SCRIPTS (Bootstrap bundle + game modules)
-         ========================================= -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
 
     <!-- Entry point -->
     <script type="module" src="assets/js/game.js"></script>

@@ -416,6 +416,7 @@ body[data-nav-open="true"] #quickPlayPause {
   inline-size: max-content;    /* shrink to content width (no full-width overlay) */
   max-inline-size: 100%;       /* still allow wrap on very narrow screens */
   pointer-events: auto;
+  min-height: 2.25rem;
 }
 
 /* HUD toggle */
@@ -875,6 +876,8 @@ body[data-bonus="true"] .feedback {
   order: 0;
   font-size: clamp(0.8rem, 1.6vw, 0.95rem);  /* stops label from blowing up */
   text-shadow: var(--text-glow);
+  min-height: 1.25em; 
+  line-height: 1;
 }
 
 /* Explicit arrow size cap so they don't grow on big screens */
@@ -1572,17 +1575,20 @@ body[data-no-flash] .tail-back {
   position: relative;
   box-shadow: 0 0 0.75rem var(--neon-cyan);
 }
-/* Overlay Play/Pause icon logic */
+/* Overlay Play/Pause icon logic (SVG) */
 .play-btn .icon {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(1.85rem, 6vw, 2.625rem);
-  line-height: 1;
+  inline-size: clamp(1.85rem, 6vw, 2.625rem);  /* size */
+  block-size: clamp(1.85rem, 6vw, 2.625rem);
   color: var(--neon-cyan);
-  text-shadow: 0 0 0.75rem var(--neon-cyan);
-  display: none; 
+  fill: currentColor;                           /* SVG follows color */
+  filter: drop-shadow(0 0 0.75rem var(--neon-cyan)); /* neon glow */
+  pointer-events: none;                         /* clicks go to .play-btn */
+  line-height: 1;
+  display: none;                                /* CSS toggles handle show/hide */
 }
 
 #overlay::before {
@@ -2000,6 +2006,8 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   }
   .metric {
     font-size: 1.25rem; 
+    min-height: 1.2em; 
+    line-height: 1;
   }
 
   #quickPlayPause {
