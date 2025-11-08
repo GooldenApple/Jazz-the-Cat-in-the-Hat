@@ -92,11 +92,10 @@ body,
 /* Page shell */
 body {
   background-color: var(--bg);
-  background-image: url("../images/background.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  background-attachment: scroll;
 
   color: var(--ink);
   font-family: var(--font-hud);
@@ -106,7 +105,31 @@ body {
   display: block;
   max-height: 100%;
   overflow: hidden;
+
+   background-image: image-set(
+    url("../images/background.avif") type("image/avif"),
+    url("../images/background.webp") type("image/webp"),
+    url("../images/background.png")  type("image/png")
+  );
 }
+
+/* Older Safari */
+@supports (background-image: -webkit-image-set(url("x.avif") 1x)) {
+  body {
+    background-image: -webkit-image-set(
+      url("../images/background.avif") type("image/avif") 1x,
+      url("../images/background.webp") type("image/webp") 1x,
+      url("../images/background.png")  type("image/png")  1x
+    );
+  }
+}
+
+/* 3) True fallback only if neither image-set exists */
+@supports not ( (background-image: image-set(url("x.avif") type("image/avif"))) or
+                (background-image: -webkit-image-set(url("x.avif") 1x)) ) {
+  body { background-image: url("../images/background.png"); }
+}
+
 
 .hidden {
   display: none !important;
@@ -276,11 +299,13 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   transform: scale(0.95);                            /* small tap feedback */
 }
 
+
+
 /* Draw the icon only (no panel) */
 #quickPlayPause::before {
   content: '▶';                                      /* default = Play */
   display: block;                                    /* allow centering */
-  font-size: 1.8rem;                                 /* icon size */
+  font-size: 2rem;                                 /* icon size */
   line-height: 1;                                    /* tight box */
   color: var(--neon-cyan, #00ffd5);                  /* theme neon */
   text-shadow:                                       /* neon glow */
@@ -403,7 +428,7 @@ body[data-nav-open="true"] #quickPlayPause {
   border-radius: 0.25rem;
   background: rgba(12, 18, 36, 0.75);
   color: var(--neon-cyan);
-  font-size: 0.875rem;
+  font-size: 1.2rem;
   font-family: var(--font-score);
   text-shadow: 0 0 0.3125rem var(--neon-cyan);
   box-shadow: 0 0 0.5rem var(--neon-purple);
@@ -420,7 +445,7 @@ body[data-nav-open="true"] #quickPlayPause {
   height: 1.5rem;
   margin: 0;
   line-height: 1;                /* avoid baseline push */
-  font-size: 1.25rem;            /* a touch smaller so it sits nicely */
+  font-size: 2.5rem;            /* a touch smaller so it sits nicely */
   position: relative;
   left: 1px;
 }
@@ -1869,7 +1894,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
     font-size: 0.8rem;
   }
   .hud-toggle__icon {
-    font-size: 1.2rem;
+    font-size: 2rem;
   }
 
   .hud-item {
@@ -2161,7 +2186,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
        0  0 12px rgba(0,0,0,0.58),
        0  0 24px rgba(0,0,0,0.38);
   }
-  
+
 }
 
 
@@ -2316,19 +2341,18 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
 }
 
 /* Rotate overlay: show on small devices in landscape or very short heights */
-@media (max-width: 767.98px) and (orientation: landscape), (max-height: 480px) {
-  #rotateOverlay {
-    display: flex;
-  }
+@media ( (orientation: landscape) and (max-height: 520px) and (pointer: coarse) ),
+       ( (max-height: 420px) and (pointer: coarse) ) {
+  #rotateOverlay { display: flex; }
 }
-@media (min-width: 768px) {
-  #rotateOverlay {
-    display: none !important;
-  }
-  body[data-rotate-dismissed="true"] #rotateOverlay {
-    display: none !important;
-  }
+
+/* HIDE: only when both width and height are comfortably large */
+@media (min-width: 768px) and (min-height: 521px) {
+  #rotateOverlay { display: none !important; }
 }
+
+/* Manual dismiss always wins */
+body[data-rotate-dismissed="true"] #rotateOverlay { display: none !important; }
 
 /* --- Accesibility & visuals settings --- */
 
