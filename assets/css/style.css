@@ -282,7 +282,7 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   display: block;                                    /* allow centering */
   font-size: 1.8rem;                                 /* icon size */
   line-height: 1;                                    /* tight box */
-  color: var(--neon-pink, #ff4dd2);                  /* theme neon */
+  color: var(--neon-cyan, #00ffd5);                  /* theme neon */
   text-shadow:                                       /* neon glow */
     0 0 2px currentColor,
     0 0 5px currentColor,
@@ -1423,6 +1423,17 @@ body::before {
   font-size: clamp(0.9rem, 2.8vw, 1.15rem);
 }
 
+#overlay .play-tip,
+#overlay .play-label {
+  text-shadow:
+    var(--text-glow),
+    -1px 0 rgba(0,0,0,0.90), 
+     1px 0 rgba(0,0,0,0.90),
+     0 -1px rgba(0,0,0,0.90), 
+     0  1px rgba(0,0,0,0.90), 
+     0  0 10px rgba(0,0,0,0.55),            /* soft halo        */
+     0  0 20px rgba(0,0,0,0.35);            /* outer halo       */
+}
 
 .play-cta {
   position: absolute;
@@ -1455,6 +1466,32 @@ body::before {
   color: var(--neon-cyan);
   text-shadow: 0 0 0.75rem var(--neon-cyan);
   display: none; 
+}
+
+#overlay::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;                               /* center the band vertically */
+  transform: translateY(-50%);            /* true vertical centering */
+  height: clamp(22rem, 50dvh, 34rem);     /* MUCH taller on all screens */
+  background: linear-gradient(
+    180deg,
+    rgba(11,18,33,0.00) 0%,
+    rgba(11,18,33,0.70) 18%,
+    rgba(11,18,33,0.75) 50%,
+    rgba(11,18,33,0.70) 82%,
+    rgba(11,18,33,0.00) 100%
+  );
+  pointer-events: none;                   /* never blocks clicks */
+  z-index: 0;                             /* behind overlay content */
+}
+
+/* Ensure all overlay content renders above the band */
+#overlay > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Paused → show PLAY */
@@ -2101,6 +2138,30 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   padding-top: 1rem;
   }
 
+  #overlay::before { 
+    height: clamp(24rem, 54dvh, 36rem); 
+  }
+
+#quickPlayPause {
+  inline-size: 4rem;
+  block-size: 4rem;
+}
+#quickPlayPause::before {
+  font-size: 3rem;
+}
+
+#overlay .play-tip,
+  #overlay .play-label {
+    text-shadow:
+      var(--text-glow),
+      -1.5px 0 rgba(0,0,0,0.92),
+       1.5px 0 rgba(0,0,0,0.92),
+       0 -1.5px rgba(0,0,0,0.92),
+       0  1.5px rgba(0,0,0,0.92),
+       0  0 12px rgba(0,0,0,0.58),
+       0  0 24px rgba(0,0,0,0.38);
+  }
+  
 }
 
 
@@ -2239,6 +2300,19 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   .dancer { 
     bottom: 8.25rem; 
   }
+
+   #overlay::before { 
+    height: clamp(26rem, 56dvh, 40rem); 
+  }
+
+  #quickPlayPause {
+  inline-size: 5rem;
+  block-size: 5rem;
+}
+#quickPlayPause::before {
+  font-size: 4rem;
+}
+
 }
 
 /* Rotate overlay: show on small devices in landscape or very short heights */
