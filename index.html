@@ -191,7 +191,7 @@
             <div class="judge-line" aria-hidden="true"></div>
           </div>
 
-          <!-- Dancer (SVG cat) - lives on the stage above the rails -->
+ <!-- Dancer (SVG cat) - lives on the stage above the rails -->
 <div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
   <!-- SVG canvas -->
   <svg viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -199,15 +199,33 @@
          FRONT POSE (default)
          ====================== -->
     <g id="pose-front" aria-hidden="false">
+     
+      <!-- Tail (front) — S-curve, tip up & away -->
+      <g id="tail">
+  <path class="outline"
+        d="M108 148
+           C 124 143, 130 154, 124 164
+           C 118 172, 108 170, 112 162
+           C 120 146, 136 142, 134 115" />
+  <path class="fill"
+        d="M108 148
+           C 124 143, 130 154, 124 164
+           C 118 172, 108 170, 112 162
+           C 120 146, 136 142, 134 115" />
+      </g>
+      
       <!-- Ears -->
       <polygon points="38,55 26,25 48,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
       <polygon points="112,55 124,25 102,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+      
       <!-- Head -->
       <circle cx="75" cy="80" r="40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
+      
       <!-- Hat -->
       <rect id="hat-top"  x="45" y="20" width="60" height="24" rx="4" fill="#2b2d3a"/>
       <rect id="hat-band" x="45" y="40" width="60" height="4"  rx="2" />
       <rect id="hat-brim" x="30" y="44" width="90" height="10" rx="4" fill="#2b2d3a"/>
+      
       <!-- Sunglasses -->
       <g id="glasses" aria-label="Sunglasses">
         <rect x="50" y="70" width="20" height="12" rx="3" fill="black" />
@@ -216,52 +234,100 @@
       </g>
       <line x1="44" y1="74" x2="28" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/>
       <line x1="106" y1="74" x2="122" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/>
-      <!-- Nose + mouth -->
-      <circle cx="75" cy="90" r="4" fill="#2b1c12"/>
-      <path d="M65 100 Q75 110 85 100" stroke="#2b1c12" stroke-width="3" fill="none" />
-      <!-- Body + belly -->
-      <ellipse id="body"  cx="75" cy="140" rx="35" ry="30" fill="#FFD49E"  stroke="#2b1c12" stroke-width="3" />
-      <ellipse id="belly" cx="75" cy="138" rx="18" ry="15" fill="#ffe7c6" stroke="#2b1c12" stroke-width="2" />
-      <!-- Bow tie -->
-      <g id="bowtie" aria-label="Bow tie">
-        <polygon points="60,108 72,115 60,122" stroke="#000" stroke-width="1.5"/>
-        <polygon points="90,108 78,115 90,122" stroke="#000" stroke-width="1.5"/>
-        <circle  cx="75" cy="115" r="5" stroke="#000" stroke-width="1.5"/>
-      </g>
-      <!-- Arms -->
-      <line id="arm-left"  x1="40" y1="130" x2="20" y2="150" stroke="#2b1c12" stroke-width="6" />
-      <line id="arm-right" x1="110" y1="130" x2="130" y2="150" stroke="#2b1c12" stroke-width="6" />
-      <!-- Legs -->
-      <line x1="65" y1="160" x2="55" y2="180" stroke="#2b1c12" stroke-width="6" />
-      <line x1="85" y1="160" x2="95" y2="180" stroke="#2b1c12" stroke-width="6" />
-      <!-- Tail -->
-      <path id="tail"
-            d="M 108 145 C 122 140, 130 150, 124 160 C 118 170, 104 168, 100 160"
-            fill="none" stroke="#2b1c12" stroke-width="5"
-            stroke-linecap="round" stroke-linejoin="round" />
+      
+    <!-- Nose: rounded triangle pointing downward (centered on x=75) -->
+    <polygon id="nose"
+      points="72,90 78,90 75,96"
+      fill="#2b1c12" stroke="#2b1c12" stroke-width="2"
+      stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+
+          <!-- Mouth: two small arcs, placed lower so it won't touch the nose -->
+          <g id="cat-mouth" stroke="#2b1c12" stroke-width="3" fill="none" stroke-linecap="round">
+            <!-- left arc -->
+            <path d="M75 102 q -8 8 -16 0"></path>
+            <!-- right arc -->
+            <path d="M75 102 q  8 8  16 0"></path>
+          </g>
+                  <!-- Whiskers: start just outside the head edge (head: cx=75, cy=80, r=40) -->
+              <g id="whiskers" stroke="#2b1c12" stroke-width="3" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke">
+                <!-- left side (inner x ≈ 33 = just outside left head edge 35) -->
+                <line x1="50" y1="90" x2="30" y2="85"></line>
+                <line x1="50" y1="94" x2="29"  y2="94"></line>
+                <line x1="50" y1="98" x2="30" y2="103"></line>
+
+                <!-- right side (inner x ≈ 117 = just outside right head edge 115) -->
+                <line x1="100" y1="90" x2="120" y2="85"></line>
+                <line x1="100" y1="94" x2="121" y2="94"></line>
+                <line x1="100" y1="98" x2="120" y2="103"></line>
+              </g>
+
+
+          <!-- Body + belly -->
+          <ellipse id="body"  cx="75" cy="140" rx="35" ry="30" fill="#FFD49E"  stroke="#2b1c12" stroke-width="3" />
+          <ellipse id="belly" cx="75" cy="138" rx="18" ry="15" fill="#ffe7c6" stroke="#2b1c12" stroke-width="2" />
+          <!-- Bow tie -->
+          <g id="bowtie" aria-label="Bow tie">
+            <polygon points="60,108 72,115 60,122" stroke="#000" stroke-width="1.5"/>
+            <polygon points="90,108 78,115 90,122" stroke="#000" stroke-width="1.5"/>
+            <circle  cx="75" cy="115" r="5" stroke="#000" stroke-width="1.5"/>
+          </g>
+          <!-- Arms -->
+          <g id="arm-left">
+            <line class="outline" x1="40" y1="130" x2="20" y2="150" />
+            <line class="fill"    x1="40" y1="130" x2="20" y2="150" />
+          </g>
+          <g id="arm-right">
+            <line class="outline" x1="110" y1="130" x2="130" y2="150" />
+            <line class="fill"    x1="110" y1="130" x2="130" y2="150" />
+          </g>
+
+          <!-- Legs -->
+          <g id="leg-left">
+            <line class="outline" x1="65" y1="160" x2="55" y2="180" />
+            <line class="fill"    x1="65" y1="160" x2="55" y2="180" />
+          </g>
+          <g id="leg-right">
+            <line class="outline" x1="85" y1="160" x2="95" y2="180" />
+            <line class="fill"    x1="85" y1="160" x2="95" y2="180" />
+          </g>
     </g>
+
 
     <!-- ======================
          BACK/TWERK POSE (DOWN)
          Shown when .move-down is active on #dancer
          ====================== -->
     <g id="pose-down" aria-hidden="true">
+      
       <polygon points="48,54 36,26 56,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
       <polygon points="102,54 114,26 94,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
+      
       <ellipse id="head-back" cx="75" cy="104" rx="30" ry="26" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
+       
       <rect id="hat-top-back"  x="47" y="42" width="56" height="22" rx="4" fill="#2b2d3a"
             transform="rotate(-12 75 53)"/>
-      <rect id="hat-band-back" x="47" y="60" width="56" height="4"  rx="2"
+        <rect id="hat-band-back" x="47" y="60" width="56" height="4"  rx="2"
             transform="rotate(-12 75 62)"/>
-      <rect id="hat-brim-back" x="34" y="64" width="82" height="10" rx="4" fill="#2b2d3a"
+        <rect id="hat-brim-back" x="34" y="64" width="82" height="10" rx="4" fill="#2b2d3a"
             transform="rotate(-12 75 69)"/>
+
       <ellipse id="butt-back" cx="78" cy="144" rx="36" ry="30" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
+      
       <line x1="68" y1="164" x2="60" y2="180" stroke="#2b1c12" stroke-width="6"/>
       <line x1="88" y1="164" x2="96" y2="180" stroke="#2b1c12" stroke-width="6"/>
-      <path id="tail-back"
-            d="M 78 152 C 92 146, 102 160, 94 170 C 88 176, 74 172, 72 164"
-            fill="none" stroke="#2b1c12" stroke-width="5"
-            stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Tail (BACK) – outline + inner fill (tip up) -->
+<path id="tail-back"
+      d="M 78 152
+         C 90 148, 100 156, 98 165
+         C 96 172, 90 176, 94 168
+         C 100 156, 110 150, 112 136"
+      fill="none" />
+<path class="tail-back"
+      d="M 78 152
+         C 90 148, 100 156, 98 165
+         C 96 172, 90 176, 94 168
+         C 100 156, 110 150, 112 136"
+      fill="none" />
     </g>
   </svg>
 </div>

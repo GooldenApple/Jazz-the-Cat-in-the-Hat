@@ -107,10 +107,10 @@ body {
   overflow: hidden;
 
    background-image: image-set(
-    url("../images/background.avif") type("image/avif"),
-    url("../images/background.webp") type("image/webp"),
-    url("../images/background.png")  type("image/png")
-  );
+  url("../images/background.avif") type("image/avif") 1x,
+  url("../images/background.webp") type("image/webp") 1x,
+  url("../images/background.png")  type("image/png")  1x
+);
 }
 
 /* Older Safari */
@@ -1017,11 +1017,6 @@ body::before {
   block-size: auto;
 }
 
-#hat-band {
-  fill: var(--label-left);
-  filter: drop-shadow(0 0 0.1875rem var(--label-left))
-    drop-shadow(0 0 0.375rem var(--label-left));
-}
 #bowtie > * {
   fill: var(--label-left);
 }
@@ -1038,6 +1033,102 @@ body::before {
   filter: none;
   stroke-width: 1px;
 }
+
+/* Nose: keep edges smooth and scale-safe */
+#nose {
+  fill: #2b1c12;
+  stroke: #2b1c12;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Whiskers */
+#whiskers line {
+  stroke: #030201;              /* same as outlines/legs */
+  filter: none;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Limbs: double-stroke (keeps your arm IDs for animations) */
+#arm-left .outline, #arm-left .fill,
+#arm-right .outline, #arm-right .fill,
+#leg-left .outline, #leg-left .fill,
+#leg-right .outline, #leg-right .fill {
+  fill: none;                      /* lines only */
+  stroke-linecap: round;           /* rounded ends */
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Dark outer border */
+#arm-left .outline, #arm-right .outline,
+#leg-left .outline, #leg-right .outline {
+  stroke: #2b1c12;                 /* dark brown */
+  stroke-width: 12;                /* ~2× previous 6px */
+}
+
+/* Light inner “fur” */
+#arm-left .fill, #arm-right .fill,
+#leg-left .fill, #leg-right .fill {
+  stroke: #FFD49E;                 /* belly/fur tone */
+  stroke-width: 8;
+}
+
+/* Tail — FRONT (#tail has .outline + .fill) */
+#tail .outline, 
+#tail .fill {
+  fill: none;                    /* lines only */
+  stroke-linecap: round;         /* rounded ends */
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: none !important;       /* make sure no old filter sneaks in */
+}
+#tail .outline {                 /* dark border */
+  stroke: #2b1c12;
+  stroke-width: 10;
+}
+#tail .fill {                    /* light inner */
+  stroke: #FFD49E;
+  stroke-width: 6;
+}
+
+/* Tail — BACK (id path = outline, class .tail-back = inner) */
+#tail-back,
+.tail-back {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: none !important;
+}
+#tail-back {                     /* dark border */
+  stroke: #2b1c12;
+  stroke-width: 10;
+}
+.tail-back {                     /* light inner */
+  stroke: #FFD49E;
+  stroke-width: 6;
+}
+
+/* Hat band (front + back) */
+#hat-band,
+#hat-band-back {
+  fill: var(--label-left);
+  filter: drop-shadow(0 0 0.1875rem var(--label-left))
+          drop-shadow(0 0 0.375rem var(--label-left));
+}
+
+
+/* no-flash toggle */
+body[data-no-flash] #tail .outline,
+body[data-no-flash] #tail .fill,
+body[data-no-flash] #tail-back,
+body[data-no-flash] .tail-back {
+  filter: none !important;
+}
+
+
 
 
 /* =========================
@@ -1315,7 +1406,7 @@ body::before {
 #dancer.move-down #butt-back {
   animation: twerkK 0.8s 0.7s ease-in-out;
 }
-#dancer.move-down #tail-back {
+#dancer.move-down #tail-back .tail-back {
   animation: tailWagK 0.8s ease-in-out 0ms 1;
 }
 
@@ -1347,6 +1438,7 @@ body::before {
     filter: brightness(1.15);
   }
 }
+
 
 /* =========================
    Rotate overlay (ARIA/JS)
@@ -1600,7 +1692,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
 .pill-btn {
   appearance: none;
   display: inline-block;
-  padding: .5rem .9rem;
+  padding: 0.5rem 0.9rem;
   border: 2px solid var(--pill-border);
   border-radius: var(--pill-radius);
   background: var(--pill-bg);
@@ -2131,6 +2223,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   padding: clamp(0.4rem, 1.8vw, 0.6rem) clamp(0.6rem, 2.4vw, 0.9rem);
   font-size: clamp(0.85rem, 3.2vw, 1rem);
   border-radius: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 }
