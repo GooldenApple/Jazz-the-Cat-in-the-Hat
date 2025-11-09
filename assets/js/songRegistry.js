@@ -1,7 +1,4 @@
-/**songRegistry.js
-  *Read-only song registry (immutable). Prevents accidental runtime mutations.
-  */
-
+//songRegistry.js
 export const SONGS = Object.freeze([
   Object.freeze({
     id: 'itty-bitty-8bit',
@@ -111,16 +108,6 @@ export const SONGS = Object.freeze([
   }),
 ]);
 
-/* Find a song by id (returns null if not found) */
-function getSongById(id) {
-  return SONGS.find((s) => s.id === id) || null; // find match or null
-}
-
-/* Get the first song (useful as default) */
-function getFirstSong() {
-  return SONGS[0] || null; // first registry entry or null
-}
-
 
 export const LEVEL_TO_SONG = Object.freeze({
   1:  'itty-bitty-8bit',
@@ -151,4 +138,4 @@ function getSongForLevel(level) {
 }
 
 /* ---- exports ---- */
-export { getSongById, getFirstSong, getSongForLevel };
+export { getSongForLevel };

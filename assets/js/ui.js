@@ -1165,31 +1165,26 @@ function hideBonusBanner() {
 })();
 
 /* ---------------------------
-   Export all UI functions
+   Export UI functions
 ---------------------------- */
 export {
-  // HUD toggle
-  HUD_MODE_KEY, getHudInlineMode, setHudInlineMode, toggleHudInline, wireHudInlineToggle,
-  // Overlay (Play/Pause)
-  overlayEl, playBtn, showOverlay, hideOverlay, setOverlayLabel, wirePlayButton, setOverlayIcon, setPlayTip,
-  // Navbar Play/Pause sync
-  getMenuPlayToggle, setMenuLabelToPlay, setMenuLabelToPause, updatePlayMenuLabel, wireMenuPlayToggle,
-  // Navbar collapse (Bootstrap)
-  initNavbarCollapseSync, initTopbarAutoHeight,
-  // Feedback / judge flash 
-  judgeFlash, setFeedback,
-  // Hearts
-  createHeart, renderLives,
-  // Notes (visual)
+  HUD_MODE_KEY,
+  bindControls,
+  hideOverlay,
+  initNavbarCollapseSync,
+  initResultOverlays,
+  initRotateOverlay,
+  setFeedback,
+  setHudInlineMode,
+  setOverlayLabel,
+  showGameOverOverlay,
+  showOverlay,
+  showPauseOverlay,
+  showResultsOverlay,
   spawnNote,
-  // Rotate overlay
-  updateRotateOverlayAria, dismissRotateUntilPortrait, resetDismissalIfPortrait, initRotateOverlay,
-  // Extra controls
-  bindControls, openPanel, closePanel,
-  // HUD update
   updateHUD,
-  // overlay play/paus/gameover/next
-  showResultsOverlay, showGameOverOverlay, initResultOverlays, showPauseOverlay,
-  // Bonus banner (new)
-  showBonusBanner, hideBonusBanner,
+  updatePlayMenuLabel,
+  wireHudInlineToggle,
+  wireMenuPlayToggle,
+  wirePlayButton,
 };

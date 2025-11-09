@@ -2509,7 +2509,7 @@ body[data-no-flash] .svg-heart {
   display: inline-block;        /* predictable box for padding */
   z-index: 1000;                /* above UI when shown */
   background: #0b1221;          /* match site bg */
-  color: #fd0404;               /* high-contrast neon pink */
+  color: #00ffd5;               /* high-contrast neon pink */
   padding: 0.5rem 0.75rem;      /* comfortable target */
   border-radius: 0.375rem;      /* soft corners */
   text-decoration: none;        /* clean look */

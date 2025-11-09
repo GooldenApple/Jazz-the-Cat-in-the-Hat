@@ -91,7 +91,7 @@ const MAX_LIVES = 10;                                    // hard cap for lives
  * loadBestScore()
  * Read best score from storage; 0 on error.
  */
-export function loadBestScore() {
+ function loadBestScore() {
   try {
     const n = Number(localStorage.getItem(BEST_SCORE_KEY)); // read value
     if (!Number.isFinite(n)) return 0;                      // invalid → 0
@@ -103,7 +103,7 @@ export function loadBestScore() {
  * saveBestScore(v)
  * Save best score to storage (safe).
  */
-export function saveBestScore(v) {
+ function saveBestScore(v) {
   try {
     const n = Math.max(0, Math.floor(Number(v) || 0));      // sanitize
     localStorage.setItem(BEST_SCORE_KEY, String(n));         // persist

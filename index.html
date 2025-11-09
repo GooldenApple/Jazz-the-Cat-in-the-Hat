@@ -94,7 +94,6 @@
           <li class="nav-item"><button class="nav-btn" data-action="tutorial" type="button">Tutorial</button></li>
           <li class="nav-item"><button class="nav-btn" data-action="settings" type="button">Settings</button></li>
           <li class="nav-item"><button class="nav-btn" data-action="highscore" type="button">Score</button></li>
-          <li class="nav-item"><button class="nav-btn" data-action="credits" type="button">Credits</button></li>
         </ul>
       </nav>
     </header>
@@ -373,13 +372,12 @@
         <div class="ui-panel__card">
           <h2 id="panel-settings-title">Settings</h2>
 
-          <!-- Settings tabs (Audio / Accessibility / Score / Tutorial / Credits) -->
+          <!-- Settings tabs (Audio / Accessibility / Score / Tutorial) -->
           <nav class="settings-tabs" aria-label="Settings sections" role="tablist">
             <button id="tab-audio"         class="settings-tab" data-settings-tab="audio"         role="tab" aria-selected="true"  aria-controls="settingsPane-audio"      type="button">Audio</button>
             <button id="tab-accessibility" class="settings-tab" data-settings-tab="accessibility" role="tab" aria-selected="false" aria-controls="settingsPane-accessibility" type="button">Accessibility</button>
             <button id="tab-highscore"     class="settings-tab" data-settings-tab="highscore"     role="tab" aria-selected="false" aria-controls="settingsPane-highscore"    type="button">Score</button>
             <button id="tab-tutorial"      class="settings-tab" data-settings-tab="tutorial"      role="tab" aria-selected="false" aria-controls="settingsPane-tutorial"     type="button">Tutorial</button>
-            <button id="tab-credits"       class="settings-tab" data-settings-tab="credits"       role="tab" aria-selected="false" aria-controls="settingsPane-credits"      type="button">Credits</button>
           </nav>
 
           <!-- Settings panes wrapper -->
@@ -461,19 +459,6 @@
                 </p>
               </fieldset>
             </section>
-
-            <!-- Credits -->
-            <section id="settingsPane-credits" class="settings-pane hidden" aria-hidden="true">
-              <h3 class="sr-only">Credits</h3>
-              <fieldset>
-                <legend>Credits</legend>
-                <ul class="hint">
-                  <li>Frame graphic: Freepik</li>
-                  <!-- add credits items here -->
-                </ul>
-              </fieldset>
-            </section>
-          </form>
 
           <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
         </div>
