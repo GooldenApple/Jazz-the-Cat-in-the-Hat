@@ -15,7 +15,7 @@
   --ink: #f5f7ff;
   --muted: #a9b3d3;
 
-  --neon-pink: #ff4dd2;
+  --neon-pink: #ff8ff0;
   --neon-purple: #a64dff;
   --neon-cyan: #00ffd5;
   --neon-green: #39ff14;
@@ -358,6 +358,15 @@ body[data-nav-open="true"] #quickPlayPause {
   opacity: 0.15;
   fill: var(--muted);
   filter: none;
+}
+/* a11y: subtle chip behind HUD label (visually minimal) */
+#hud .label, .hud .label, .hud-label {
+  position: relative;
+  color: #ff8ff0;
+  text-shadow: none;
+  padding: 0.05rem 0.25rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .hud-top {
