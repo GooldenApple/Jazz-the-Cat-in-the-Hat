@@ -1584,6 +1584,8 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   outline-offset: 6px;
 }
 
+/* a11y: visible keyboard focus */
+:focus-visible { outline: 2px dashed #ff8ff0; outline-offset: 3px; }
 /* ----------------------------------------
    Settings overlay container
 ---------------------------------------- */
