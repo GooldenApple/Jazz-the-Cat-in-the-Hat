@@ -279,21 +279,18 @@ body[data-nav-open] .hamburger span:nth-child(3) {
 ============================= */
 .quick-pp {
   position: fixed;                                  /* pin to viewport */
-  top: 6.5rem;                                       /* align with HUD row */
+  top: calc(var(--topbar-h, 4rem) + 2.5rem);        /* align with HUD row */
   right: max(1rem, env(safe-area-inset-right));     /* keep safe area on iOS */
   inline-size: 3rem;                                 /* large hit target */
   block-size: 3rem;                                  /* same as width */
   display: grid;                                     /* center the glyph */
   place-items: center;                               /* center both axes */
-  background: transparent !important;                /* let stage show through */
-  background-image: none !important;
-  border: 0 !important;                                         /* remove ring */
-  border-radius: 0 !important;                                  /* no circle */
-  box-shadow: none !important;                                  /* no halo box */
-  backdrop-filter: none;                                      /* no blur panel */
-  padding: 0 !important;                                         /* no offset */
-  appearance: none;                                /* kill UA styles (Android/Chromium) */
-  -webkit-appearance: none;                     /* kill UA styles (iOS/Safari) */
+  background: transparent;                           /* let stage show through */
+  border: 0;                                         /* remove ring */
+  border-radius: 0;                                  /* no circle */
+  box-shadow: none;                                  /* no halo box */
+  backdrop-filter: none;                             /* no blur panel */
+  padding: 0;                                        /* no offset */
   cursor: pointer;                                   /* clickable */
   z-index: 2302;                                     /* above rails */
 }
@@ -302,8 +299,6 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   transform: scale(0.95);                            /* small tap feedback */
 }
 
-/* No extra pseudo element */
-#quickPlayPause::after { content: none !important; }
 
 
 /* Draw the icon only (no panel) */
@@ -2030,7 +2025,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     padding-left: 0.1rem;
     
   }
-  #quickPlayPause { 
+  #quickPlayPause .pp-icon { 
     font-size: 0.9rem; 
   }
 
