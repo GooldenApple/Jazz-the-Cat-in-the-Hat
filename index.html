@@ -1,10 +1,11 @@
+<!doctype html>
 <html lang="en">
   <head>
     <!-- performance: preconnects for Google Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
 
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
     <!-- Preload background (same path as in CSS) -->
@@ -48,7 +49,7 @@
     </noscript>
 
     <!-- Project styles (must load AFTER Bootstrap so it can override) -->
-    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="stylesheet" href="assets/css/style.css">
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon_io/favicon-32x32.png">
@@ -57,99 +58,68 @@
     <link rel="shortcut icon" href="assets/images/favicon_io/favicon.ico">
   </head>
 
-
   <body>
-    <!-- =========================================
-         ROTATION OVERLAY
-         Shows on tiny landscape or very short viewports.
-         ========================================= -->
+    <!-- ROTATION OVERLAY: shows on tiny landscape or very short viewports -->
     <div id="rotateOverlay" aria-hidden="true">
       <div class="rb-card" role="dialog" aria-label="Rotate device">
         <div class="rb-icon" aria-hidden="true">📱↩️</div>
         <h2 class="rb-title">Rotate to portrait</h2>
         <p class="rb-text">This game is optimized for portrait mode.</p>
-        <button class="rb-try" type="button" aria-label="Close message">
-          Close window
-        </button>
+        <button class="rb-try" type="button" aria-label="Close message">Close window</button>
       </div>
     </div>
 
-    <!-------------------------------
-         TOP BAR / GLOBAL NAVIGATION 
-      -------------------------------->
-    <header class="topbar navbar navbar-expand-xl" role="banner">
+    <!-- TOP BAR / GLOBAL NAVIGATION -->
+    <header class="topbar navbar navbar-expand-xl">
       <!-- Brand (site title) -->
-      <h1 class="navbar-brand brand" id="siteTitle">
-        🐱 Jazz the Cat in the Hat 🎩
-      </h1>
+      <h1 class="navbar-brand brand" id="siteTitle">🐱 Jazz the Cat in the Hat 🎩</h1>
 
       <!-- Hamburger toggler -->
       <button class="navbar-toggler hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
       </button>
 
-      <!-- Collapsible nav ,menu opens overlays -->
+      <!-- Collapsible nav, menu opens overlays -->
       <nav class="collapse navbar-collapse" id="mainNav" aria-label="Primary">
         <ul class="navbar-nav ms-auto nav-list" id="primaryNav">
           <!-- Menu items are buttons -->
-           <li class="nav-item d-xl-none">
+          <li class="nav-item d-xl-none">
             <button id="menuPlayToggle" class="nav-btn" type="button" aria-pressed="false" aria-label="Play or pause the game" data-action="togglePlayPause">
-              Play  <!-- hidden on desktop -->
+              Play
             </button>
           </li>
-          <li class="nav-item">
-            <button class="nav-btn" data-action="tutorial" type="button">Tutorial</button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-btn" data-action="settings" type="button">Settings</button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-btn" data-action="highscore" type="button">Score</button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-btn" data-action="credits" type="button">Credits</button>
-          </li> 
+          <li class="nav-item"><button class="nav-btn" data-action="tutorial" type="button">Tutorial</button></li>
+          <li class="nav-item"><button class="nav-btn" data-action="settings" type="button">Settings</button></li>
+          <li class="nav-item"><button class="nav-btn" data-action="highscore" type="button">Score</button></li>
+          <li class="nav-item"><button class="nav-btn" data-action="credits" type="button">Credits</button></li>
         </ul>
       </nav>
     </header>
 
-    <!---------------------
-         QUICK PLAY/PAUSE 
-      --------------------->
-    <button id="quickPlayPause" class="quick-pp" aria-pressed="false" type="button" aria-label="Play/Pause">
-    </button>
+    <!-- QUICK PLAY/PAUSE -->
+    <button id="quickPlayPause" class="quick-pp" aria-pressed="false" type="button" aria-label="Play/Pause"></button>
 
-    <!--------------------------------------------
-         MAIN GAME AREA 
-         - HUD is fixed on top of playfield.
-         - Stage holds rails, dancer and feedback.
-         - Overlay layer shows CTA / results / game-over panels.
-       ---------------------------------------------------->
-    <main id="game" class="game" role="main">
+    <!-- MAIN GAME AREA -->
+    <main id="game" class="game">
       <!-- HUD: score/best/level + lives -->
       <section class="hud" aria-label="Heads-up display">
-        <!-- HUD top: toggle + collapsible metric pills -->
         <div class="hud-top">
-          <!-- Small toggle chip to collapse/expand the metric stack -->
+          <!-- HUD toggle -->
           <button id="hudToggle" class="hud-toggle" aria-controls="hudStackPanel" aria-expanded="true" aria-label="Collapse HUD" type="button">
             <span class="hud-toggle__icon" aria-hidden="true">►</span>
             <span class="hud-toggle__text">HUD</span>
           </button>
 
-          <!-- Collapsible metric stack (Score / Best / Level) -->
+          <!-- Collapsible metric stack -->
           <div id="hudStackPanel" class="hud-stack">
             <div class="hud-item">
               <span class="hud-label">Score</span>
               <div id="score" class="metric" aria-live="polite">0</div>
             </div>
-
             <div class="hud-item">
               <span class="hud-label">Best</span>
               <div id="best" class="metric" aria-live="polite">0</div>
             </div>
-
             <div class="hud-item">
               <span class="hud-label">Level</span>
               <div id="level" class="metric" aria-live="polite">1</div>
@@ -157,7 +127,7 @@
           </div>
         </div>
 
-        <!-- HUD bottom: lives row (hearts can wrap as they grow) -->
+        <!-- HUD bottom: lives row -->
         <div class="hud-bottom">
           <div class="hud-item hud-item--plain">
             <span class="hud-label">Lives:</span>
@@ -166,35 +136,27 @@
         </div>
       </section>
 
-      <!-- =========================================
-           PLAYFIELD WRAPPER
-           Groups rails + dancer + feedback with the same width model
-           so everything stays aligned responsively.
-           ========================================= -->
+      <!-- PLAYFIELD WRAPPER -->
       <div class="lanebox">
-        <!-- ===== Stage: prompt lane + rails + dancer + feedback ===== -->
+        <!-- Stage: prompt lane + rails + dancer + feedback -->
         <section class="stage" aria-label="Game stage">
-          <!-- Prompt lane (screen-reader friendly updates) -->
+          <!-- Prompt lane -->
           <div id="promptLane" class="prompt-lane" aria-live="polite" aria-atomic="true"></div>
 
-          <!-- Direction rails (the 4 vertical lanes) -->
+          <!-- Direction rails -->
           <div class="rails" aria-hidden="true">
-            <!-- LEFT lane -->
             <div class="rail rail-left">
               <div class="rail-line"></div>
               <div class="judge-target jt-left"></div>
             </div>
-            <!-- UP lane -->
             <div class="rail rail-up">
               <div class="rail-line"></div>
               <div class="judge-target jt-up"></div>
             </div>
-            <!-- DOWN lane -->
             <div class="rail rail-down">
               <div class="rail-line"></div>
               <div class="judge-target jt-down"></div>
             </div>
-            <!-- RIGHT lane -->
             <div class="rail rail-right">
               <div class="rail-line"></div>
               <div class="judge-target jt-right"></div>
@@ -204,216 +166,165 @@
             <div class="judge-line" aria-hidden="true"></div>
           </div>
 
- <!-- Dancer (SVG cat) - lives on the stage above the rails -->
-<div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
-  <!-- SVG canvas -->
-  <svg viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <!-- ======================
-         FRONT POSE (default)
-         ====================== -->
-    <g id="pose-front" aria-hidden="false">
-     
-      <!-- Tail (front) — S-curve, tip up & away -->
-      <g id="tail">
-  <path class="outline"
-        d="M108 148
-           C 124 143, 130 154, 124 164
-           C 118 172, 108 170, 112 162
-           C 120 146, 136 142, 134 115" />
-  <path class="fill"
-        d="M108 148
-           C 124 143, 130 154, 124 164
-           C 118 172, 108 170, 112 162
-           C 120 146, 136 142, 134 115" />
-      </g>
-      
-      <!-- Ears -->
-      <polygon points="38,55 26,25 48,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
-      <polygon points="112,55 124,25 102,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
-      
-      <!-- Head -->
-      <circle cx="75" cy="80" r="40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3" />
-      
-      <!-- Hat -->
-      <rect id="hat-top"  x="45" y="20" width="60" height="24" rx="4" fill="#2b2d3a"/>
-      <rect id="hat-band" x="45" y="40" width="60" height="4"  rx="2" />
-      <rect id="hat-brim" x="30" y="44" width="90" height="10" rx="4" fill="#2b2d3a"/>
-      
-      <!-- Sunglasses -->
-      <g id="glasses" aria-label="Sunglasses">
-        <rect x="50" y="70" width="20" height="12" rx="3" fill="black" />
-        <rect x="80" y="70" width="20" height="12" rx="3" fill="black" />
-        <rect x="70" y="73" width="10" height="4" fill="black" />
-      </g>
-      <line x1="44" y1="74" x2="28" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/>
-      <line x1="106" y1="74" x2="122" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"/>
-      
-    <!-- Nose: rounded triangle pointing downward (centered on x=75) -->
-    <polygon id="nose"
-      points="72,90 78,90 75,96"
-      fill="#2b1c12" stroke="#2b1c12" stroke-width="2"
-      stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+          <!-- Dancer (SVG cat) -->
+          <div id="dancer" class="dancer" role="img" aria-label="Jazz the cat">
+            <svg viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- FRONT POSE (default) -->
+              <g id="pose-front" aria-hidden="false">
+                <!-- Tail (front) — S-curve, tip up & away -->
+                <g id="tail">
+                  <path class="outline" d="M108 148 C 124 143, 130 154, 124 164 C 118 172, 108 170, 112 162 C 120 146, 136 142, 134 115"></path>
+                  <path class="fill"    d="M108 148 C 124 143, 130 154, 124 164 C 118 172, 108 170, 112 162 C 120 146, 136 142, 134 115"></path>
+                </g>
 
-          <!-- Mouth: two small arcs, placed lower so it won't touch the nose -->
-          <g id="cat-mouth" stroke="#2b1c12" stroke-width="3" fill="none" stroke-linecap="round">
-            <!-- left arc -->
-            <path d="M75 102 q -8 8 -16 0"></path>
-            <!-- right arc -->
-            <path d="M75 102 q  8 8  16 0"></path>
-          </g>
-                  <!-- Whiskers: start just outside the head edge (head: cx=75, cy=80, r=40) -->
-              <g id="whiskers" stroke="#2b1c12" stroke-width="3" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke">
-                <!-- left side (inner x ≈ 33 = just outside left head edge 35) -->
-                <line x1="50" y1="90" x2="30" y2="85"></line>
-                <line x1="50" y1="94" x2="29"  y2="94"></line>
-                <line x1="50" y1="98" x2="30" y2="103"></line>
+                <!-- Ears -->
+                <polygon points="38,55 26,25 48,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></polygon>
+                <polygon points="112,55 124,25 102,42" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></polygon>
 
-                <!-- right side (inner x ≈ 117 = just outside right head edge 115) -->
-                <line x1="100" y1="90" x2="120" y2="85"></line>
-                <line x1="100" y1="94" x2="121" y2="94"></line>
-                <line x1="100" y1="98" x2="120" y2="103"></line>
+                <!-- Head -->
+                <circle cx="75" cy="80" r="40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></circle>
+
+                <!-- Hat -->
+                <rect id="hat-top"  x="45" y="20" width="60" height="24" rx="4" fill="#2b2d3a"></rect>
+                <rect id="hat-band" x="45" y="40" width="60" height="4"  rx="2"></rect>
+                <rect id="hat-brim" x="30" y="44" width="90" height="10" rx="4" fill="#2b2d3a"></rect>
+
+                <!-- Sunglasses -->
+                <g id="glasses" aria-label="Sunglasses">
+                  <rect x="50" y="70" width="20" height="12" rx="3" fill="black"></rect>
+                  <rect x="80" y="70" width="20" height="12" rx="3" fill="black"></rect>
+                  <rect x="70" y="73" width="10" height="4" fill="black"></rect>
+                </g>
+                <line x1="44" y1="74" x2="28" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"></line>
+                <line x1="106" y1="74" x2="122" y2="70" stroke="black" stroke-width="4" stroke-linecap="round"></line>
+
+                <!-- Nose -->
+                <polygon id="nose" points="72,90 78,90 75,96" fill="#2b1c12" stroke="#2b1c12" stroke-width="2" stroke-linejoin="round"></polygon>
+
+                <!-- Mouth -->
+                <g id="cat-mouth" stroke="#2b1c12" stroke-width="3" fill="none" stroke-linecap="round">
+                  <path d="M75 102 q -8 8 -16 0"></path>
+                  <path d="M75 102 q  8 8  16 0"></path>
+                </g>
+
+                <!-- Whiskers (vector-effect applied per line) -->
+                <g id="whiskers" stroke="#2b1c12" stroke-width="3" stroke-linecap="round" fill="none">
+                  <line x1="50" y1="90" x2="30" y2="85"  vector-effect="non-scaling-stroke"></line>
+                  <line x1="50" y1="94" x2="29" y2="94"   vector-effect="non-scaling-stroke"></line>
+                  <line x1="50" y1="98" x2="30" y2="103" vector-effect="non-scaling-stroke"></line>
+                  <line x1="100" y1="90" x2="120" y2="85" vector-effect="non-scaling-stroke"></line>
+                  <line x1="100" y1="94" x2="121" y2="94" vector-effect="non-scaling-stroke"></line>
+                  <line x1="100" y1="98" x2="120" y2="103" vector-effect="non-scaling-stroke"></line>
+                </g>
+
+                <!-- Body + belly -->
+                <ellipse id="body"  cx="75" cy="140" rx="35" ry="30" fill="#FFD49E"  stroke="#2b1c12" stroke-width="3"></ellipse>
+                <ellipse id="belly" cx="75" cy="138" rx="18" ry="15" fill="#ffe7c6" stroke="#2b1c12" stroke-width="2"></ellipse>
+
+                <!-- Bow tie -->
+                <g id="bowtie" aria-label="Bow tie">
+                  <polygon points="60,108 72,115 60,122" stroke="#000" stroke-width="1.5"></polygon>
+                  <polygon points="90,108 78,115 90,122" stroke="#000" stroke-width="1.5"></polygon>
+                  <circle  cx="75" cy="115" r="5" stroke="#000" stroke-width="1.5"></circle>
+                </g>
+
+                <!-- Arms -->
+                <g id="arm-left">
+                  <line class="outline" x1="40" y1="130" x2="20" y2="150"></line>
+                  <line class="fill"    x1="40" y1="130" x2="20" y2="150"></line>
+                </g>
+                <g id="arm-right">
+                  <line class="outline" x1="110" y1="130" x2="130" y2="150"></line>
+                  <line class="fill"    x1="110" y1="130" x2="130" y2="150"></line>
+                </g>
+
+                <!-- Legs -->
+                <g id="leg-left">
+                  <line class="outline" x1="65" y1="160" x2="55" y2="180"></line>
+                  <line class="fill"    x1="65" y1="160" x2="55" y2="180"></line>
+                </g>
+                <g id="leg-right">
+                  <line class="outline" x1="85" y1="160" x2="95" y2="180"></line>
+                  <line class="fill"    x1="85" y1="160" x2="95" y2="180"></line>
+                </g>
               </g>
 
+              <!-- BACK/TWERK POSE (DOWN) -->
+              <g id="pose-down" aria-hidden="true">
+                <polygon points="48,54 36,26 56,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></polygon>
+                <polygon points="102,54 114,26 94,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></polygon>
 
-          <!-- Body + belly -->
-          <ellipse id="body"  cx="75" cy="140" rx="35" ry="30" fill="#FFD49E"  stroke="#2b1c12" stroke-width="3" />
-          <ellipse id="belly" cx="75" cy="138" rx="18" ry="15" fill="#ffe7c6" stroke="#2b1c12" stroke-width="2" />
-          <!-- Bow tie -->
-          <g id="bowtie" aria-label="Bow tie">
-            <polygon points="60,108 72,115 60,122" stroke="#000" stroke-width="1.5"/>
-            <polygon points="90,108 78,115 90,122" stroke="#000" stroke-width="1.5"/>
-            <circle  cx="75" cy="115" r="5" stroke="#000" stroke-width="1.5"/>
-          </g>
-          <!-- Arms -->
-          <g id="arm-left">
-            <line class="outline" x1="40" y1="130" x2="20" y2="150" />
-            <line class="fill"    x1="40" y1="130" x2="20" y2="150" />
-          </g>
-          <g id="arm-right">
-            <line class="outline" x1="110" y1="130" x2="130" y2="150" />
-            <line class="fill"    x1="110" y1="130" x2="130" y2="150" />
-          </g>
+                <ellipse id="head-back" cx="75" cy="104" rx="30" ry="26" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></ellipse>
 
-          <!-- Legs -->
-          <g id="leg-left">
-            <line class="outline" x1="65" y1="160" x2="55" y2="180" />
-            <line class="fill"    x1="65" y1="160" x2="55" y2="180" />
-          </g>
-          <g id="leg-right">
-            <line class="outline" x1="85" y1="160" x2="95" y2="180" />
-            <line class="fill"    x1="85" y1="160" x2="95" y2="180" />
-          </g>
-    </g>
+                <rect id="hat-top-back"  x="47" y="42" width="56" height="22" rx="4" fill="#2b2d3a" transform="rotate(-12 75 53)"></rect>
+                <rect id="hat-band-back" x="47" y="60" width="56" height="4"  rx="2" transform="rotate(-12 75 62)"></rect>
+                <rect id="hat-brim-back" x="34" y="64" width="82" height="10" rx="4" fill="#2b2d3a" transform="rotate(-12 75 69)"></rect>
 
+                <ellipse id="butt-back" cx="78" cy="144" rx="36" ry="30" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"></ellipse>
 
-    <!-- ======================
-         BACK/TWERK POSE (DOWN)
-         Shown when .move-down is active on #dancer
-         ====================== -->
-    <g id="pose-down" aria-hidden="true">
-      
-      <polygon points="48,54 36,26 56,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
-      <polygon points="102,54 114,26 94,40" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
-      
-      <ellipse id="head-back" cx="75" cy="104" rx="30" ry="26" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
-       
-      <rect id="hat-top-back"  x="47" y="42" width="56" height="22" rx="4" fill="#2b2d3a"
-            transform="rotate(-12 75 53)"/>
-        <rect id="hat-band-back" x="47" y="60" width="56" height="4"  rx="2"
-            transform="rotate(-12 75 62)"/>
-        <rect id="hat-brim-back" x="34" y="64" width="82" height="10" rx="4" fill="#2b2d3a"
-            transform="rotate(-12 75 69)"/>
+                <line x1="68" y1="164" x2="60" y2="180" stroke="#2b1c12" stroke-width="6"></line>
+                <line x1="88" y1="164" x2="96" y2="180" stroke="#2b1c12" stroke-width="6"></line>
 
-      <ellipse id="butt-back" cx="78" cy="144" rx="36" ry="30" fill="#FFD49E" stroke="#2b1c12" stroke-width="3"/>
-      
-      <line x1="68" y1="164" x2="60" y2="180" stroke="#2b1c12" stroke-width="6"/>
-      <line x1="88" y1="164" x2="96" y2="180" stroke="#2b1c12" stroke-width="6"/>
-      <!-- Tail (BACK) – outline + inner fill (tip up) -->
-<path id="tail-back"
-      d="M 78 152
-         C 90 148, 100 156, 98 165
-         C 96 172, 90 176, 94 168
-         C 100 156, 110 150, 112 136"
-      fill="none" />
-<path class="tail-back"
-      d="M 78 152
-         C 90 148, 100 156, 98 165
-         C 96 172, 90 176, 94 168
-         C 100 156, 110 150, 112 136"
-      fill="none" />
-    </g>
-  </svg>
-</div>
+                <!-- Tail (back) -->
+                <path id="tail-back" d="M 78 152 C 90 148, 100 156, 98 165 C 96 172, 90 176, 94 168 C 100 156, 110 150, 112 136" fill="none"></path>
+                <path class="tail-back" d="M 78 152 C 90 148, 100 156, 98 165 C 96 172, 90 176, 94 168 C 100 156, 110 150, 112 136" fill="none"></path>
+              </g>
+            </svg>
+          </div>
 
-
-          <!-- Floating text feedback for hits/misses/combos -->
+          <!-- Floating text feedback -->
           <div id="feedback" class="feedback" aria-live="polite"></div>
         </section>
 
-        <!-- =========================================
-             CONTROLS (DDR-style arrows)
-             - Button labels sit above the SVG arrows.
-             - Grid has four equal columns that mirror the rails layout.
-             ========================================= -->
+        <!-- CONTROLS (DDR-style arrows) -->
         <section class="controls" aria-label="Arrow controls">
-          <!-- LEFT arrow -->
           <button class="ctrl-btn left" data-dir="Left" type="button" aria-label="Left arrow">
             <span class="label">LEFT</span>
             <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <polygon class="arrow-glow" points="60,15 20,50 60,85" />
-              <polygon class="arrow-main" points="60,15 20,50 60,85" />
+              <polygon class="arrow-glow" points="60,15 20,50 60,85"></polygon>
+              <polygon class="arrow-main" points="60,15 20,50 60,85"></polygon>
             </svg>
           </button>
 
-          <!-- UP arrow -->
           <button class="ctrl-btn up" data-dir="Up" type="button" aria-label="Up arrow">
             <span class="label">UP</span>
             <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <polygon class="arrow-glow" points="15,60 50,20 85,60" />
-              <polygon class="arrow-main" points="15,60 50,20 85,60" />
+              <polygon class="arrow-glow" points="15,60 50,20 85,60"></polygon>
+              <polygon class="arrow-main" points="15,60 50,20 85,60"></polygon>
             </svg>
           </button>
 
-          <!-- DOWN arrow -->
           <button class="ctrl-btn down" data-dir="Down" type="button" aria-label="Down arrow">
             <span class="label">DOWN</span>
             <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <polygon class="arrow-glow" points="15,40 50,80 85,40" />
-              <polygon class="arrow-main" points="15,40 50,80 85,40" />
+              <polygon class="arrow-glow" points="15,40 50,80 85,40"></polygon>
+              <polygon class="arrow-main" points="15,40 50,80 85,40"></polygon>
             </svg>
           </button>
 
-          <!-- RIGHT arrow -->
           <button class="ctrl-btn right" data-dir="Right" type="button" aria-label="Right arrow">
             <span class="label">RIGHT</span>
             <svg viewBox="0 0 100 100" class="arrow-icon" xmlns="http://www.w3.org/2000/svg">
-              <polygon class="arrow-glow" points="40,15 80,50 40,85" />
-              <polygon class="arrow-main" points="40,15 80,50 40,85" />
+              <polygon class="arrow-glow" points="40,15 80,50 40,85"></polygon>
+              <polygon class="arrow-main" points="40,15 80,50 40,85"></polygon>
             </svg>
           </button>
         </section>
       </div>
 
-      <!-- =========================================
-           GAME OVERLAYS (CTA / results / game over)
-           Pointer-events are managed so only visible panels are clickable.
-           ========================================= -->
-      <!-- Overlay (CTA / results holder) -->
+      <!-- GAME OVERLAYS (CTA / results / game over) -->
       <div id="overlay" class="overlay">
         <!-- Play CTA -->
         <div class="play-cta">
           <button class="play-btn" type="button" aria-label="Play/Pause">
-            <!-- Play icon -->
             <svg class="icon icon-play" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
               <polygon points="35,20 80,50 35,80"></polygon>
             </svg>
-            <!-- Pause icon -->
             <svg class="icon icon-pause" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
               <rect x="28" y="22" width="16" height="56" rx="2"></rect>
               <rect x="56" y="22" width="16" height="56" rx="2"></rect>
             </svg>
           </button>
-
           <span class="play-label">Play</span>
         </div>
 
@@ -423,7 +334,7 @@
             <h2 class="rb-title" id="resCongrats">YOU DID IT!</h2>
             <p class="rb-title">Level <span id="resLevel"></span> cleared!</p>
             <p class="rb-text" id="resSummary">
-              Score: <span id="resScore"></span><br/>
+              Score: <span id="resScore"></span><br>
               Max combo: <span id="resCombo"></span>
             </p>
             <div class="cta-row">
@@ -433,14 +344,13 @@
           </div>
         </div>
 
-
         <!-- Game Over panel -->
         <div id="gameOverCta" class="play-cta hidden" role="dialog" aria-modal="true" aria-labelledby="goTitle" aria-describedby="goSummary" tabindex="-1">
           <div class="rb-card">
             <h2 class="rb-title" id="goTitle">Game Over</h2>
             <p class="rb-text" id="goSummary">
-              Level: <span id="goLevel"></span><br/>
-              Score: <span id="goScore"></span><br/>
+              Level: <span id="goLevel"></span><br>
+              Score: <span id="goScore"></span><br>
               Max combo: <span id="goCombo"></span>
             </p>
             <div class="cta-row">
@@ -450,43 +360,35 @@
         </div>
       </div>
 
-        <!-- settings panel overlay -->
-        <section id="panel-settings" class="ui-panel hidden" role="dialog"
-                aria-modal="true" aria-labelledby="panel-settings-title">
-          <div class="ui-panel__card">
+      <!-- settings panel overlay -->
+      <section id="panel-settings" class="ui-panel hidden" role="dialog" aria-modal="true" aria-labelledby="panel-settings-title">
+        <div class="ui-panel__card">
+          <h2 id="panel-settings-title">Settings</h2>
 
-            <!-- Panel header -->
-            <h2 id="panel-settings-title">Settings</h2>
+          <!-- Settings tabs (Audio / Accessibility / Score / Tutorial / Credits) -->
+          <nav class="settings-tabs" aria-label="Settings sections" role="tablist">
+            <button id="tab-audio"         class="settings-tab" data-settings-tab="audio"         role="tab" aria-selected="true"  aria-controls="settingsPane-audio"      type="button">Settings</button>
+            <button id="tab-accessibility" class="settings-tab" data-settings-tab="accessibility" role="tab" aria-selected="false" aria-controls="settingsPane-accessibility" type="button">Accessibility</button>
+            <button id="tab-highscore"     class="settings-tab" data-settings-tab="highscore"     role="tab" aria-selected="false" aria-controls="settingsPane-highscore"    type="button">Score</button>
+            <button id="tab-tutorial"      class="settings-tab" data-settings-tab="tutorial"      role="tab" aria-selected="false" aria-controls="settingsPane-tutorial"     type="button">Tutorial</button>
+            <button id="tab-credits"       class="settings-tab" data-settings-tab="credits"       role="tab" aria-selected="false" aria-controls="settingsPane-credits"      type="button">Credits</button>
+          </nav>
 
-    <!-- ------------------------------------------
-      Settings tabs (Audio / Accessibility / Score / Tutorial / Credits)
-    ------------------------------------------ -->
-        <nav class="settings-tabs" aria-label="Settings sections">
-          <button class="settings-tab" data-settings-tab="audio" aria-selected="true">Settings</button>
-          <button class="settings-tab" data-settings-tab="accessibility" aria-selected="false">Accessibility</button>
-          <button class="settings-tab" data-settings-tab="highscore" aria-selected="false">Score</button>
-          <button class="settings-tab" data-settings-tab="tutorial" aria-selected="false">Tutorial</button>
-          <button class="settings-tab" data-settings-tab="credits" aria-selected="false">Credits</button>
-        </nav>
-
-      <!-- ------------------------------------------
-            Settings panes wrapper
-      ------------------------------------------ -->
+          <!-- Settings panes wrapper -->
           <form id="settingsForm">
             <!-- Audio (Settings) -->
             <section id="settingsPane-audio" class="settings-pane">
-              <!-- Audio controls -->
+              <h3 class="sr-only">Audio settings</h3>
               <fieldset>
                 <legend>Audio</legend>
                 <label for="settingsVolume">Master volume</label>
-                <input id="settingsVolume" name="settingsVolume" type="range" min="0" max="100" step="1" value="80" />
+                <input id="settingsVolume" name="settingsVolume" type="range" min="0" max="100" step="1" value="80">
                 <label class="inline">
-                  <input id="settingsMute" name="settingsMute" type="checkbox"/>
+                  <input id="settingsMute" name="settingsMute" type="checkbox">
                   Mute all
                 </label>
               </fieldset>
 
-              <!-- Countdown -->
               <fieldset>
                 <legend>Countdown</legend>
                 <label for="settingsCountdown">Start countdown</label>
@@ -501,8 +403,9 @@
 
             <!-- Accessibility -->
             <section id="settingsPane-accessibility" class="settings-pane hidden" aria-hidden="true">
+              <h3 class="sr-only">Accessibility settings</h3>
               <fieldset>
-                <legend>Accessibility & Visuals</legend>
+                <legend>Accessibility &amp; Visuals</legend>
                 <p class="hint">These options change visuals only and save immediately.</p>
 
                 <label class="block">
@@ -521,6 +424,7 @@
 
             <!-- Score -->
             <section id="settingsPane-highscore" class="settings-pane hidden" aria-hidden="true">
+              <h3 class="sr-only">High score</h3>
               <fieldset>
                 <legend>High Score</legend>
                 <p class="hint">Best on this device:</p>
@@ -540,6 +444,7 @@
 
             <!-- Tutorial -->
             <section id="settingsPane-tutorial" class="settings-pane hidden" aria-hidden="true">
+              <h3 class="sr-only">Tutorial</h3>
               <fieldset>
                 <legend>Tutorial</legend>
                 <p class="hint">Make Jazz shake his azz!<br>
@@ -551,6 +456,7 @@
 
             <!-- Credits -->
             <section id="settingsPane-credits" class="settings-pane hidden" aria-hidden="true">
+              <h3 class="sr-only">Credits</h3>
               <fieldset>
                 <legend>Credits</legend>
                 <ul class="hint">
@@ -564,20 +470,17 @@
           <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
         </div>
       </section>
-
+    </main>
 
     <!-- Entry point -->
     <script type="module" src="assets/js/game.js"></script>
 
-<!-- Dev helpers — keep disabled in production.
-     Uncomment locally if needed
-     <script type="module" src="assets/js/test.js"></script>
-     <script type="module" src="assets/js/scheduler.js"></script>
--->
+    <!-- Dev helpers (keep disabled in production)
+      <script type="module" src="assets/js/test.js"></script>
+      <script type="module" src="assets/js/scheduler.js"></script>
+    -->
 
     <!-- Screen reader live region (single instance used by srSpeak) -->
     <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true" role="status"></div>
-
-
   </body>
 </html>

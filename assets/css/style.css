@@ -2016,18 +2016,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     line-height: 1;
   }
 
-  #quickPlayPause {
-    inline-size: 3rem;
-    block-size: 3rem;
-    border-width: 0.2rem;
-    font-size: 0.5rem;
-    right: 0.75rem;
-    padding-left: 0.1rem;
-    
-  }
-  #quickPlayPause .pp-icon { 
-    font-size: 0.9rem; 
-  }
+
 
   .topbar {
     z-index: 2400;
