@@ -324,7 +324,7 @@ body[data-nav-open] .hamburger span:nth-child(3) {
 
 /* Hide quick play/pause while nav is open */
 body[data-nav-open="true"] #quickPlayPause {
-  display: none;
+  display: none !important;
 }
 
 
@@ -413,10 +413,12 @@ body[data-nav-open="true"] #quickPlayPause {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  inline-size: max-content;    /* shrink to content width (no full-width overlay) */
-  max-inline-size: 100%;       /* still allow wrap on very narrow screens */
+  inline-size: max-content;    /* shrink to content width */
+  max-inline-size: 100%;       /* still allows wrap on very narrow screens */
   pointer-events: auto;
-  min-height: 2.25rem;
+  min-height: 2.25rem;             /* reserve vertical space to prevent CLS */
+  font-variant-numeric: tabular-nums;/* stable widths for score/lives digits */
+  line-height: 1;                    /* prevent tall line expansion on load */
 }
 
 /* HUD toggle */
@@ -446,7 +448,7 @@ body[data-nav-open="true"] #quickPlayPause {
   height: 1.5rem;
   margin: 0;
   line-height: 1;                /* avoid baseline push */
-  font-size: 2.5rem;            /* a touch smaller so it sits nicely */
+  font-size: 2rem;            /* a touch smaller so it sits nicely */
   position: relative;
   left: 1px;
 }
@@ -679,7 +681,7 @@ main.game, .game {
   max-width: 40rem;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  column-gap: 5rem;                                /* matches base rails gap */
+  column-gap: 0.5rem;                   /* matchar .stage .rails base gap */
   pointer-events: none;
   z-index: 11;
 }
@@ -1530,7 +1532,6 @@ body[data-no-flash] .tail-back {
   display: none;
 }
 
-
 /* Center the tip text above the Play button */
 #overlay .play-tip {
   display: block;               /* block so text-align applies cleanly */
@@ -1551,8 +1552,8 @@ body[data-no-flash] .tail-back {
      1px 0 rgba(0,0,0,0.90),
      0 -1px rgba(0,0,0,0.90), 
      0  1px rgba(0,0,0,0.90), 
-     0  0 10px rgba(0,0,0,0.55),            /* soft halo        */
-     0  0 20px rgba(0,0,0,0.35);            /* outer halo       */
+     0  0 10px rgba(0,0,0,0.55),
+     0  0 20px rgba(0,0,0,0.35);
 }
 
 .play-cta {
@@ -1565,6 +1566,7 @@ body[data-no-flash] .tail-back {
   align-items: center;
   gap: clamp(0.5rem, 1.8vw, 0.75rem);
 }
+
 .play-btn {
   inline-size: clamp(4.25rem, 12vw, 6rem);
   block-size: clamp(4.25rem, 12vw, 6rem);
@@ -1575,30 +1577,43 @@ body[data-no-flash] .tail-back {
   position: relative;
   box-shadow: 0 0 0.75rem var(--neon-cyan);
 }
-/* Overlay Play/Pause icon logic (SVG) */
+
+/* --- Play/Pause icons: appearance (keep) --- */
 .play-btn .icon {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  inline-size: clamp(1.85rem, 6vw, 2.625rem);  /* size */
+  inline-size: clamp(1.85rem, 6vw, 2.625rem);
   block-size: clamp(1.85rem, 6vw, 2.625rem);
   color: var(--neon-cyan);
-  fill: currentColor;                           /* SVG follows color */
-  filter: drop-shadow(0 0 0.75rem var(--neon-cyan)); /* neon glow */
-  pointer-events: none;                         /* clicks go to .play-btn */
+  fill: currentColor;                    /* SVG follows color */
+  filter: drop-shadow(0 0 0.75rem var(--neon-cyan));
+  pointer-events: none;                  /* clicks go to .play-btn */
   line-height: 1;
-  display: none;                                /* CSS toggles handle show/hide */
+  display: none;                         /* hidden by default; state rules below decide */
 }
 
+/* --- Play/Pause icons: canonical visibility (CSS-only state) --- */
+/* Running → show PAUSE */
+body:not([data-paused]) #overlay .play-btn .icon-pause { display: inline-block; }
+
+/* Paused → show PLAY */
+body[data-paused="true"] #overlay .play-btn .icon-play { display: inline-block; }
+
+/* Countdown → force PAUSE (so countdown can be paused) */
+body[data-starting="true"] #overlay .play-btn .icon-play  { display: none !important; }
+body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-block !important; }
+
+/* Background band behind CTA */
 #overlay::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;                               /* center the band vertically */
-  transform: translateY(-50%);            /* true vertical centering */
-  height: clamp(22rem, 50dvh, 34rem);     /* MUCH taller on all screens */
+  top: 50%;
+  transform: translateY(-50%);
+  height: clamp(22rem, 50dvh, 34rem);
   background: linear-gradient(
     180deg,
     rgba(11,18,33,0.00) 0%,
@@ -1607,8 +1622,8 @@ body[data-no-flash] .tail-back {
     rgba(11,18,33,0.70) 82%,
     rgba(11,18,33,0.00) 100%
   );
-  pointer-events: none;                   /* never blocks clicks */
-  z-index: 0;                             /* behind overlay content */
+  pointer-events: none;  /* never blocks clicks */
+  z-index: 0;            /* behind overlay content */
 }
 
 /* Ensure all overlay content renders above the band */
@@ -1617,28 +1632,11 @@ body[data-no-flash] .tail-back {
   z-index: 1;
 }
 
-/* Paused → show PLAY */
-body[data-paused="true"] #overlay .play-btn .icon-play {
-  display: inline-block;
-}
-
-/* Running → show PAUSE */
-body:not([data-paused]) #overlay .play-btn .icon-pause {
-  display: inline-block;
-}
-
-/* Countdown (starting) → force PAUSE even though paused=true */
-body[data-starting="true"] #overlay .play-btn .icon-play {
-  display: none !important;
-}
-body[data-starting="true"] #overlay .play-btn .icon-pause {
-  display: inline-block !important;
-}
-
 .play-btn:hover {
   border-color: var(--neon-pink);
   box-shadow: 0 0 0.75rem var(--neon-pink);
 }
+
 .play-label {
   font-size: clamp(0.95rem, 3.2vw, 1.25rem);
   line-height: 1.15;
@@ -1659,6 +1657,14 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   border-width: 2px;
   font-size: clamp(0.85rem, 3.1vw, 1rem);
 }
+
+/* Dialog focus ring */
+#resultsCta:focus,
+#gameOverCta:focus {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 6px;
+}
+
 
 /* ----------------------------------------
    Settings overlay container
@@ -2192,22 +2198,19 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   line-height: 1.15;
 }
 
-/* Results & Game Over — mobile scale */
+/* Results & Game Over */
 #resultsCta .rb-card,
 #gameOverCta .rb-card {
   max-inline-size: 92vw;
   padding: 0.75rem 0.85rem;
   border-radius: 0.75rem;
   border-width: 2px;
-  font-size: 0.9rem;        /* scales all inner text */
+  font-size: 0.9rem; 
 }
 
-#resultsCta .rb-card h1,
+
 #resultsCta .rb-card h2,
-#resultsCta .rb-card h3,
-#gameOverCta .rb-card h1,
-#gameOverCta .rb-card h2,
-#gameOverCta .rb-card h3 {
+#gameOverCta .rb-card h2, {
   font-size: clamp(1rem, 3.5vw, 1.4rem);
   margin-bottom: clamp(0.35rem, 1.2vw, 0.5rem);
 }
@@ -2252,6 +2255,10 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
   .stage .rails {
     bottom: 5.5rem;
     column-gap: 0.625rem;
+  }
+
+  .judge-ticks { 
+    column-gap: 0.625rem; 
   }
 
   .dancer { 
@@ -2422,6 +2429,10 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
     bottom: 10rem;
     column-gap: 0.75rem;
   }
+
+  .judge-ticks { 
+    column-gap: 0.75rem; 
+  } 
 
   .dancer { 
     bottom: 8.25rem; 

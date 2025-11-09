@@ -104,6 +104,8 @@ const overlayEl = document.getElementById('overlay'); // overlay root
 const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // play btn ref
 const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null; // play icon
 const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null; // pause icon
+// --- Overlay label lock (prevents other code from changing text while paused)
+let _overlayLabelLock = null; // null | 'pause'
 
 /**
  * showOverlay()
@@ -127,11 +129,12 @@ function hideOverlay() {
  * setOverlayLabel(text)
  * Set the label under/near the big play button on the overlay.
  */
-function setOverlayLabel(text) {
-  const label = document.querySelector('#overlay .play-label'); // find label
-  if (label) label.textContent = text; // update label text
+function setOverlayLabel(text, opts = {}) {
+  // If locked (paused) and caller didn't explicitly override → do nothing
+  if (_overlayLabelLock && !opts.override) return;
+  const label = document.querySelector('#overlay .play-label');
+  if (label) label.textContent = String(text);
 }
-
 /**
  * setPlayTip(text)
  * Ensure a tip line exists above the round play button and set its text.
@@ -721,12 +724,25 @@ function showResultsOverlay({ level, score, maxCombo }) {
  * Show base CTA with a clear resume hint; keep overlay visible.
  */
 function showPauseOverlay() {
-  hideAllOverlayPanels(); // hide others
-  const baseCta = document.querySelector('#overlay .play-cta'); // base CTA
-  if (baseCta) baseCta.classList.remove('hidden'); // ensure visible
-  setOverlayLabel('Game paused\nPress Play to resume'); // label (CSS handles newline)
-  srSpeak('Game paused. Press Play to resume.'); // announce
-  showOverlay(); // show overlay layer
+  // Do nothing if a UI panel (e.g., Settings) is open
+  const panelOpen = document.body.getAttribute('data-panel-open');
+  if (panelOpen) return;
+
+  // Do not touch overlay if Results or Game Over is visible
+  const res = document.getElementById('resultsCta');
+  const go  = document.getElementById('gameOverCta');
+  const resultsVisible  = res && !res.classList.contains('hidden');
+  const gameOverVisible = go && !go.classList.contains('hidden');
+  if (resultsVisible || gameOverVisible) return;
+
+  // Show base CTA with a clear pause message
+  hideAllOverlayPanels();                       // hide other CTA panels
+  const baseCta = document.querySelector('#overlay .play-cta');
+  if (baseCta) baseCta.classList.remove('hidden');
+
+  setOverlayLabel('Game paused\nPress Play to resume'); // caption under the button
+  srSpeak('Game paused. Press Play to resume.');        // screen reader hint
+  showOverlay();                                        // reveal overlay layer
 }
 
 /**
@@ -865,9 +881,25 @@ function closePanel(name) {
   const panel = document.getElementById(`panel-${name}`); // find panel
   if (!panel) return; // guard
   panel.classList.add('hidden'); // hide panel
-  if (document.body.getAttribute('data-panel-open') === name) { document.body.removeAttribute('data-panel-open'); } // clear flag
+  if (document.body.getAttribute('data-panel-open') === name) {
+    document.body.removeAttribute('data-panel-open'); // clear flag
+  }
+
+  // If the game is paused when a panel closes, and no Results/Game Over is showing,
+  // bring back the pause CTA so the user is not left with an empty screen.
+  const isPaused   = document.body.hasAttribute('data-paused');
+  const isStarting = document.body.getAttribute('data-starting') === 'true';
+  const res = document.getElementById('resultsCta');
+  const go  = document.getElementById('gameOverCta');
+  const resultsVisible  = res && !res.classList.contains('hidden');
+  const gameOverVisible = go && !go.classList.contains('hidden');
+  if (isPaused && !isStarting && !resultsVisible && !gameOverVisible) {
+    showPauseOverlay();
+  }
+
   _restoreFocus(); // restore focus and cleanup trap
 }
+
 
 /**
  * loadSettings()
@@ -1112,6 +1144,25 @@ function hideBonusBanner() {
   });
 })();
 
+// --- Keep overlay-label lock in sync with UI intents ---
+(function syncOverlayLabelLock() {
+  // When user intends to start/resume → release lock (countdown may update label)
+  window.addEventListener('ui:requestStartRun', () => {
+    _overlayLabelLock = null;
+  });
+
+  // When song actually starts → also release (belt-and-braces)
+  window.addEventListener('song:started', () => {
+    _overlayLabelLock = null;
+  });
+
+  // When user pauses (from anywhere) → apply lock and enforce the paused label
+  window.addEventListener('ui:requestPause', () => {
+    _overlayLabelLock = 'pause';
+    setOverlayLabel('Game paused\nPress Play to resume', { override: true });
+    showOverlay();
+  });
+})();
 
 /* ---------------------------
    Export all UI functions

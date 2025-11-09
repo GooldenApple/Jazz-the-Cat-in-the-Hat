@@ -1,51 +1,61 @@
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Preload background (same path as in CSS) -->
-  <link rel="preload" as="image" href="assets/images/background.avif" type="image/avif" fetchpriority="high">
+<html lang="en">
+  <head>
+    <!-- performance: preconnects for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 
-  <!-- Document identity -->
-  <title>Jazz the Cat in the Hat</title>
-  <meta name="description" content="Rhythm-based reaction game with keyboard and touch controls.">
-  <meta name="theme-color" content="#0b1221">
-  <!-- SEO -->
-  <link rel="canonical" href="https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-  <!-- Fonts: preconnect + ONE stylesheet link -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- Preload background (same path as in CSS) -->
+    <link rel="preload" as="image" href="assets/images/background.avif" type="image/avif" fetchpriority="high">
 
-  <!-- Preconnect for Bootstrap  -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- Document identity -->
+    <title>Jazz the Cat in the Hat</title>
+    <meta name="description" content="Rhythm-based reaction game with keyboard and touch controls.">
+    <meta name="theme-color" content="#0b1221">
+    <!-- SEO -->
+    <link rel="canonical" href="https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/">
 
-  <!-- Bootstrap JS (deferred, safe) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-          crossorigin="anonymous"></script>
+    <!-- Google Fonts -->
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+    </noscript>
 
-  <!-- Bootstrap CSS (preload pattern) -->
-  <link rel="preload" as="style"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous"
-        onload="this.onload=null;this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet"
+    <!-- Preconnect for Bootstrap  -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Bootstrap JS (deferred, safe) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+    <!-- Bootstrap CSS (preload pattern) -->
+    <link rel="preload" as="style"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
-  </noscript>
+          crossorigin="anonymous"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+    </noscript>
 
-  <!-- Project styles (must load AFTER Bootstrap so it can override) -->
-  <link rel="stylesheet" href="assets/css/style.css" />
+    <!-- Project styles (must load AFTER Bootstrap so it can override) -->
+    <link rel="stylesheet" href="assets/css/style.css" />
 
-  <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon_io/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon_io/apple-touch-icon.png">
-  <link rel="shortcut icon" href="assets/images/favicon_io/favicon.ico">
-</head>
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/favicon_io/apple-touch-icon.png">
+    <link rel="shortcut icon" href="assets/images/favicon_io/favicon.ico">
+  </head>
 
 
   <body>
@@ -56,7 +66,7 @@
     <div id="rotateOverlay" aria-hidden="true">
       <div class="rb-card" role="dialog" aria-label="Rotate device">
         <div class="rb-icon" aria-hidden="true">📱↩️</div>
-        <p class="rb-title">Rotate to portrait</p>
+        <h2 class="rb-title">Rotate to portrait</h2>
         <p class="rb-text">This game is optimized for portrait mode.</p>
         <button class="rb-try" type="button" aria-label="Close message">
           Close window
@@ -64,9 +74,9 @@
       </div>
     </div>
 
-    <!-- =========================================
+    <!-------------------------------
          TOP BAR / GLOBAL NAVIGATION 
-         ========================================= -->
+      -------------------------------->
     <header class="topbar navbar navbar-expand-xl" role="banner">
       <!-- Brand (site title) -->
       <h1 class="navbar-brand brand" id="siteTitle">
@@ -85,7 +95,7 @@
         <ul class="navbar-nav ms-auto nav-list" id="primaryNav">
           <!-- Menu items are buttons -->
            <li class="nav-item d-xl-none">
-            <button id="menuPlayToggle" class="nav-btn menu-pp" type="button" aria-pressed="false" aria-label="Play or pause the game" data-action="togglePlayPause">
+            <button id="menuPlayToggle" class="nav-btn" type="button" aria-pressed="false" aria-label="Play or pause the game" data-action="togglePlayPause">
               Play  <!-- hidden on desktop -->
             </button>
           </li>
@@ -105,29 +115,25 @@
       </nav>
     </header>
 
-    <!-- =================
+    <!---------------------
          QUICK PLAY/PAUSE 
-       ==================== -->
-    <button id="quickPlayPause" class="quick-pp" aria-label="Play/Pause" aria-pressed="false" type="button">
+      --------------------->
+    <button id="quickPlayPause" class="quick-pp" aria-pressed="false" type="button" aria-label="Play/Pause">
     </button>
 
-    <!-- =========================================
+    <!--------------------------------------------
          MAIN GAME AREA 
          - HUD is fixed on top of playfield.
          - Stage holds rails, dancer and feedback.
          - Overlay layer shows CTA / results / game-over panels.
-         ========================================= -->
+       ---------------------------------------------------->
     <main id="game" class="game" role="main">
-      <!-- ===== HUD: score/best/level + lives ===== -->
+      <!-- HUD: score/best/level + lives -->
       <section class="hud" aria-label="Heads-up display">
         <!-- HUD top: toggle + collapsible metric pills -->
         <div class="hud-top">
           <!-- Small toggle chip to collapse/expand the metric stack -->
-          <button id="hudToggle" class="hud-toggle"
-                  aria-controls="hudStackPanel"
-                  aria-expanded="true"
-                  aria-label="Collapse HUD"
-                  type="button">
+          <button id="hudToggle" class="hud-toggle" aria-controls="hudStackPanel" aria-expanded="true" aria-label="Collapse HUD" type="button">
             <span class="hud-toggle__icon" aria-hidden="true">►</span>
             <span class="hud-toggle__text">HUD</span>
           </button>
@@ -392,32 +398,31 @@
            GAME OVERLAYS (CTA / results / game over)
            Pointer-events are managed so only visible panels are clickable.
            ========================================= -->
-      <div id="overlay" class="overlay hidden" aria-live="polite" aria-atomic="true">
-        <!-- Base CTA (round Play/Pause button + label) -->
+      <!-- Overlay (CTA / results holder) -->
+      <div id="overlay" class="overlay">
+        <!-- Play CTA -->
         <div class="play-cta">
-
-          <div class="play-btn" role="button" tabindex="0" aria-label="Play" aria-pressed="false">
+          <button class="play-btn" type="button" aria-label="Play/Pause">
             <!-- Play icon -->
-            <svg class="icon icon-play" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
-              <path d="M8 5v14l11-7-11-7z" fill="currentColor"></path>
+            <svg class="icon icon-play" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <polygon points="35,20 80,50 35,80"></polygon>
             </svg>
-            <!-- Pause icon (hidden initially) -->
-            <svg class="icon icon-pause" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" hidden>
-              <rect x="6" y="5" width="4" height="14" fill="currentColor"></rect>
-              <rect x="14" y="5" width="4" height="14" fill="currentColor"></rect>
+            <!-- Pause icon -->
+            <svg class="icon icon-pause" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+              <rect x="28" y="22" width="16" height="56" rx="2"></rect>
+              <rect x="56" y="22" width="16" height="56" rx="2"></rect>
             </svg>
-          </div>
+          </button>
 
           <span class="play-label">Play</span>
         </div>
 
-
         <!-- Results panel -->
-        <div id="resultsCta" class="play-cta hidden" role="dialog" aria-label="Level result">
+        <div id="resultsCta" class="play-cta hidden" role="dialog" aria-modal="true" aria-labelledby="resCongrats" aria-describedby="resSummary" tabindex="-1">
           <div class="rb-card">
-            <p class="rb-title" id="resCongrats">YOU DID IT!</p>
+            <h2 class="rb-title" id="resCongrats">YOU DID IT!</h2>
             <p class="rb-title">Level <span id="resLevel"></span> cleared!</p>
-            <p class="rb-text">
+            <p class="rb-text" id="resSummary">
               Score: <span id="resScore"></span><br/>
               Max combo: <span id="resCombo"></span>
             </p>
@@ -428,11 +433,12 @@
           </div>
         </div>
 
+
         <!-- Game Over panel -->
-        <div id="gameOverCta" class="play-cta hidden" role="dialog" aria-label="Game over">
+        <div id="gameOverCta" class="play-cta hidden" role="dialog" aria-modal="true" aria-labelledby="goTitle" aria-describedby="goSummary" tabindex="-1">
           <div class="rb-card">
-            <p class="rb-title">Game Over</p>
-            <p class="rb-text">
+            <h2 class="rb-title" id="goTitle">Game Over</h2>
+            <p class="rb-text" id="goSummary">
               Level: <span id="goLevel"></span><br/>
               Score: <span id="goScore"></span><br/>
               Max combo: <span id="goCombo"></span>
@@ -443,131 +449,134 @@
           </div>
         </div>
       </div>
-    </main>
 
-<!-- settings panel overlay -->
-<section id="panel-settings" class="ui-panel hidden" role="dialog"
-         aria-modal="true" aria-labelledby="panel-settings-title">
-  <div class="ui-panel__card">
+        <!-- settings panel overlay -->
+        <section id="panel-settings" class="ui-panel hidden" role="dialog"
+                aria-modal="true" aria-labelledby="panel-settings-title">
+          <div class="ui-panel__card">
 
-    <!-- Panel header -->
-    <h2 id="panel-settings-title">Settings</h2>
+            <!-- Panel header -->
+            <h2 id="panel-settings-title">Settings</h2>
 
- <!-- ------------------------------------------
-   Settings tabs (Audio / Accessibility / Score / Tutorial / Credits)
- ------------------------------------------ -->
-    <nav class="settings-tabs" aria-label="Settings sections">
-      <button class="settings-tab" data-settings-tab="audio" aria-selected="true">Settings</button>
-      <button class="settings-tab" data-settings-tab="accessibility" aria-selected="false">Accessibility</button>
-      <button class="settings-tab" data-settings-tab="highscore" aria-selected="false">Score</button>
-      <button class="settings-tab" data-settings-tab="tutorial" aria-selected="false">Tutorial</button>
-      <button class="settings-tab" data-settings-tab="credits" aria-selected="false">Credits</button>
-    </nav>
+    <!-- ------------------------------------------
+      Settings tabs (Audio / Accessibility / Score / Tutorial / Credits)
+    ------------------------------------------ -->
+        <nav class="settings-tabs" aria-label="Settings sections">
+          <button class="settings-tab" data-settings-tab="audio" aria-selected="true">Settings</button>
+          <button class="settings-tab" data-settings-tab="accessibility" aria-selected="false">Accessibility</button>
+          <button class="settings-tab" data-settings-tab="highscore" aria-selected="false">Score</button>
+          <button class="settings-tab" data-settings-tab="tutorial" aria-selected="false">Tutorial</button>
+          <button class="settings-tab" data-settings-tab="credits" aria-selected="false">Credits</button>
+        </nav>
 
-<!-- ------------------------------------------
-      Settings panes wrapper
- ------------------------------------------ -->
-    <form id="settingsForm">
-      <!-- Audio (Settings) -->
-      <section id="settingsPane-audio" class="settings-pane">
-        <!-- Audio controls -->
-        <fieldset>
-          <legend>Audio</legend>
-          <label for="settingsVolume">Master volume</label>
-          <input id="settingsVolume" name="settingsVolume" type="range" min="0" max="100" step="1" value="80" />
-          <label class="inline">
-            <input id="settingsMute" name="settingsMute" type="checkbox"/>
-            Mute all
-          </label>
-        </fieldset>
+      <!-- ------------------------------------------
+            Settings panes wrapper
+      ------------------------------------------ -->
+          <form id="settingsForm">
+            <!-- Audio (Settings) -->
+            <section id="settingsPane-audio" class="settings-pane">
+              <!-- Audio controls -->
+              <fieldset>
+                <legend>Audio</legend>
+                <label for="settingsVolume">Master volume</label>
+                <input id="settingsVolume" name="settingsVolume" type="range" min="0" max="100" step="1" value="80" />
+                <label class="inline">
+                  <input id="settingsMute" name="settingsMute" type="checkbox"/>
+                  Mute all
+                </label>
+              </fieldset>
 
-        <!-- Countdown -->
-        <fieldset>
-          <legend>Countdown</legend>
-          <label for="settingsCountdown">Start countdown</label>
-          <select id="settingsCountdown" name="settingsCountdown">
-            <option value="0">0s</option>
-            <option value="3">3s</option>
-            <option value="5">5s</option>
-          </select>
-          <p class="hint">Applies on next start.</p>
-        </fieldset>
+              <!-- Countdown -->
+              <fieldset>
+                <legend>Countdown</legend>
+                <label for="settingsCountdown">Start countdown</label>
+                <select id="settingsCountdown" name="settingsCountdown">
+                  <option value="0">0s</option>
+                  <option value="3">3s</option>
+                  <option value="5">5s</option>
+                </select>
+                <p class="hint">Applies on next start.</p>
+              </fieldset>
+            </section>
+
+            <!-- Accessibility -->
+            <section id="settingsPane-accessibility" class="settings-pane hidden" aria-hidden="true">
+              <fieldset>
+                <legend>Accessibility & Visuals</legend>
+                <p class="hint">These options change visuals only and save immediately.</p>
+
+                <label class="block">
+                  <button id="settingsReduceMotion" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintReduceMotion">Reduce motion</button>
+                </label>
+                <p id="hintReduceMotion" class="hint"><br>Tones down animations to reduce distraction.</p>
+
+                <label class="block">
+                  <button id="settingsNoFlash" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintNoFlash">Disable screen glow and flashes</button>
+                </label>
+                <p id="hintNoFlash" class="hint"><br>Removes bright screen flashes and glow effects to avoid sudden light bursts.</p>
+
+                <p class="hint"><em>Applies immediately.</em></p>
+              </fieldset>
+            </section>
+
+            <!-- Score -->
+            <section id="settingsPane-highscore" class="settings-pane hidden" aria-hidden="true">
+              <fieldset>
+                <legend>High Score</legend>
+                <p class="hint">Best on this device:</p>
+                <div class="hirow">
+                  <output id="hiBestValue">0</output>
+                  <button id="resetHighScore" type="button" class="settings-tab score-reset" title="Reset BEST score">Reset</button>
+                </div>
+                <br>
+                <p class="hint">This only resets the BEST value. Use “Reset game data…” to clear everything.</p>
+              </fieldset>
+
+              <fieldset>
+                <legend>Data</legend>
+                <button id="settingsResetData" type="button" class="settings-tab data-reset">Reset game data</button>
+              </fieldset>
+            </section>
+
+            <!-- Tutorial -->
+            <section id="settingsPane-tutorial" class="settings-pane hidden" aria-hidden="true">
+              <fieldset>
+                <legend>Tutorial</legend>
+                <p class="hint">Make Jazz shake his azz!<br>
+                  To make Jazz dance, hit the correct arrow when a orb cross the neon target.<br>
+                  Strike combos and get bonuses!
+                </p>
+              </fieldset>
+            </section>
+
+            <!-- Credits -->
+            <section id="settingsPane-credits" class="settings-pane hidden" aria-hidden="true">
+              <fieldset>
+                <legend>Credits</legend>
+                <ul class="hint">
+                  <li>Frame graphic: Freepik</li>
+                  <!-- add credits items here -->
+                </ul>
+              </fieldset>
+            </section>
+          </form>
+
+          <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
+        </div>
       </section>
-
-      <!-- Accessibility -->
-      <section id="settingsPane-accessibility" class="settings-pane hidden" aria-hidden="true">
-        <fieldset>
-          <legend>Accessibility & Visuals</legend>
-          <p class="hint">These options change visuals only and save immediately.</p>
-
-          <label class="block">
-            <button id="settingsReduceMotion" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintReduceMotion">Reduce motion</button>
-          </label>
-          <p id="hintReduceMotion" class="hint"><br>Tones down animations to reduce distraction.</p>
-
-          <label class="block">
-            <button id="settingsNoFlash" class="settings-tab" type="button" aria-pressed="false" aria-describedby="hintNoFlash">Disable screen glow and flashes</button>
-          </label>
-          <p id="hintNoFlash" class="hint"><br>Removes bright screen flashes and glow effects to avoid sudden light bursts.</p>
-
-          <p class="hint"><em>Applies immediately.</em></p>
-        </fieldset>
-      </section>
-
-      <!-- Score -->
-      <section id="settingsPane-highscore" class="settings-pane hidden" aria-hidden="true">
-        <fieldset>
-          <legend>High Score</legend>
-          <p class="hint">Best on this device:</p>
-          <div class="hirow">
-            <output id="hiBestValue">0</output>
-            <button id="resetHighScore" type="button" class="settings-tab score-reset" title="Reset BEST score">Reset</button>
-          </div>
-          <br>
-          <p class="hint">This only resets the BEST value. Use “Reset game data…” to clear everything.</p>
-        </fieldset>
-
-        <fieldset>
-          <legend>Data</legend>
-          <button id="settingsResetData" type="button" class="settings-tab data-reset">Reset game data</button>
-        </fieldset>
-      </section>
-
-      <!-- Tutorial -->
-      <section id="settingsPane-tutorial" class="settings-pane hidden" aria-hidden="true">
-        <fieldset>
-          <legend>Tutorial</legend>
-          <p class="hint">Make Jazz shake his azz!<br>
-            To make Jazz dance, hit the correct arrow when a orb cross the neon target.<br>
-            Strike combos and get bonuses!
-          </p>
-        </fieldset>
-      </section>
-
-      <!-- Credits -->
-      <section id="settingsPane-credits" class="settings-pane hidden" aria-hidden="true">
-        <fieldset>
-          <legend>Credits</legend>
-          <ul class="hint">
-            <li>Frame graphic: Freepik</li>
-            <!-- add credits items here -->
-          </ul>
-        </fieldset>
-      </section>
-    </form>
-
-    <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
-  </div>
-</section>
 
 
     <!-- Entry point -->
     <script type="module" src="assets/js/game.js"></script>
 
-    <!-- Dev helpers (non-production) -->
-    <script type="module" src="assets/js/test.js"></script>
+<!-- Dev helpers — keep disabled in production.
+     Uncomment locally if needed
+     <script type="module" src="assets/js/test.js"></script>
+     <script type="module" src="assets/js/scheduler.js"></script>
+-->
+
     <!-- Screen reader live region (single instance used by srSpeak) -->
-    <div id="srRegion" class="sr-only" aria-live="polite" aria-atomic="true" role="status"></div>
+    <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true" role="status"></div>
 
 
   </body>
