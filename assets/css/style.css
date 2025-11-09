@@ -95,9 +95,7 @@ body {
   background-position: center;
   background-size: cover;
   background-attachment: scroll;
-  /* Validator-safe background (simple fallback) */
-  background-image: url("../images/background.png");
-
+  background-image: url("../images/bg1920.avif") !important;
   color: var(--ink);
   font-family: var(--font-hud);
   text-transform: uppercase;
@@ -113,7 +111,7 @@ body {
 }
 
 /* =========================
-   Top bar / Navbar (mobile-first)
+   Top bar / Navbar
 ========================= */
 .topbar {
   position: relative;
@@ -2123,6 +2121,9 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
 
 /* ≤1199.98px — burger mode */
 @media (max-width: 1199.98px) {
+
+  body { background-image: url("/images/bg1920.avif"); }
+
   :root {
     --floor-bottom: 40px;
   }
@@ -2213,6 +2214,9 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
 }
 /* ≥1200px */
 @media (min-width: 1200px) {
+
+  body { background-image: url("../images/bg1440.avif"); }
+
   .navbar-toggler.hamburger {
     display: none !important;
   }
