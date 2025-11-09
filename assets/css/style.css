@@ -33,13 +33,13 @@
   --font-score: "VT323";
   --text-glow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-cyan);
 
-   /* Controls / Arrows: keep single source of truth */
+  /* Controls / Arrows: keep single source of truth */
   --arrow-size: clamp(4.5rem, 10vw, 6rem);
-  --controls-gap: 0.5rem;                             /* mobile-first gap */
+  --controls-gap: 0.5rem;
   --controls-bottom: 0.75rem;
   --controls-max-w: 40rem;
   --controls-side-pad: 0.75rem;
-  --controls-zone-h: calc(var(--arrow-size) + 1.75rem); /* labels + padding */
+  --controls-zone-h: calc(var(--arrow-size) + 1.75rem);
 
   /* Overlays / floor */
   --overlay-y: 34dvh;
@@ -50,16 +50,16 @@
   /* Judge geometry */
   --judge-rel: 62%;
 
-  /* Rails geometry derived from controls zone */
+  /* Rails geometry */
   --rails-gap: 0.5rem;
   --rails-bottom: calc(var(--controls-zone-h) + var(--rails-gap));
 
   /* Settings pills */
-  --pill-bg: rgba(255,255,255,0.04);
+  --pill-bg: rgba(255, 255, 255, 0.04);
   --pill-text: #fff;
   --pill-radius: 14px;
   --pill-border: #43f5ff;
-  --pill-glow: rgba(67,245,255,.55);
+  --pill-glow: rgba(67, 245, 255, 0.55);
 }
 
 /* =========================
@@ -71,13 +71,12 @@
   box-sizing: border-box;
 }
 
-
 html {
   -webkit-text-size-adjust: 100%;
 }
 
-html, body {
-  /* notes to self: standard full-height grid page */
+html,
+body {
   height: 100%;
 }
 
@@ -96,6 +95,8 @@ body {
   background-position: center;
   background-size: cover;
   background-attachment: scroll;
+  /* Validator-safe background (simple fallback) */
+  background-image: url("../images/background.png");
 
   color: var(--ink);
   font-family: var(--font-hud);
@@ -105,31 +106,7 @@ body {
   display: block;
   max-height: 100%;
   overflow: hidden;
-
-   background-image: image-set(
-  url("../images/background.avif") type("image/avif") 1x,
-  url("../images/background.webp") type("image/webp") 1x,
-  url("../images/background.png")  type("image/png")  1x
-);
 }
-
-/* Older Safari */
-@supports (background-image: -webkit-image-set(url("x.avif") 1x)) {
-  body {
-    background-image: -webkit-image-set(
-      url("../images/background.avif") type("image/avif") 1x,
-      url("../images/background.webp") type("image/webp") 1x,
-      url("../images/background.png")  type("image/png")  1x
-    );
-  }
-}
-
-/* 3) True fallback only if neither image-set exists */
-@supports not ( (background-image: image-set(url("x.avif") type("image/avif"))) or
-                (background-image: -webkit-image-set(url("x.avif") 1x)) ) {
-  body { background-image: url("../images/background.png"); }
-}
-
 
 .hidden {
   display: none !important;
@@ -148,23 +125,21 @@ body {
   flex-wrap: nowrap;
   justify-content: flex-start;
   overflow: visible;
-  padding: max(0.2rem, env(safe-area-inset-top))
-    max(0.8rem, env(safe-area-inset-right)) 0.2rem
-    max(0.8rem, env(safe-area-inset-left));
+  padding: 0.5rem 0.75rem 0.2rem 0.75rem;
   background: linear-gradient(
     to bottom,
     rgba(18, 27, 52, 0.92),
     rgba(18, 27, 52, 0.78)
   );
-  border-bottom: 0.125rem solid rgba(166, 77, 255, 0.35); 
+  border-bottom: 0.125rem solid rgba(166, 77, 255, 0.35);
   backdrop-filter: blur(6px);
-  overflow-x: clip; /* prevent horizontal push */
+  overflow-x: clip;
 }
 
 /* Brand */
 .brand {
   margin-right: 0;
-  flex: 1 1 auto; /* allow shrinking (prevents overflow) */
+  flex: 1 1 auto;
   min-width: 0;
   display: inline-flex;
   align-items: center;
@@ -181,7 +156,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  font-size: clamp(0.82rem, 2.8vw, 1.10rem);
+  font-size: clamp(0.82rem, 2.8vw, 1.1rem);
   letter-spacing: 0.5px;
   font-weight: 500;
   line-height: 1;
@@ -194,7 +169,7 @@ body {
 .navbar-toggler.hamburger {
   position: absolute;
   top: 50%;
-  right: max(0.75rem, env(safe-area-inset-right));
+  right: 0.75rem;
   transform: translateY(-50%);
   display: inline-grid;
   place-content: center;
@@ -209,7 +184,6 @@ body {
     inset 0 0 0.625rem rgba(166, 77, 255, 0.25);
   z-index: 50;
 }
-
 .navbar-toggler.hamburger span {
   display: block;
   width: 1.5rem;
@@ -218,7 +192,6 @@ body {
   box-shadow: 0 0 0.375rem rgba(255, 255, 255, 0.6);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
-
 /* X morph  */
 body[data-nav-open] .hamburger span:nth-child(1) {
   transform: translateY(0.375rem) rotate(45deg);
@@ -270,63 +243,49 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   box-shadow: 0 0 0.625rem rgba(0, 255, 213, 0.35);
 }
 
-
 /* =============================
    Quick Play/Pause — icon-only
-   - Fully transparent background
-   - Neon glow on the glyph only
-   - Same row as topbar/HUD (tweak top if needed)
 ============================= */
 .quick-pp {
-  position: fixed;                                  /* pin to viewport */
-  top: calc(var(--topbar-h, 4rem) + 2.5rem);        /* align with HUD row */
-  right: max(1rem, env(safe-area-inset-right));     /* keep safe area on iOS */
-  inline-size: 3rem;                                 /* large hit target */
-  block-size: 3rem;                                  /* same as width */
-  display: grid;                                     /* center the glyph */
-  place-items: center;                               /* center both axes */
-  background: transparent;                           /* let stage show through */
-  border: 0;                                         /* remove ring */
-  border-radius: 0;                                  /* no circle */
-  box-shadow: none;                                  /* no halo box */
-  backdrop-filter: none;                             /* no blur panel */
-  padding: 0;                                        /* no offset */
-  cursor: pointer;                                   /* clickable */
-  z-index: 2302;                                     /* above rails */
+  position: fixed;
+  top: calc(var(--topbar-h, 4rem) + 2.5rem);
+  right: 1rem;
+  inline-size: 3rem;
+  block-size: 3rem;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2302;
 }
-
 .quick-pp:active {
-  transform: scale(0.95);                            /* small tap feedback */
+  transform: scale(0.95);
 }
-
-
 
 /* Draw the icon only (no panel) */
 #quickPlayPause::before {
-  content: '▶';                                      /* default = Play */
-  display: block;                                    /* allow centering */
-  font-size: 2rem;                                 /* icon size */
-  line-height: 1;                                    /* tight box */
-  color: var(--neon-cyan, #00ffd5);                  /* theme neon */
-  text-shadow:                                       /* neon glow */
-    0 0 2px currentColor,
-    0 0 5px currentColor,
-    0 0 8px currentColor;
-  transform: translateX(1px);                        /* optical center for triangle */
+  content: "▶";
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--neon-cyan, #00ffd5);
+  text-shadow: 0 0 2px currentColor, 0 0 5px currentColor, 0 0 8px currentColor;
+  transform: translateX(1px);
 }
-
 /* When running (or during countdown) show Pause */
 #quickPlayPause[aria-pressed="true"]::before {
-  content: '⏸';                                      /* pause bars */
-  transform: translateX(0);                          /* centered bars */
+  content: "⏸";
+  transform: translateX(0);
 }
-
-
 /* Hide quick play/pause while nav is open */
 body[data-nav-open="true"] #quickPlayPause {
   display: none !important;
 }
-
 
 /* =========================
    HUD (fixed under navbar)
@@ -343,7 +302,6 @@ body[data-nav-open="true"] #quickPlayPause {
   z-index: 2300;
   pointer-events: none;
 }
-
 .hud-bottom {
   order: 0;
   display: flex;
@@ -351,7 +309,6 @@ body[data-nav-open="true"] #quickPlayPause {
   inline-size: 100%;
   pointer-events: none;
 }
-
 .hud-item.hud-item--plain {
   pointer-events: auto;
   border: none;
@@ -365,7 +322,6 @@ body[data-nav-open="true"] #quickPlayPause {
   margin-bottom: 0.375rem;
   color: var(--neon-pink);
 }
-
 .lives {
   display: flex;
   flex-wrap: wrap;
@@ -374,14 +330,13 @@ body[data-nav-open="true"] #quickPlayPause {
   align-items: center;
   padding: 0.125rem;
 }
-
 .svg-heart {
   inline-size: 1.75rem;
   block-size: 1.75rem;
   filter: var(
     --icon-glow,
     drop-shadow(0 0 0.25rem var(--neon-red))
-    drop-shadow(0 0 0.625rem var(--neon-pink))
+      drop-shadow(0 0 0.625rem var(--neon-pink))
   );
   transition: opacity 0.25s ease, fill 0.25s ease;
 }
@@ -413,12 +368,12 @@ body[data-nav-open="true"] #quickPlayPause {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  inline-size: max-content;    /* shrink to content width */
-  max-inline-size: 100%;       /* still allows wrap on very narrow screens */
+  inline-size: max-content;
+  max-inline-size: 100%;
   pointer-events: auto;
-  min-height: 2.25rem;             /* reserve vertical space to prevent CLS */
-  font-variant-numeric: tabular-nums;/* stable widths for score/lives digits */
-  line-height: 1;                    /* prevent tall line expansion on load */
+  min-height: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 /* HUD toggle */
@@ -442,17 +397,16 @@ body[data-nav-open="true"] #quickPlayPause {
 /* Center the HUD toggle arrow */
 .hud-toggle__icon {
   display: inline-flex;
-  align-items: center;           /* vertical center */
-  justify-content: center;       /* horizontal center */
-  width: 1.5rem;                 /* square box for the icon */
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
   height: 1.5rem;
   margin: 0;
-  line-height: 1;                /* avoid baseline push */
-  font-size: 2rem;            /* a touch smaller so it sits nicely */
+  line-height: 1;
+  font-size: 2rem;
   position: relative;
   left: 1px;
 }
-
 .hud-toggle:hover,
 .hud-toggle:focus-visible {
   background: rgba(24, 36, 72, 0.9);
@@ -466,13 +420,13 @@ body[data-nav-open="true"] #quickPlayPause {
   outline-offset: 0.125rem;
 }
 
-/* HUD stack (collapsible) */
+/* HUD stack */
 .hud-stack {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   overflow: hidden;
-  max-height: 32.5rem; 
+  max-height: 32.5rem;
   opacity: 1;
   transition: max-height 0.25s ease, opacity 0.2s ease;
   pointer-events: auto;
@@ -489,7 +443,7 @@ body[data-hud="collapsed"] .hud-stack {
 .hud-item {
   min-width: 6.25rem;
   padding: 0.5rem 0.75rem;
-  border: 0.1875rem solid var(--neon-purple); 
+  border: 0.1875rem solid var(--neon-purple);
   border-radius: 0.375rem;
   background: rgba(18, 27, 52, 0.8);
   box-shadow: 0 0 0.75rem var(--neon-purple);
@@ -506,13 +460,12 @@ body[data-hud="collapsed"] .hud-stack {
   text-shadow: 0 0 0.3125rem var(--neon-cyan), 0 0 0.625rem var(--neon-pink);
 }
 
-
 /* =========================
    Stage & playfield cluster
 ========================= */
-/* Keep main game area tall enough without relying on the grid row */
-main.game, .game {
-  min-block-size: calc(100svh - 4rem) !important; /* 4rem = topbar */
+main.game,
+.game {
+  min-block-size: calc(100svh - 4rem) !important;
 }
 
 .stage {
@@ -521,16 +474,10 @@ main.game, .game {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-
   margin-inline: auto;
-
   padding-top: 2rem;
   padding-bottom: 2rem;
-
-
-  /* Fill below navbar – track the *dynamic* viewport height */
   min-block-size: calc(100svh - 4rem);
-  
 }
 
 .prompt-lane {
@@ -639,10 +586,9 @@ main.game, .game {
   block-size: var(--r1);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 0.125rem solid color-mix(in srgb, currentColor 85%, white 15%);
+  border: 0.125rem solid rgba(255, 255, 255, 0.25);
   opacity: 0.65;
-  box-shadow: 0 0 0.625rem currentColor,
-    0 0 1.375rem color-mix(in srgb, currentColor 85%, white 15%);
+  box-shadow: 0 0 0.625rem currentColor, 0 0 1.375rem rgba(255, 255, 255, 0.25);
 }
 .judge-target::after {
   content: "";
@@ -653,10 +599,9 @@ main.game, .game {
   block-size: var(--r2);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 0.125rem solid color-mix(in srgb, currentColor 70%, white 30%);
+  border: 0.125rem solid rgba(255, 255, 255, 0.4);
   opacity: 0.4;
-  box-shadow: 0 0 0.75rem currentColor,
-    0 0 1.75rem color-mix(in srgb, currentColor 70%, white 30%);
+  box-shadow: 0 0 0.75rem currentColor, 0 0 1.75rem rgba(255, 255, 255, 0.4);
 }
 .jt-left {
   color: var(--label-left);
@@ -677,33 +622,30 @@ main.game, .game {
   top: 62%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: calc( 100% - ( max(0.75rem, env(safe-area-inset-left)) + max(0.75rem, env(safe-area-inset-right))));
+  width: calc(100% - 1.5rem);
   max-width: 40rem;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  column-gap: 0.5rem;                   /* matchar .stage .rails base gap */
+  column-gap: 0.5rem;
   pointer-events: none;
   z-index: 11;
 }
-
-
 .judge-ticks .judge-target {
   position: static;
   left: auto;
   top: auto;
-  transform: none;        /* grid centering handles placement */
+  transform: none;
   justify-self: center;
   align-self: center;
 }
 
 .stage .rails {
   position: absolute;
-  top: 1rem;        /* vertical anchoring: from the HUD stack to the controls area */
-  bottom: 6.25rem;  /* mobile: ends above arrow labels */
-  /* horizontal model stays the same */
+  top: 1rem;
+  bottom: 6.25rem;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - (max(0.75rem, env(safe-area-inset-left)) + max(0.75rem, env(safe-area-inset-right))));
+  width: calc(100% - 1.5rem);
   max-width: 40rem;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -714,7 +656,6 @@ main.game, .game {
   pointer-events: none;
   z-index: 14;
 }
-
 
 .rail {
   position: relative;
@@ -745,7 +686,7 @@ main.game, .game {
   z-index: 16;
   pointer-events: none;
   box-shadow: 0 0 0.625rem currentColor, 0 0 1.5rem currentColor,
-    0 0 2.5rem color-mix(in srgb, currentColor 80%, white 20%);
+    0 0 2.5rem rgba(255, 255, 255, 0.2);
 
   --drop-distance-judge: 0px;
   --drop-distance-bottom: 0px;
@@ -771,7 +712,7 @@ main.game, .game {
 @keyframes fallNote {
   from {
     transform: translate(-50%, -3.75rem);
-  } /* was -60px */
+  }
   to {
     transform: translate(-50%, var(--drop-distance-bottom));
   }
@@ -779,7 +720,6 @@ main.game, .game {
 body[data-paused="true"] .rail .note {
   animation-play-state: paused !important;
 }
-
 
 /* Feedback text */
 .feedback {
@@ -792,52 +732,45 @@ body[data-paused="true"] .rail .note {
   pointer-events: none;
 }
 
-/* ---------------------------------------------
-   Bonus feedback styling (only bonus-related text)
----------------------------------------------- */
-.feedback.bonus { 
-  color: var(--neon-pink);                /* neon-cyan for bonus banner/text */
-  text-shadow: 0 0 12px var(--neon-pink); /* soft glow to stand out */
-  font-weight: 700;              /* make it pop */
-}
-
-.feedback.life {
-  color: var(--neon-red);                /* same color for life message (cohesive) */
-  text-shadow: 0 0 12px var(--neon-red); 
+/* Bonus / life feedback */
+.feedback.bonus {
+  color: var(--neon-pink);
+  text-shadow: 0 0 12px var(--neon-pink);
   font-weight: 700;
 }
-
-/* tiny emphasis while body is in bonus state (no global text change) */
+.feedback.life {
+  color: var(--neon-red);
+  text-shadow: 0 0 12px var(--neon-red);
+  font-weight: 700;
+}
 body[data-bonus="true"] .feedback {
-  color: var(--neon-pink);                /* ensure feedback stays cyan during bonus */
+  color: var(--neon-pink);
 }
 
-/* -----------------------------------------
-   HUD: Persistent bonus banner 
------------------------------------------- */
+/* HUD: Persistent bonus banner */
 #bonusBanner {
-  position: absolute;           /* float above stage */
-  top: 4rem;                    /* adjust to clear navbar/topbar */
+  position: absolute;
+  top: 4rem;
   left: 0;
   right: 0;
-  display: grid;                /* center pill horizontally */
+  display: grid;
   place-items: center;
-  pointer-events: none;         /* never blocks clicks */
-  z-index: 60;                  /* keep above feedback; raise if needed */
+  pointer-events: none;
+  z-index: 60;
 }
-
-#bonusBanner[hidden] { display: none; }
-
+#bonusBanner[hidden] {
+  display: none;
+}
 #bonusBanner .pill {
-  padding: .35rem .75rem;       /* compact pill */
-  border-radius: 999px;         /* full round */
-  font-weight: 700;             /* strong label */
-  text-transform: uppercase;    /* visual emphasis */
-  letter-spacing: .08em;        /* spaced look */
-  background: rgba(255, 0, 170, 0.12); /* subtle neon wash */
-  color: var(--neon-pink);               /* theme neon pink */
-  box-shadow: 0 0 .6rem currentColor; /* glow */
-  backdrop-filter: blur(2px);   /* mild glass effect */
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(255, 0, 170, 0.12);
+  color: var(--neon-pink);
+  box-shadow: 0 0 0.6rem currentColor;
+  backdrop-filter: blur(2px);
 }
 
 /* Controls row */
@@ -846,22 +779,18 @@ body[data-bonus="true"] .feedback {
   left: 0;
   right: 0;
   margin-inline: auto;
-  max-inline-size: 40rem;                 /* desktop cap */
+  max-inline-size: 40rem;
   bottom: 0.75rem;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)); /* allow shrink to zero */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   justify-items: center;
-  gap: 0.5rem;                            /* mobile gap */
+  gap: 0.5rem;
   box-sizing: border-box;
-  padding: 0.25rem
-           max(0.75rem, env(safe-area-inset-left))
-           max(0.5rem, env(safe-area-inset-bottom))
-           max(0.75rem, env(safe-area-inset-right));
-  min-block-size: 5.5rem;                 /* stable control zone height */
+  padding: 0.25rem 0.75rem 0.5rem 0.75rem;
+  min-block-size: 5.5rem;
   z-index: 15;
 }
-
 .ctrl-btn {
   inline-size: 100%;
   display: flex;
@@ -872,17 +801,16 @@ body[data-bonus="true"] .feedback {
   border: 0;
   cursor: pointer;
   outline: none;
-  min-width: 0;        /* allow the grid item to shrink below intrinsic width */
+  min-width: 0;
 }
 .ctrl-btn .label {
   order: 0;
-  font-size: clamp(0.8rem, 1.6vw, 0.95rem);  /* stops label from blowing up */
+  font-size: clamp(0.8rem, 1.6vw, 0.95rem);
   text-shadow: var(--text-glow);
-  min-height: 1.25em; 
+  min-height: 1.25em;
   line-height: 1;
 }
-
-/* Explicit arrow size cap so they don't grow on big screens */
+/* Explicit arrow size cap */
 .arrow-icon {
   inline-size: clamp(4.5rem, 10vw, 6rem);
   block-size: clamp(4.5rem, 10vw, 6rem);
@@ -922,7 +850,7 @@ body[data-bonus="true"] .feedback {
 .arrow-main {
   fill: currentColor;
   stroke: #fff;
-  stroke-width: 0.9rem; 
+  stroke-width: 0.9rem;
   stroke-linejoin: round;
   stroke-linecap: round;
   transition: transform 0.12s ease;
@@ -942,6 +870,7 @@ body[data-bonus="true"] .feedback {
   transform: scale(1.16);
   filter: drop-shadow(0 0 0.75rem #fff) drop-shadow(0 0 2.125rem currentColor);
 }
+
 @keyframes neonPulse {
   0%,
   100% {
@@ -1005,16 +934,14 @@ body::before {
 /* =====================
    SVG Jazz the cat 
 ========================= */
-
-/* Jazz the cat */
 .dancer {
   position: fixed;
   left: 50%;
-  bottom: 7.5rem;                                 /* sits above controls */
+  bottom: 7.5rem;
   transform: translateX(-50%);
   z-index: 15;
   margin: 0;
-  inline-size: clamp(7.5rem, 35vw, 10rem); /* fluid width */
+  inline-size: clamp(7.5rem, 35vw, 10rem);
   pointer-events: none;
 }
 .dancer svg {
@@ -1039,80 +966,81 @@ body::before {
   stroke-width: 1px;
 }
 
-/* Nose: keep edges smooth and scale-safe */
+/* Nose */
 #nose {
   fill: #2b1c12;
   stroke: #2b1c12;
   stroke-width: 2;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
 }
 
 /* Whiskers */
 #whiskers line {
-  stroke: #030201;              /* same as outlines/legs */
+  stroke: #030201;
   filter: none;
-  vector-effect: non-scaling-stroke;
 }
 
-/* Limbs: double-stroke (keeps your arm IDs for animations) */
-#arm-left .outline, #arm-left .fill,
-#arm-right .outline, #arm-right .fill,
-#leg-left .outline, #leg-left .fill,
-#leg-right .outline, #leg-right .fill {
-  fill: none;                      /* lines only */
-  stroke-linecap: round;           /* rounded ends */
+/* Limbs: double-stroke */
+#arm-left .outline,
+#arm-left .fill,
+#arm-right .outline,
+#arm-right .fill,
+#leg-left .outline,
+#leg-left .fill,
+#leg-right .outline,
+#leg-right .fill {
+  fill: none;
+  stroke-linecap: round;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
 }
-
 /* Dark outer border */
-#arm-left .outline, #arm-right .outline,
-#leg-left .outline, #leg-right .outline {
-  stroke: #2b1c12;                 /* dark brown */
-  stroke-width: 12;                /* ~2× previous 6px */
+#arm-left .outline,
+#arm-right .outline,
+#leg-left .outline,
+#leg-right .outline {
+  stroke: #2b1c12;
+  stroke-width: 12;
 }
-
 /* Light inner “fur” */
-#arm-left .fill, #arm-right .fill,
-#leg-left .fill, #leg-right .fill {
-  stroke: #FFD49E;                 /* belly/fur tone */
+#arm-left .fill,
+#arm-right .fill,
+#leg-left .fill,
+#leg-right .fill {
+  stroke: #ffd49e;
   stroke-width: 8;
 }
 
-/* Tail — FRONT (#tail has .outline + .fill) */
-#tail .outline, 
+/* Tail — FRONT */
+#tail .outline,
 #tail .fill {
-  fill: none;                    /* lines only */
-  stroke-linecap: round;         /* rounded ends */
+  fill: none;
+  stroke-linecap: round;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  filter: none !important;       /* make sure no old filter sneaks in */
+  filter: none !important;
 }
-#tail .outline {                 /* dark border */
+#tail .outline {
   stroke: #2b1c12;
   stroke-width: 10;
 }
-#tail .fill {                    /* light inner */
-  stroke: #FFD49E;
+#tail .fill {
+  stroke: #ffd49e;
   stroke-width: 6;
 }
 
-/* Tail — BACK (id path = outline, class .tail-back = inner) */
+/* Tail — BACK */
 #tail-back,
 .tail-back {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
   filter: none !important;
 }
-#tail-back {                     /* dark border */
+#tail-back {
   stroke: #2b1c12;
   stroke-width: 10;
 }
-.tail-back {                     /* light inner */
-  stroke: #FFD49E;
+.tail-back {
+  stroke: #ffd49e;
   stroke-width: 6;
 }
 
@@ -1121,9 +1049,8 @@ body::before {
 #hat-band-back {
   fill: var(--label-left);
   filter: drop-shadow(0 0 0.1875rem var(--label-left))
-          drop-shadow(0 0 0.375rem var(--label-left));
+    drop-shadow(0 0 0.375rem var(--label-left));
 }
-
 
 /* no-flash toggle */
 body[data-no-flash] #tail .outline,
@@ -1133,9 +1060,6 @@ body[data-no-flash] .tail-back {
   filter: none !important;
 }
 
-
-
-
 /* =========================
    Dance moves (animations)
 ========================= */
@@ -1143,7 +1067,6 @@ body[data-no-flash] .tail-back {
   transform-box: fill-box;
   transform-origin: center;
 }
-
 #dancer #pose-front {
   opacity: 1;
   pointer-events: auto;
@@ -1444,7 +1367,6 @@ body[data-no-flash] .tail-back {
   }
 }
 
-
 /* =========================
    Rotate overlay (ARIA/JS)
 ========================= */
@@ -1472,12 +1394,10 @@ body[data-no-flash] .tail-back {
   word-break: normal;
   text-align: center;
 }
-
 .rb-text {
   font-size: 0.8125rem;
   margin: 0 0 0.625rem;
 }
-
 .rb-try {
   padding: 0.375rem 0.75rem;
   border: 0.125rem solid var(--neon-purple);
@@ -1489,7 +1409,7 @@ body[data-no-flash] .tail-back {
   box-shadow: 0 0 0.5rem rgba(166, 77, 255, 0.55);
 }
 
-/* Fullscreen blocker (media + ARIA control) */
+/* Fullscreen blocker */
 #rotateOverlay {
   position: fixed;
   inset: 0;
@@ -1527,33 +1447,27 @@ body[data-no-flash] .tail-back {
 #overlay .rb-card {
   pointer-events: auto;
 }
-
 .overlay.hidden {
   display: none;
 }
 
 /* Center the tip text above the Play button */
 #overlay .play-tip {
-  display: block;               /* block so text-align applies cleanly */
-  text-align: center;           /* center the multi-line text */
-  max-inline-size: 92vw;        /* keep it from stretching edge-to-edge */
-  padding: 0 0.5rem;            /* tiny side breathing room */
-  line-height: 1.2;             /* readable line spacing */
+  display: block;
+  text-align: center;
+  max-inline-size: 92vw;
+  padding: 0 0.5rem;
+  line-height: 1.2;
   color: var(--ink);
   text-shadow: var(--text-glow);
   font-size: clamp(0.9rem, 2.8vw, 1.15rem);
 }
-
 #overlay .play-tip,
 #overlay .play-label {
-  text-shadow:
-    var(--text-glow),
-    -1px 0 rgba(0,0,0,0.90), 
-     1px 0 rgba(0,0,0,0.90),
-     0 -1px rgba(0,0,0,0.90), 
-     0  1px rgba(0,0,0,0.90), 
-     0  0 10px rgba(0,0,0,0.55),
-     0  0 20px rgba(0,0,0,0.35);
+  text-shadow: var(--text-glow), -1px 0 rgba(0, 0, 0, 0.9),
+    1px 0 rgba(0, 0, 0, 0.9), 0 -1px rgba(0, 0, 0, 0.9),
+    0 1px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(0, 0, 0, 0.35);
 }
 
 .play-cta {
@@ -1566,7 +1480,6 @@ body[data-no-flash] .tail-back {
   align-items: center;
   gap: clamp(0.5rem, 1.8vw, 0.75rem);
 }
-
 .play-btn {
   inline-size: clamp(4.25rem, 12vw, 6rem);
   block-size: clamp(4.25rem, 12vw, 6rem);
@@ -1577,8 +1490,7 @@ body[data-no-flash] .tail-back {
   position: relative;
   box-shadow: 0 0 0.75rem var(--neon-cyan);
 }
-
-/* --- Play/Pause icons: appearance (keep) --- */
+/* Play/Pause icons */
 .play-btn .icon {
   position: absolute;
   top: 50%;
@@ -1587,23 +1499,25 @@ body[data-no-flash] .tail-back {
   inline-size: clamp(1.85rem, 6vw, 2.625rem);
   block-size: clamp(1.85rem, 6vw, 2.625rem);
   color: var(--neon-cyan);
-  fill: currentColor;                    /* SVG follows color */
+  fill: currentColor;
   filter: drop-shadow(0 0 0.75rem var(--neon-cyan));
-  pointer-events: none;                  /* clicks go to .play-btn */
+  pointer-events: none;
   line-height: 1;
-  display: none;                         /* hidden by default; state rules below decide */
+  display: none;
 }
-
-/* --- Play/Pause icons: canonical visibility (CSS-only state) --- */
-/* Running → show PAUSE */
-body:not([data-paused]) #overlay .play-btn .icon-pause { display: inline-block; }
-
-/* Paused → show PLAY */
-body[data-paused="true"] #overlay .play-btn .icon-play { display: inline-block; }
-
-/* Countdown → force PAUSE (so countdown can be paused) */
-body[data-starting="true"] #overlay .play-btn .icon-play  { display: none !important; }
-body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-block !important; }
+/* Running → PAUSE; Paused → PLAY; Countdown → PAUSE */
+body:not([data-paused]) #overlay .play-btn .icon-pause {
+  display: inline-block;
+}
+body[data-paused="true"] #overlay .play-btn .icon-play {
+  display: inline-block;
+}
+body[data-starting="true"] #overlay .play-btn .icon-play {
+  display: none !important;
+}
+body[data-starting="true"] #overlay .play-btn .icon-pause {
+  display: inline-block !important;
+}
 
 /* Background band behind CTA */
 #overlay::before {
@@ -1616,17 +1530,16 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   height: clamp(22rem, 50dvh, 34rem);
   background: linear-gradient(
     180deg,
-    rgba(11,18,33,0.00) 0%,
-    rgba(11,18,33,0.70) 18%,
-    rgba(11,18,33,0.75) 50%,
-    rgba(11,18,33,0.70) 82%,
-    rgba(11,18,33,0.00) 100%
+    rgba(11, 18, 33, 0) 0%,
+    rgba(11, 18, 33, 0.7) 18%,
+    rgba(11, 18, 33, 0.75) 50%,
+    rgba(11, 18, 33, 0.7) 82%,
+    rgba(11, 18, 33, 0) 100%
   );
-  pointer-events: none;  /* never blocks clicks */
-  z-index: 0;            /* behind overlay content */
+  pointer-events: none;
+  z-index: 0;
 }
-
-/* Ensure all overlay content renders above the band */
+/* Ensure overlay content above the band */
 #overlay > * {
   position: relative;
   z-index: 1;
@@ -1636,7 +1549,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   border-color: var(--neon-pink);
   box-shadow: 0 0 0.75rem var(--neon-pink);
 }
-
 .play-label {
   font-size: clamp(0.95rem, 3.2vw, 1.25rem);
   line-height: 1.15;
@@ -1665,41 +1577,34 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   outline-offset: 6px;
 }
 
-
 /* ----------------------------------------
    Settings overlay container
-   Purpose: Ensure the settings panel sits above the play overlay, centers content 
 ---------------------------------------- */
-#panel-settings {                     /* target the settings panel root */
-  position: fixed;                    /* pin to viewport */
-  inset: 0;                           /* cover full screen */
-  display: flex;                      /* enable centering */
-  align-items: center;                /* vertical center */
-  justify-content: center;            /* horizontal center */
-  background: rgba(0, 0, 0, 0.6);     /* dimmed backdrop */
+#panel-settings {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
   z-index: 20000;
   padding: 0.75rem;
-  overflow: visible;                  /* never clip the card when it shrinks */
+  overflow: visible;
 }
-
-/* ----------------------------------------
-   Settings card look
----------------------------------------- */
-#panel-settings .ui-panel__card {     /* the card inside settings */
-  max-width: min(680px, 92vw);        /* readable line length */
-  padding: 1.25rem 1.5rem;            /* comfortable spacing */
-  border-radius: 1rem;                /* soft corners */
-  background: rgba(8, 10, 18, 0.92);  /* dark translucent glass */
-  border: 2px solid #7df9ff;         /* neon border using theme accent */
-  box-shadow:                           /* soft outer glow + depth */
-    0 0 24px rgba(125, 249, 255, 0.35),
+/* Card */
+#panel-settings .ui-panel__card {
+  max-width: min(680px, 92vw);
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  background: rgba(8, 10, 18, 0.92);
+  border: 2px solid #7df9ff;
+  box-shadow: 0 0 24px rgba(125, 249, 255, 0.35),
     0 12px 30px rgba(0, 0, 0, 0.45);
-  color: var(--text, #f5f7ff);        /* theme text color */
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6); /* subtle readability shadow */
+  color: var(--text, #f5f7ff);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
   max-height: none;
   overflow: visible;
 }
-
 
 .pill-btn {
   appearance: none;
@@ -1710,206 +1615,168 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   background: var(--pill-bg);
   color: var(--pill-text);
   font: inherit;
-  letter-spacing: .03em;
+  letter-spacing: 0.03em;
   cursor: pointer;
   user-select: none;
   text-decoration: none;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.05) inset,
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05) inset,
     0 0 18px var(--pill-glow);
-  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease,
+    background-color 120ms ease;
 }
-
 .pill-btn:hover {
   transform: translateY(-1px);
 }
-
 .pill-btn:active {
   transform: translateY(0);
 }
-
 .pill-btn:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
-.hirow, .hs-row {
+.hirow,
+.hs-row {
   display: flex;
   align-items: center;
-  gap: .75rem;
+  gap: 0.75rem;
 }
-
-#hiBestValue, .hs-value {
+#hiBestValue,
+.hs-value {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* Settings › High Score: make the buttons neon red */
+/* High Score / Accessibility buttons */
 #settingsPane-highscore button,
 #settingsPane-highscore button.btn,
 #settingsPane-accessibility #settingsReduceMotion,
 #settingsPane-accessibility #settingsNoFlash {
-  border-color: var(--neon-red);              
+  border-color: var(--neon-red);
   box-shadow: 0 0 12px rgba(253, 4, 4, 0.25);
   text-shadow: var(--text-glow);
-  
 }
-
 #settingsPane-highscore button:hover,
 #settingsPane-highscore button.btn:hover,
 #settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"],
 #settingsPane-accessibility #settingsNoFlash[aria-pressed="true"],
 #settingsPane-accessibility #settingsReduceMotion:hover,
 #settingsPane-accessibility #settingsNoFlash:hover {
-  box-shadow: 0 0 18px rgba(253, 4, 4, 0.40);
+  box-shadow: 0 0 18px rgba(253, 4, 4, 0.4);
 }
-
 #settingsPane-highscore button:focus-visible,
 #settingsPane-highscore button.btn:focus-visible {
   outline: 2px solid var(--neon-red);
   outline-offset: 2px;
 }
 
-/* Accessibility toggles: show ON state clearly without glow */
+/* Accessibility toggles: ON state */
 #settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"],
 #settingsPane-accessibility #settingsNoFlash[aria-pressed="true"] {
   border-color: var(--neon-green, #1aff7a);
 }
-
 #settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"]:hover,
 #settingsPane-accessibility #settingsNoFlash[aria-pressed="true"]:hover {
   border-color: var(--neon-green, #1aff7a);
 }
-
-#settingsPane-accessibility #settingsReduceMotion[aria-pressed="true"]:focus-visible,
-#settingsPane-accessibility #settingsNoFlash[aria-pressed="true"]:focus-visible {
+#settingsPane-accessibility
+  #settingsReduceMotion[aria-pressed="true"]:focus-visible,
+#settingsPane-accessibility
+  #settingsNoFlash[aria-pressed="true"]:focus-visible {
   outline-color: var(--neon-green, #1aff7a);
 }
 
-
-/* ----------------------------------------
-   Settings heading
-   Purpose: Use the same strong arcade headline style as other overlays.
----------------------------------------- */
-#panel-settings .ui-panel__card h2 {  /* settings title */
-  margin: 0 0 0.75rem 0;              /* spacing below title */
-  font-size: clamp(1.4rem, 3vw, 1.8rem); /* responsive size */
-  font-weight: 900;                   /* bold headline */
-  text-transform: uppercase;          /* arcade vibe */
-  letter-spacing: 0.04em;             /* slight tracking */
+/* Headings / text */
+#panel-settings .ui-panel__card h2 {
+  margin: 0 0 0.75rem 0;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   max-width: 100%;
-  white-space: normal;     /* allow wrapping */
-  overflow-wrap: anywhere; /* safe breaks on very narrow widths */
-  word-break: normal;      /* prefer natural breaks */
-  text-align: center;      /* mobile-first symmetry */
-  margin-left: auto;       /* keep visually centered within card */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+  margin-left: auto;
   margin-right: auto;
-
+}
+#panel-settings .ui-panel__card p {
+  margin: 0 0 0.75rem 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-/* ----------------------------------------
-   Settings body text
-   Purpose: Match overlay copy styling.
----------------------------------------- */
-#panel-settings .ui-panel__card p {   /* paragraph text */
-  margin: 0 0 0.75rem 0;              /* space between lines */
-  font-weight: 700;                   /* stronger weight like results text */
-  letter-spacing: 0.02em;             /* subtle tracking */
+/* Close button */
+#panel-settings .ui-panel__close {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 2px solid var(--accent, #7df9ff);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text, #f5f7ff);
+  font-weight: 800;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 12px rgba(125, 249, 255, 0.25);
+  cursor: pointer;
 }
-
-/* ----------------------------------------
-   Close button
-   Purpose: Style close button to feel like in-game controls.
----------------------------------------- */
-#panel-settings .ui-panel__close {    /* close button element */
-  display: inline-block;              /* keep box model */
-  padding: 0.5rem 0.9rem;             /* touch target */
-  border-radius: 0.75rem;             /* rounded */
-  border: 2px solid var(--accent, #7df9ff); /* neon border */
-  background: rgba(0, 0, 0, 0.35);    /* translucent fill */
-  color: var(--text, #f5f7ff);        /* readable text */
-  font-weight: 800;                   /* punchy label */
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6); /* depth */
-  box-shadow: 0 0 12px rgba(125, 249, 255, 0.25); /* glow */
-  cursor: pointer;                    /* interactive affordance */
-}
-
-/* ----------------------------------------
-   Close button focus
-   Purpose: Provide a visible, theme-consistent focus ring.
----------------------------------------- */
 #panel-settings .ui-panel__close:focus-visible {
-  outline: 2px solid var(--accent, #7df9ff); /* themed ring */
-  outline-offset: 2px;                        /* offset for clarity */
+  outline: 2px solid var(--accent, #7df9ff);
+  outline-offset: 2px;
 }
 
-/* ----------------------------------------
-   Settings tabs (layout)
-   Purpose: Horizontal/wrapping tab bar with neon look
----------------------------------------- */
-.settings-tabs {                                   /* tab bar container */
-  display: flex;                                   /* row layout */
-  flex-wrap: wrap;                                 /* wrap on small screens */
-  gap: 0.5rem;                                     /* gap between tabs */
-  margin: 0 0 0.75rem 0;                           /* space below tabs */
-  justify-content: center
+/* Tabs */
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem 0;
+  justify-content: center;
 }
-
-/* ----------------------------------------
-   Settings tab button
-   Purpose: Neon-styled pill buttons consistent with theme
----------------------------------------- */
-.settings-tab {                                    /* each tab button */
-  padding: 0.4rem 0.8rem;                          /* comfortable hit area */
-  border-radius: 0.75rem;                          /* rounded corners */
-  border: 2px solid var(--neon-cyan);              /* neon border */
-  background: rgba(0,0,0,0.35);                    /* glassy fill */
-  color: var(--ink);                                /* themed text */
-  font-weight: 800;                                 /* bold label */
-  text-shadow: var(--text-glow);                    /* neon text glow */
-  box-shadow: 0 0 12px rgba(0,255,213,0.25);        /* subtle outer glow */
-  cursor: pointer;                                  /* clickable */
-  /* prevent overflow and keep symmetric look on tiny widths */
+.settings-tab {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.75rem;
+  border: 2px solid var(--neon-cyan);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font-weight: 800;
+  text-shadow: var(--text-glow);
+  box-shadow: 0 0 12px rgba(0, 255, 213, 0.25);
+  cursor: pointer;
   max-width: 100%;
-  white-space: normal;      /* allow line break inside long labels */
-  word-break: break-word;   /* break very long words if needed */
-  text-align: center;       /* keep text visually centered */
+  white-space: normal;
+  overflow-wrap: anywhere; /* (replaces word-break: break-word) */
+  text-align: center;
+}
+.settings-tab[aria-selected="true"] {
+  background: rgba(0, 255, 213, 0.12);
+  box-shadow: 0 0 18px rgba(0, 255, 213, 0.4);
 }
 
-
-.settings-tab[aria-selected="true"] {            /* active tab state */
-  background: rgba(0,255,213,0.12);
-  box-shadow: 0 0 18px rgba(0,255,213,0.4);
+/* Panes */
+.settings-pane {
+  display: block;
 }
-
-/* ----------------------------------------
-   Settings panes spacing
-   Purpose: Show one pane at a time and add breathing room
----------------------------------------- */
-.settings-pane {                                   /* visible pane */
-  display: block;                                   /* normal block */
+.settings-pane.hidden {
+  display: none;
 }
-.settings-pane.hidden {                             /* hidden pane */
-  display: none;                                    /* removed from flow */
+#settingsForm fieldset {
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin: 0 0 0.75rem 0;
 }
-#settingsForm fieldset {                            /* group box */
-  border: 2px solid rgba(255,255,255,0.08);         /* subtle outline */
-  border-radius: 0.75rem;                           /* rounded corners */
-  padding: 0.75rem;                                 /* inner padding */
-  margin: 0 0 0.75rem 0;                            /* space between groups */
+#settingsForm legend {
+  padding: 0 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-#settingsForm legend {                              /* group title */
-  padding: 0 0.5rem;                                /* small padding */
-  font-weight: 900;                                 /* bold headline */
-  letter-spacing: 0.04em;                           /* arcade vibe */
-  text-transform: uppercase;                        /* headline case */
+#settingsForm .hint {
+  margin: 0.375rem 0 0 0;
+  font-weight: 700;
+  color: var(--muted);
 }
-#settingsForm .hint {                               /* helper text */
-  margin: 0.375rem 0 0 0;                           /* top margin */
-  font-weight: 700;                                 /* readable weight */
-  color: var(--muted);                              /* muted tone */
-}
-
 .settings-pane legend {
   max-width: 100%;
   white-space: normal;
@@ -1920,66 +1787,55 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   margin-right: auto;
 }
 
-
-/* SR-only utility */
-/* Visually hidden utility (Bootstrap-compatible) */
+/* SR-only utility (Bootstrap-compatible) */
 .visually-hidden,
 .sr-only {
-  position: absolute !important;   /* take element out of normal flow */
-  width: 1px !important;           /* tiny box so it doesn't affect layout */
+  position: absolute !important;
+  width: 1px !important;
   height: 1px !important;
-  margin: -1px !important;         /* avoid adding layout space */
+  margin: -1px !important;
   padding: 0 !important;
   border: 0 !important;
-  overflow: hidden !important;     /* hide any content visually */
-  white-space: nowrap !important;  /* keep text on one line */
-  clip: rect(0 0 0 0) !important;  /* legacy clipping for older UAs */
-  clip-path: inset(50%) !important;/* modern clipping */
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  /* modern clipping only (validator-safe) */
+  clip-path: inset(50%) !important;
 }
-
-/* focusable, SR-only control */
 .sr-only.sr-only--focusable:focus,
 .sr-only.sr-only--focusable:active {
   position: static !important;
   width: auto !important;
   height: auto !important;
   margin: 0 !important;
-  clip: auto !important;
   clip-path: none !important;
   overflow: visible !important;
   white-space: normal !important;
 }
 
-
-
 /* =========================
    Media queries (Bootstrap)
 ========================= */
-
-
 @media (max-width: 380px) {
-  
   .ctrl-btn .label {
     font-size: clamp(0.7rem, 3.2vw, 0.85rem);
   }
-  
-  .lives { gap: 0.35rem; }
-
+  .lives {
+    gap: 0.35rem;
+  }
   .svg-heart {
     inline-size: clamp(0.9rem, 7vw, 1.1rem);
     block-size: clamp(0.9rem, 7vw, 1.1rem);
   }
 
-  
   .navbar-toggler.hamburger {
-    right: max(0.5rem, env(safe-area-inset-right));
+    right: 0.5rem;
     padding: 0.25rem;
     gap: 0.2rem;
     border-width: 2px;
   }
   .navbar-toggler.hamburger span {
-    width: 1.25rem;      /* shorter bars */
-    min-height: 0.1rem;  /* thinner bars */
+    width: 1.25rem;
+    min-height: 0.1rem;
   }
 
   .brand {
@@ -1989,7 +1845,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   }
 
   #hudToggle .hud-toggle__text {
-    display: none; 
+    display: none;
   }
   .hud-toggle {
     padding: 0.2rem 0.4rem;
@@ -2003,26 +1859,24 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
 
   .hud-item {
     padding: 0.4rem 0.6rem;
-    border-width: 2px; 
+    border-width: 2px;
     min-width: 5.25rem;
   }
   .hud-label {
-    font-size: 0.6875rem; 
+    font-size: 0.6875rem;
     margin-bottom: 0.2rem;
   }
   .metric {
-    font-size: 1.25rem; 
-    min-height: 1.2em; 
+    font-size: 1.25rem;
+    min-height: 1.2em;
     line-height: 1;
   }
-
-
 
   .topbar {
     z-index: 2400;
   }
   .topbar .navbar-collapse {
-  z-index: 2401;
+    z-index: 2401;
   }
 
   #menuPlayToggle.nav-btn {
@@ -2035,12 +1889,10 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     padding: 0.75rem 0.85rem;
     border-radius: 0.75rem;
     border-width: 2px;
-    box-shadow:
-      0 0 18px rgba(125, 249, 255, 0.25),
-      0 8px 20px rgba(0, 0, 0, 0.40);
+    box-shadow: 0 0 18px rgba(125, 249, 255, 0.25),
+      0 8px 20px rgba(0, 0, 0, 0.4);
     font-size: 87.5%;
   }
-
   #panel-settings .ui-panel__card h2 {
     font-size: 1.15rem;
     margin-bottom: 0.5rem;
@@ -2050,7 +1902,10 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     margin-bottom: 6px;
   }
 
-  .settings-tabs { gap: 5px; margin-bottom: 8px; }
+  .settings-tabs {
+    gap: 5px;
+    margin-bottom: 8px;
+  }
   .settings-tab {
     padding: 5px 9px;
     border-radius: 9px;
@@ -2058,9 +1913,12 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     font-size: 0.85rem;
   }
 
- 
-  #settingsForm legend { font-size: 1rem; }
-  #settingsForm .hint   { font-size: 0.5rem; }
+  #settingsForm legend {
+    font-size: 1rem;
+  }
+  #settingsForm .hint {
+    font-size: 0.5rem;
+  }
 
   .pill-btn {
     padding: 7px 10px;
@@ -2074,17 +1932,14 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     border-width: 2px;
     font-size: 0.9rem;
   }
-
-
 }
 
 /* ≤575.98px — small phones */
 @media (max-width: 575.98px) {
   :root {
-    --floor-bottom: 1rem; 
-    --floor-height: clamp(18rem, 48dvh, 52rem); 
+    --floor-bottom: 1rem;
+    --floor-height: clamp(18rem, 48dvh, 52rem);
     --rails-gap: 0.75rem;
-
   }
 
   .brand {
@@ -2098,15 +1953,14 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   }
 
   .topbar {
-    padding-right: max(0.75rem, env(safe-area-inset-right));
-    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
   }
 
-  .lives { 
-    gap: 0.4rem; 
+  .lives {
+    gap: 0.4rem;
     padding: 0.0625rem;
   }
-
   .svg-heart {
     inline-size: clamp(1rem, 6.2vw, 1.25rem);
     block-size: clamp(1rem, 6.2vw, 1.25rem);
@@ -2118,7 +1972,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     border-radius: 12px;
     border-width: 2px;
   }
-  
   #panel-settings .ui-panel__card h2 {
     font-size: 1rem;
     margin: 0 0 8px 0;
@@ -2153,7 +2006,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     letter-spacing: 0.03em;
   }
   #settingsForm .hint {
-
     margin-top: 6px;
   }
 
@@ -2171,125 +2023,106 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   }
 
   /* Play/Pause overlay — mobile scale */
-#overlay .play-cta { 
-  gap: 0.5rem;
-}
-#overlay .play-btn {
-  inline-size: 4.75rem;
-  block-size: 4.75rem;
-  border-width: 0.2rem;
-}
-#overlay .play-btn .icon {
-  font-size: 2.1rem;
-}
-#overlay .play-label {
-  font-size: 1rem;
-  line-height: 1.15;
-}
+  #overlay .play-cta {
+    gap: 0.5rem;
+  }
+  #overlay .play-btn {
+    inline-size: 4.75rem;
+    block-size: 4.75rem;
+    border-width: 0.2rem;
+  }
+  #overlay .play-btn .icon {
+    font-size: 2.1rem;
+  }
+  #overlay .play-label {
+    font-size: 1rem;
+    line-height: 1.15;
+  }
 
-/* Results & Game Over */
-#resultsCta .rb-card,
-#gameOverCta .rb-card {
-  max-inline-size: 92vw;
-  padding: 0.75rem 0.85rem;
-  border-radius: 0.75rem;
-  border-width: 2px;
-  font-size: 0.9rem; 
+  /* Results & Game Over */
+  #resultsCta .rb-card,
+  #gameOverCta .rb-card {
+    max-inline-size: 92vw;
+    padding: 0.75rem 0.85rem;
+    border-radius: 0.75rem;
+    border-width: 2px;
+    font-size: 0.9rem;
+  }
+  #resultsCta .rb-card h2,
+  #gameOverCta .rb-card h2 {
+    font-size: clamp(1rem, 3.5vw, 1.4rem);
+    margin-bottom: clamp(0.35rem, 1.2vw, 0.5rem);
+  }
+  #resultsCta .rb-card p,
+  #resultsCta .rb-card .stat,
+  #gameOverCta .rb-card p,
+  #gameOverCta .rb-card .stat {
+    font-size: clamp(1.05rem, 4vw, 1.35rem);
+  }
+  #resultsCta .rb-card .value,
+  #gameOverCta .rb-card .value {
+    font-size: 1.2rem;
+  }
+  #btnNextLevel,
+  #btnRestartLevel,
+  #btnRetryLevel {
+    padding: clamp(0.4rem, 1.8vw, 0.6rem) clamp(0.6rem, 2.4vw, 0.9rem);
+    font-size: clamp(0.85rem, 3.2vw, 1rem);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
 }
-
-
-#resultsCta .rb-card h2,
-#gameOverCta .rb-card h2, {
-  font-size: clamp(1rem, 3.5vw, 1.4rem);
-  margin-bottom: clamp(0.35rem, 1.2vw, 0.5rem);
-}
-
-#resultsCta .rb-card p,
-#resultsCta .rb-card .stat,
-#gameOverCta .rb-card p,
-#gameOverCta .rb-card .stat {
-  font-size: clamp(1.05rem, 4vw, 1.35rem);
-}
-
-#resultsCta .rb-card .value,
-#gameOverCta .rb-card .value {
-  font-size: 1.2rem;
-}
-
-/* Results/Game Over buttons */
-#btnNextLevel,
-#btnRestartLevel,
-#btnRetryLevel {
-  padding: clamp(0.4rem, 1.8vw, 0.6rem) clamp(0.6rem, 2.4vw, 0.9rem);
-  font-size: clamp(0.85rem, 3.2vw, 1rem);
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-}
-
 
 @media (min-width: 768px) {
-  
   :root {
     --floor-bottom: 40px;
   }
-  
+
   .controls {
     bottom: 1rem;
     gap: 0.625rem;
     min-block-size: 5.75rem;
   }
-
   .stage .rails {
     bottom: 5.5rem;
     column-gap: 0.625rem;
   }
-
-  .judge-ticks { 
-    column-gap: 0.625rem; 
+  .judge-ticks {
+    column-gap: 0.625rem;
+  }
+  .dancer {
+    bottom: 8rem;
   }
 
-  .dancer { 
-    bottom: 8rem; 
-  }
- 
   .brand {
-  max-inline-size: calc(100% - 4.5rem);
-  padding-right: 0.5rem;
-  padding-top: 1rem;
+    max-inline-size: calc(100% - 4.5rem);
+    padding-right: 0.5rem;
+    padding-top: 1rem;
   }
 
-  #overlay::before { 
-    height: clamp(24rem, 54dvh, 36rem); 
+  #overlay::before {
+    height: clamp(24rem, 54dvh, 36rem);
   }
 
-#quickPlayPause {
-  inline-size: 4rem;
-  block-size: 4rem;
-}
-#quickPlayPause::before {
-  font-size: 3rem;
-}
+  #quickPlayPause {
+    inline-size: 4rem;
+    block-size: 4rem;
+  }
+  #quickPlayPause::before {
+    font-size: 3rem;
+  }
 
-#overlay .play-tip,
+  #overlay .play-tip,
   #overlay .play-label {
-    text-shadow:
-      var(--text-glow),
-      -1.5px 0 rgba(0,0,0,0.92),
-       1.5px 0 rgba(0,0,0,0.92),
-       0 -1.5px rgba(0,0,0,0.92),
-       0  1.5px rgba(0,0,0,0.92),
-       0  0 12px rgba(0,0,0,0.58),
-       0  0 24px rgba(0,0,0,0.38);
+    text-shadow: var(--text-glow), -1.5px 0 rgba(0, 0, 0, 0.92),
+      1.5px 0 rgba(0, 0, 0, 0.92), 0 -1.5px rgba(0, 0, 0, 0.92),
+      0 1.5px rgba(0, 0, 0, 0.92), 0 0 12px rgba(0, 0, 0, 0.58),
+      0 0 24px rgba(0, 0, 0, 0.38);
   }
-
 }
-
 
 /* ≤1199.98px — burger mode */
 @media (max-width: 1199.98px) {
-
   :root {
     --floor-bottom: 40px;
   }
@@ -2297,8 +2130,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   .navbar-toggler.hamburger {
     display: inline-grid;
   }
-
-   .topbar {
+  .topbar {
     padding-right: 1rem;
   }
 
@@ -2309,17 +2141,15 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
   .topbar .navbar-collapse {
     position: absolute;
     top: calc(var(--topbar-h) + 0.375rem);
-    inset-inline-end: max(0.75rem, env(safe-area-inset-right));
-    inset-inline-start: auto;
+    right: 0.75rem;
+    left: auto;
     width: max-content;
-    max-width: calc(
-      100% - (env(safe-area-inset-left) + env(safe-area-inset-right) + 1.5rem));
+    max-width: calc(100% - 1.5rem);
     padding: 0;
     margin: 0;
     background: transparent;
     z-index: 40;
   }
-
   .topbar .navbar-collapse.show {
     z-index: 2305;
     display: block !important;
@@ -2347,7 +2177,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     white-space: nowrap;
   }
 
-
   .brand {
     display: block;
     margin-right: 0;
@@ -2355,18 +2184,18 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     min-width: 0;
     overflow: hidden;
     text-overflow: clip;
-    white-space: nowrap; 
+    white-space: nowrap;
     max-width: 100%;
   }
   .stage .rails {
     bottom: 10rem;
   }
 
-    .topbar .navbar-collapse { 
+  .topbar .navbar-collapse {
     z-index: 2401;
   }
-  .topbar { 
-    z-index: 2400; 
+  .topbar {
+    z-index: 2400;
   }
 
   .topbar .navbar-collapse .navbar-nav.nav-list {
@@ -2374,7 +2203,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     padding: 0;
     margin: 0;
   }
-
   .topbar .navbar-collapse .nav-btn {
     font-size: clamp(0.78rem, 3.5vw, 0.95rem);
     padding: 0.25rem 0.5rem;
@@ -2382,14 +2210,12 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     border-radius: 0.5rem;
     background: rgba(10, 14, 28, 0.82);
   }
-} 
+}
 /* ≥1200px */
 @media (min-width: 1200px) {
-
   .navbar-toggler.hamburger {
     display: none !important;
   }
-
   .topbar .navbar-collapse {
     position: static;
     display: flex !important;
@@ -2397,7 +2223,6 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     padding: 0;
     margin: 0;
   }
-
   .topbar .navbar-collapse .navbar-nav.nav-list {
     display: flex;
     flex-direction: row !important;
@@ -2408,154 +2233,168 @@ body[data-starting="true"] #overlay .play-btn .icon-pause { display: inline-bloc
     margin: 0;
   }
 
-    .controls {
+  .controls {
     bottom: 1.25rem;
     gap: 0.75rem;
     min-block-size: 6rem;
   }
-
-   .stage .rails {
+  .stage .rails {
     bottom: 10rem;
     column-gap: 0.75rem;
   }
-
-  .judge-ticks { 
-    column-gap: 0.75rem; 
-  } 
-
-  .dancer { 
-    bottom: 8.25rem; 
+  .judge-ticks {
+    column-gap: 0.75rem;
+  }
+  .dancer {
+    bottom: 8.25rem;
   }
 
-   #overlay::before { 
-    height: clamp(26rem, 56dvh, 40rem); 
+  #overlay::before {
+    height: clamp(26rem, 56dvh, 40rem);
   }
 
   #quickPlayPause {
-  inline-size: 5rem;
-  block-size: 5rem;
-}
-#quickPlayPause::before {
-  font-size: 4rem;
-}
-
-}
-
-/* Rotate overlay: show on small devices in landscape or very short heights */
-@media ( (orientation: landscape) and (max-height: 520px) and (pointer: coarse) ),
-       ( (max-height: 420px) and (pointer: coarse) ) {
-  #rotateOverlay { display: flex; }
+    inline-size: 5rem;
+    block-size: 5rem;
+  }
+  #quickPlayPause::before {
+    font-size: 4rem;
+  }
 }
 
-/* HIDE: only when both width and height are comfortably large */
+/* Rotate overlay visibility */
+@media ((orientation: landscape) and (max-height: 520px) and (pointer: coarse)),
+  ((max-height: 420px) and (pointer: coarse)) {
+  #rotateOverlay {
+    display: flex;
+  }
+}
 @media (min-width: 768px) and (min-height: 521px) {
-  #rotateOverlay { display: none !important; }
+  #rotateOverlay {
+    display: none !important;
+  }
+}
+body[data-rotate-dismissed="true"] #rotateOverlay {
+  display: none !important;
 }
 
-/* Manual dismiss always wins */
-body[data-rotate-dismissed="true"] #rotateOverlay { display: none !important; }
-
-/* --- Accesibility & visuals settings --- */
+/* ================================
+   Accessibility & Visual Settings
+   - Centralized overrides for motion and glow/flash
+================================ */
 
 /* ----------------------------------------
-   Settings: Reduce Motion
-   Purpose: Cut non-essential animations to reduce motion
+   Reduce Motion: disable non-essential animations
+   Purpose: Respect user preference to minimize motion
 ---------------------------------------- */
 
+/* Stop dancer translations on all moves */
 body[data-reduce-motion="true"] #dancer.move-left svg,
 body[data-reduce-motion="true"] #dancer.move-right svg,
 body[data-reduce-motion="true"] #dancer.move-up svg,
 body[data-reduce-motion="true"] #dancer.move-down svg {
-  animation: none !important;                               /* stops translation left/right/up */
+  animation: none !important; /* kill all move animations */
 }
 
-body[data-reduce-motion="true"] .ctrl-btn.active .arrow-glow { /* controller glow */
-  animation: none !important;                                   /* stop neonPulse */
-}
-body[data-reduce-motion="true"] .ctrl-btn.active .label {       /* controller label */
-  animation: none !important;                                   /* stop textPulse */
-}
-body[data-reduce-motion="true"] .judge-ticks {                  
-  animation: none !important;                                   /* stop any tick anim */
+/* Stop controller pulses and any tick animations */
+body[data-reduce-motion="true"] .ctrl-btn.active .arrow-glow,
+body[data-reduce-motion="true"] .ctrl-btn.active .label,
+body[data-reduce-motion="true"] .judge-ticks {
+  animation: none !important; /* no pulsing/glow/text/ticks */
 }
 
+/* Stop tail wag specifically on down move */
 body[data-reduce-motion="true"] #dancer.move-down #tail-back {
-  animation: none !important;                                   /* stop tail wag */
+  animation: none !important; /* no tail wag */
 }
 
 /* ----------------------------------------
-   Settings: No Flash
-   Purpose: Disable judge flash effects triggered on rails
+   No Flash: rail judge flashes
+   Purpose: Remove judge flash layers for good/miss
 ---------------------------------------- */
-body[data-no-flash="true"] .stage .rails.flash-good::after, /* hides 'good' flash layer */
-body[data-no-flash="true"] .stage .rails.flash-miss::after { /* hides 'miss' flash layer */
-  animation: none !important;                               /* stop flash animation */
-  opacity: 0 !important;                                    /* make layer invisible */
-  pointer-events: none;                                     /* keep it non-interactive */
+body[data-no-flash="true"] .stage .rails.flash-good::after,
+body[data-no-flash="true"] .stage .rails.flash-miss::after {
+  animation: none !important; /* stop flash animation */
+  opacity: 0 !important; /* hide flash layer */
+  pointer-events: none; /* keep non-interactive */
 }
 
-/* no glow/bloom on orbs, rails ,judge line */
+/* ----------------------------------------
+   No Flash: notes / rails / judge baseline
+   Purpose: Remove neon glows globally on core playfield
+---------------------------------------- */
 body[data-no-flash] .note,
 body[data-no-flash] .rails .rail,
 body[data-no-flash] .judge-line {
-  box-shadow: none !important;
-  filter: none !important;
+  box-shadow: none !important; /* drop all glow */
+  filter: none !important; /* drop filter glow */
 }
 
-/* make orbs clear with border */
+/* Make notes readable without glow */
 body[data-no-flash] .note {
-  background-image: none;           
-  opacity: 0.95; 
-  border: 2px solid rgba(255,255,255,0.85);
-  outline: 0; 
+  background-image: none; /* no gradient/bloom */
+  opacity: 0.95; /* keep solid visibility */
+  border: 2px solid rgba(255, 255, 255, 0.85); /* crisp outline */
+  outline: 0; /* no extra outline */
 }
 
-
+/* Remove any note pseudo glows */
 body[data-no-flash] .note::before,
 body[data-no-flash] .note::after {
-  animation: none !important;
-  box-shadow: none !important;
-  filter: none !important;
+  animation: none !important; /* no animated glow */
+  box-shadow: none !important; /* no halo */
+  filter: none !important; /* no effects */
 }
 
-/* Kill all text glow when no-flash is enabled */
+/* ----------------------------------------
+   No Flash: global text glow variables
+   Purpose: Turn off shared glow tokens and text shadows
+---------------------------------------- */
 body[data-no-flash] {
-  --text-glow: none;
-  --icon-glow: none;
+  --text-glow: none; /* disable text glow */
+  --icon-glow: none; /* disable icon glow */
 }
 
 body[data-no-flash] * {
-  text-shadow: none !important;   /* catch any hard-coded text-shadow values */
+  text-shadow: none !important; /* enforce no text glow */
 }
 
-/* HUD: remove all outer glows/shadows when no-flash is on */
+/* ----------------------------------------
+   No Flash: HUD & overlay play/pause
+   Purpose: Remove outer glows and filters
+---------------------------------------- */
 body[data-no-flash] .hud,
 body[data-no-flash] .hud * {
-  box-shadow: none !important; /* kill neon HUD glows */
+  box-shadow: none !important; /* no HUD glow */
 }
 
-/* Overlay play/pause – remove button/icon glow */
 body[data-no-flash] .play-btn,
 body[data-no-flash] .play-btn:hover,
 body[data-no-flash] .play-btn::before,
 body[data-no-flash] .play-btn::after,
 body[data-no-flash] .icon-play,
 body[data-no-flash] .icon-pause {
-  box-shadow: none !important;
-  filter: none !important;
-  text-shadow: none !important;
+  box-shadow: none !important; /* no button/icon glow */
+  filter: none !important; /* no filter glow */
+  text-shadow: none !important; /* no text glow */
 }
 
-/* Controller arrows (buttons + labels + SVG icon) */
+/* ----------------------------------------
+   No Flash: controller arrows & labels
+   Purpose: Remove neon bloom on controls
+---------------------------------------- */
 body[data-no-flash] .ctrl-btn,
 body[data-no-flash] .ctrl-btn *,
 body[data-no-flash] .arrow-icon {
-  box-shadow: none !important;
-  filter: none !important;
-  text-shadow: none !important; /* label text */
+  box-shadow: none !important; /* no control glow */
+  filter: none !important; /* no filter glow */
+  text-shadow: none !important; /* no label glow */
 }
 
-/* Judge line & ticks – remove all glow */
+/* ----------------------------------------
+   No Flash: judge line & targets
+   Purpose: Remove glow on judge line and target rings
+---------------------------------------- */
 body[data-no-flash] .judge-line,
 body[data-no-flash] .judge-line::before,
 body[data-no-flash] .judge-line::after,
@@ -2563,70 +2402,83 @@ body[data-no-flash] .judge-ticks,
 body[data-no-flash] .judge-ticks::before,
 body[data-no-flash] .judge-ticks::after,
 body[data-no-flash] .judge-target {
-  box-shadow: none !important;
-  filter: none !important;
-}
-/* kill its glow/background */
-body[data-no-flash] .stage .rails::after {
-  background: cyan !important;
-  box-shadow: none !important;
-  filter: none !important;
-  opacity: 1 !important;
+  box-shadow: none !important; /* no halos */
+  filter: none !important; /* no filters */
 }
 
+/* Keep judge baseline visible but flat (no glow) */
+body[data-no-flash] .stage .rails::after {
+  background: cyan !important; /* retain visible line */
+  box-shadow: none !important; /* no bloom */
+  filter: none !important; /* no effects */
+  opacity: 1 !important; /* fully visible */
+}
+
+/* Remove inner ring halos on judge target */
 body[data-no-flash] .judge-target::before,
 body[data-no-flash] .judge-target::after {
-  box-shadow: none !important;
-  filter: none !important;
-  background: none !important;
+  box-shadow: none !important; /* no glow */
+  filter: none !important; /* no filters */
+  background: none !important; /* no fills */
 }
 
+/* ----------------------------------------
+   No Flash: misc SVG accents
+   Purpose: Remove decorative glows on accessories
+---------------------------------------- */
 body[data-no-flash] .arrow-glow {
-  filter: none !important;
+  filter: none !important; /* no arrow glow */
 }
 
 body[data-no-flash] #hat-band,
 body[data-no-flash] #bowtie,
 body[data-no-flash] #glasses rect {
-  filter: none !important;
+  filter: none !important; /* no accessory glow */
 }
 
-
-/* Cards: remove outer + inset glow */
+/* ----------------------------------------
+   No Flash: overlay cards & buttons
+   Purpose: Flatten rotate/results/gameover cards and buttons
+---------------------------------------- */
 body[data-no-flash] #rotateOverlay .rb-card,
-body[data-no-flash] #resultsCta   .rb-card,
-body[data-no-flash] #gameOverCta  .rb-card {
-  box-shadow: none !important;
+body[data-no-flash] #resultsCta .rb-card,
+body[data-no-flash] #gameOverCta .rb-card {
+  box-shadow: none !important; /* flat cards */
 }
 
-/* Buttons inside those cards: remove glow */
 body[data-no-flash] #rotateOverlay .rb-try,
-body[data-no-flash] #resultsCta   .rb-try,
-body[data-no-flash] #gameOverCta  .rb-try {
-  box-shadow: none !important;
+body[data-no-flash] #resultsCta .rb-try,
+body[data-no-flash] #gameOverCta .rb-try {
+  box-shadow: none !important; /* flat buttons */
 }
 
-/* Any icon in rotate card (emoji/SVG) – ensure no filter glow */
 body[data-no-flash] #rotateOverlay .rb-icon {
-  filter: none !important;
+  filter: none !important; /* no icon glow */
 }
 
-/* Settings overlay (card + tabs + buttons): kill glow in no-flash mode */
+/* ----------------------------------------
+   No Flash: settings panel
+   Purpose: Remove glows from settings UI
+---------------------------------------- */
 body[data-no-flash] #panel-settings .ui-panel__card {
-  box-shadow: none !important; 
+  box-shadow: none !important; /* flat panel */
 }
 
 body[data-no-flash] #panel-settings .settings-tab,
 body[data-no-flash] #panel-settings .settings-tab:hover,
 body[data-no-flash] #panel-settings .settings-tab[aria-selected="true"],
 body[data-no-flash] #panel-settings .settings-tab[aria-pressed="true"] {
-  box-shadow: none !important; 
+  box-shadow: none !important; /* flat tabs */
 }
 
 body[data-no-flash] #panel-settings button {
-  box-shadow: none !important;
+  box-shadow: none !important; /* flat buttons */
 }
 
-body[data-no-flash] .svg-heart { 
-  filter: none !important; 
+/* ----------------------------------------
+   No Flash: hearts (lives)
+   Purpose: Remove glow/bloom on SVG hearts
+---------------------------------------- */
+body[data-no-flash] .svg-heart {
+  filter: none !important; /* no heart glow */
 }
