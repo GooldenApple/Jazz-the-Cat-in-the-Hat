@@ -1,12 +1,9 @@
-
-![Mockups of the game on desktop, tablet and mobile](assets/images/readme/mockup-multi-device.png)  
-*Responsive view of Jazz the Cat in the Hat across devices.*
+![Background art preview](assets/images/bgpng1440.png)  
+*Neon backdrop used across the game (PNG fallback so it renders on GitHub).*
 
 # Jazz the Cat in the Hat
 
-A neon-styled, chart‑driven **web rhythm game** built with **HTML/CSS/vanilla ES modules**.
-
-Players hit **Left / Up / Down / Right** to the beat. Notes fall toward a judge line; timing is scored as **Perfect / Great / Good / Miss**. The game includes **lives**, a **combo → multiplier** system, a **bonus mode** that can award **extra lives**, and **15 difficulty levels** mapped to a curated song set.
+A neon-arcade, rhythm‑reaction game lovingly built for kids — and fun for teens and grown‑ups, too. Inspired by my daughter and especially my son, who tested, gave feedback, and kept the vision grounded in joy: **big buttons, clear timing, instant celebration** when you nail a beat. The design prioritises comfort and accessibility: calm modes for sensitive players, short sessions for family life, and a gentle difficulty curve that still lets score hunters chase perfection.
 
 **Live Site:** <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>  
 **Repo:** <https://github.com/GooldenApple/Jazz-the-Cat-in-the-Hat>
@@ -18,47 +15,30 @@ Players hit **Left / Up / Down / Right** to the beat. Notes fall toward a judge 
 - [User Experience (UX)](#user-experience-ux)
   - [Project Purpose](#project-purpose)
   - [UX Decisions](#ux-decisions)
-  - [Initial Discussion](#initial-discussion)
-  - [Key Information for the Game](#key-information-for-the-game)
   - [User Stories](#user-stories)
-    - [Player Goals](#player-goals)
-    - [First‑Time Player](#firsttime-player)
-    - [Returning Player](#returning-player)
-    - [Accessibility & Sensitivity](#accessibility--sensitivity)
-    - [Developer / Maintainer](#developer--maintainer)
-- [Design](#design)
-  - [Colour Scheme](#colour-scheme)
-  - [Typography](#typography)
-  - [Imagery & Icons](#imagery--icons)
-  - [Audio & Songs](#audio--songs)
-  - [Wireframes](#wireframes)
+  - [User Story Testing (Traceability)](#user-story-testing-traceability)
+  - [Wireframes & Mockups](#wireframes--mockups)
+- [Gameplay](#gameplay)
+  - [Timing & Scoring](#timing--scoring)
+  - [Hearts & Forgiveness](#hearts--forgiveness)
+  - [Bonus Mode](#bonus-mode)
+  - [Level Progression](#level-progression)
 - [Features](#features)
-  - [Global Features](#global-features)
-  - [Core Gameplay](#core-gameplay)
-  - [Difficulty & Levels](#difficulty--levels)
-  - [Settings](#settings)
-  - [Controls](#controls)
-- [Accessibility](#accessibility)
-- [Technologies Used](#technologies-used)
-- [Deployment & Local Development](#deployment--local-development)
-  - [Deployment (GitHub Pages)](#deployment-github-pages)
-  - [Local Development](#local-development)
-  - [How to Fork](#how-to-fork)
-  - [How to Clone](#how-to-clone)
+- [Design](#design)
+  - [Visual Language](#visual-language)
+  - [Layout & Responsiveness](#layout--responsiveness)
+  - [Accessibility](#accessibility)
+- [Technologies](#technologies)
+- [Deployment](#deployment)
+- [Usage](#usage)
 - [Testing](#testing)
-  - [Manual Feature Testing](#manual-feature-testing)
-  - [Game Logic & Console Harness](#game-logic--console-harness)
-  - [Accessibility Testing](#accessibility-testing)
-  - [Browser & Device Testing](#browser--device-testing)
-  - [Automated Testing](#automated-testing)
-  - [Code Validation](#code-validation)
-  - [Bug Fixes & Future Improvements](#bug-fixes--future-improvements)
-- [Grading Criteria Mapping (Pass/Merit)](#grading-criteria-mapping-passmerit)
-- [Appendix / Process & Artifacts](#appendix--process--artifacts)
-  - [Architecture & File Structure](#architecture--file-structure)
-  - [Event Protocol](#event-protocol)
-  - [Difficulty Reference](#difficulty-reference)
-  - [Testing Artifacts](#testing-artifacts)
+  - [Tools & Methods](#tools--methods)
+  - [Manual Test Matrix](#manual-test-matrix)
+  - [Developer Console Sanity Tests](#developer-console-sanity-tests)
+  - [Regression Tests (Recent Fixes)](#regression-tests-recent-fixes)
+  - [Validation](#validation)
+  - [Known Issues / Non‑blocking](#known-issues--non-blocking)
+  - [Future Testing](#future-testing)
 - [Credits](#credits)
 - [Acknowledgements](#acknowledgements)
 
@@ -67,426 +47,339 @@ Players hit **Left / Up / Down / Right** to the beat. Notes fall toward a judge 
 ## User Experience (UX)
 
 ### Project Purpose
-
-Deliver a responsive rhythm game with:
-- **Clear feedback** (combos, hearts, timing labels).
-- **Fair progression** (levels ramp from very easy → boss tiers).
-- **Accessibility toggles** (reduce motion / no flash).
-- **Low friction** start (overlay Play button, quick play/pause).
+- Deliver a **simple, responsive rhythm game** with clear controls and satisfying feedback.
+- Offer an **approachable learning curve**: Levels 1–3 introduce one note at a time; later levels gradually increase challenge.
+- Keep **performance and accessibility** in focus: low‑glow mode, reduce motion, and transparent UI states.
 
 ### UX Decisions
-
-- **Mobile‑first layout** with consistent rail/controls alignment and safe‑area insets respected on iOS.  
-- **Overlay CTA** with **3‑2‑1 countdown** that can be paused immediately.  
-- **Neon theme** with toned glow to keep legibility on small screens.  
-- **HUD** emphasizes **score, lives, level, combo**, and **best**; readable even at 360px.  
-- **Bonus mode banner** is persistent but unobtrusive; uses text/minimal glow.
-
-### Initial Discussion
-
-The game targets casual players learning rhythm timing. Early levels are extremely forgiving and **only spawn one note at a time**. The pace and simultaneity scale over time. **Natural misses do not instantly punish** at low tiers; damage accrues via tolerant steps to keep frustration low while still teaching timing.
-
-### Key Information for the Game
-
-- Fast to start; **no account** required.  
-- **Arrows** = inputs; **touch** and **keyboard** supported.  
-- **Lives & streaks** guide progress; **extra lives** possible in **bonus mode**.  
-- **Songs are chart‑driven** so timing aligns with the music.
+- **Overlay‑first flow:** Big Play/Pause overlay makes it obvious how to start and stop.
+- **Legible HUD:** Score, combo, and lives are readable at a glance; Quick Play/Pause is available but unobtrusive.
+- **Mobile‑first:** Controls and rails align consistently across breakpoints; no awkward gaps; navbar behavior is predictable.
+- **Accessibility toggles:** *Reduce Motion* and *No Flash* make effects and animations optional.
+- **Clear lifecycle panels:** Results vs Game Over panels appear at the right time, with Next/Retry actions.
 
 ### User Stories
 
-#### Player Goals
-**User Story:**  
-As a player, I want a quick start and clear feedback on my timing so I can improve while enjoying the music.
-
-**Acceptance Criteria:**  
-- Overlay Play starts a level with a short countdown.  
-- Timing labels (Perfect/Great/Good/Miss) are visible.  
-- Lives and combo are clearly shown and update instantly.  
-- Bonus mode feedback shows progress toward extra life.
-
-**Tasks:**  
-- Implement overlay with countdown + Play/Pause.  
-- Render HUD (score, best, lives, combo, level).  
-- Emit feedback labels near judge line.  
-- Dispatch bonus progress events to update the banner.
-
-#### First‑Time Player
-**User Story:**  
-As a first‑time player, I want very easy early levels to practice one note at a time so I can learn timing without feeling overwhelmed.
-
-**Acceptance Criteria:**  
-- Levels 1–3 spawn single notes only; slow fall speed.  
-- Level 1 has **no life loss** (training).  
-- Hit windows are generous.  
-- Charts simplified for low complexity.
-
-**Tasks:**  
-- Enforce `maxSimultaneous=1` for early levels.  
-- Set generous judge windows and long travel time.  
-- Simplify charts and block simultaneous spawns.
-
-#### Returning Player
-**User Story:**  
-As a returning player, I want a longer game with increasing density and faster beats so I can challenge myself and track my best score.
-
-**Acceptance Criteria:**  
-- Gradual increase in density and simultaneity.  
-- Best score is persisted to localStorage.  
-- Levels get **longer overall** by repeating the song if needed.
-
-**Tasks:**  
-- Level policy ramps probabilities for pairs/trios/quads.  
-- Persist and load `best` across sessions.  
-- If a level target duration exceeds a single song, **loop the track** seamlessly.
-
-#### Accessibility & Sensitivity
-**User Story:**  
-As a player with motion/light sensitivity, I want to reduce motion or disable bright flashes so I can play comfortably.
-
-**Acceptance Criteria:**  
-- Settings include **Reduce Motion** and **No Flash** options.  
-- States are remembered and affect visuals immediately.  
-- Buttons are **ARIA‑labeled** with visible focus outlines.
-
-**Tasks:**  
-- Implement `aria-pressed` buttons with proper `aria-describedby`.  
-- Respect settings in CSS/JS (animation timing, glow/flash toggles).  
-- Persist settings in localStorage and apply on load.
-
-#### Developer / Maintainer
-**User Story:**  
-As a developer, I want clean modules and an event protocol so I can extend songs, difficulty, or UI without breaking the game loop.
-
-**Acceptance Criteria:**  
-- Modules: `game.js`, `ui.js`, `input.js`, `scoring.js`, `songPlayer.js`, `songRegistry.js`, `difficulty.js`.  
-- Custom events: `song:*`, `ui:*`, `game:*`.  
-- Charts in `/assets/charts/*.json` and audio in `/assets/audio/*.mp3`.
-
-**Tasks:**  
-- Keep public exports minimal and documented.  
-- Avoid duplicate listeners; centralize start/stop.  
-- Chart loader validates bpm, offset, travelBeats fields.
+#### 1) Young Player (6–10)
+**Persona:** Plays on phone/tablet; loves cats, bright colors, and instant feedback. Reading optional.  
+**User Story:** As a young player, I want big, friendly arrows and a simple “3‑2‑1” start so I can jump in and dance with Jazz without needing to read instructions.  
+**Acceptance Criteria**
+- Large tap targets with clear labels and strong contrast
+- **Level 1** is “practice”: no health loss, slow notes, **one note at a time**
+- Big Play/Pause with clear label; overlay always explains current state
+- One‑screen tutorial with minimal text
+- Adjustable **countdown** (0/3/5s), default 3s
+- **Reduce motion** and **No flash** toggles available
+- Cute sounds with a single **Mute** switch
 
 ---
 
-## Design
+#### 2) Pre‑Teen / Teen Rhythm Fan (11–16)
+**Persona:** Keyboard or mobile; wants legit rhythm feel, combos, and grindable BEST scores.  
+**User Story:** As a teen, I want a fair difficulty ramp, responsive input, and a visible combo so I can chase scores and feel my skill improving.  
+**Acceptance Criteria**
+- Clear curve across **Levels 1–13** (L1–3 solo notes; L4–7 occasional doubles; L8+ frequent chords)
+- Consistent timing windows (**Perfect / Great / Good / Miss**)
+- Combo, max combo, and **BEST** persist to localStorage
+- **Retry** and **Next level** after a run
+- Keyboard + touch are equally responsive; no ghost clicks
+- Bonus mode during streaks (extra points on lower levels; extra life on higher)
 
-### Colour Scheme
+---
 
-![Neon color palette](assets/images/readme/palette.png)  
-*Neon palette tuned for contrast: pink, purple, cyan, green on dark blue background.*
+#### 3) Adult Casual Player (Parent with 5 minutes)
+**Persona:** One hand on phone, needs zero friction.  
+**User Story:** As a busy parent, I want tap‑to‑play and quick pause, with remembered volume, so I can enjoy a short break without fiddling.  
+**Acceptance Criteria**
+- One‑tap **Play**, one‑tap **Pause**
+- **Mute** + **Volume** remembered between sessions
+- HUD collapse remembered
+- Fast load on mobile (good Lighthouse scores)
+- No sign‑ups, no ads, no distractions
 
-- Background: `#0b1221`  
-- Ink (text): `#f5f7ff`  
-- Neon Pink: `#ff4dd2`  
-- Neon Purple: `#a64dff`  
-- Neon Cyan: `#00ffd5`  
-- Neon Green: `#39ff14`  
+---
 
-### Typography
+#### 4) Parent/Guardian (Safety & Comfort)
+**Persona:** Observes a child playing; wants calm visuals and a safe space.  
+**User Story:** As a parent, I want gentle visual options and a safe environment so my child can play without flashing lights or unwanted links.  
+**Acceptance Criteria**
+- **No ads**, no IAP, no outbound links from play area
+- **Reduce motion** and **No flash** visibly reduce intensity
+- Clear language; friendly tone
+- Overlays explain **Paused**, **Play**, **Level cleared**, **Game Over**
 
-- **Head‑up display (HUD)** and **buttons** use a bold display font; body text remains highly legible.  
-- Mobile sizes favor readability; headings scale progressively with clamp().
+---
 
-### Imagery & Icons
+#### 5) Teacher/Therapist (Short, repeatable sessions)
+**Persona:** Uses short runs for focus/timing/motor practice.  
+**User Story:** As a teacher, I want short, repeatable runs with clear feedback and minimal text so I can use the game for warm‑ups.  
+**Acceptance Criteria**
+- Quick starts with short countdown
+- Immediate **Restart** option
+- Minimal reading; icons and short labels
+- Predictable patterns and steady pacing on early levels
+- Works well in **portrait** on tablets/phones
 
-- **Icon‑only quick play/pause** (glyph `'▶'` / `'⏸'`) with subtle glow.  
-- Minimalist note orbs and rail markers for clarity.
+---
 
-### Audio & Songs
+#### 6) Accessibility‑First Player (ADHD / Dyslexia / Autism traits)
+**Persona:** Sensitive to overload; needs clarity and control over effects.  
+**User Story:** As a player who gets overwhelmed by busy screens, I want simple visuals, adjustable countdown, and reduced effects so I can enjoy the rhythm without stress.  
+**Acceptance Criteria**
+- **Reduce motion** disables non‑essential animations
+- **No flash** removes broad flashes/glow bursts
+- Big, consistent **countdown** numerals
+- High‑contrast HUD labels; legible pixel font
+- Comfortable spacing; no time‑critical menus
 
-Songs by **Kevin MacLeod – Incompetech** (CC‑BY 3.0/4.0). Sample set used in levels (subject to change):  
-C‑Funk, Style Funk, Funkorama, Flutey Funk, Funk Game Loop, Aces High, Protofunk, Smooth Move, Funky Chunk, Celebration, Your Call, Enter the Party, Fork and Spoon.  
-See **Credits** for licensing notes.
+---
 
-### Wireframes
+#### 7) Mobile‑First Player (Slow network / older device)
+**Persona:** Mid‑range Android, spotty 4G.  
+**User Story:** As a mobile player on a slow device, I want fast load and smooth input so I’m not waiting or dropping notes.  
+**Acceptance Criteria**
+- Compressed hero/background (AVIF/WebP with PNG fallback)
+- Optimized CSS; minimal render‑blocking
+- Low‑latency input; animation scales with **Reduce motion**
+- Stable layout (no CLS); strategic preloads
 
-<details>
-  <summary>📸 Game Screen Wireframe</summary>
+---
 
-![Game Screen Wireframe](assets/images/readme/wire-game.png)  
-*Rails, judge line, HUD, overlay CTA and quick-pp button alignment.*
-</details>
+#### 8) Power‑User / Score Hunter
+**Persona:** Chases PBs; demands consistency.  
+**User Story:** As a score hunter, I want consistent timing windows, quick retries, and a visible BEST so I can grind levels and improve.  
+**Acceptance Criteria**
+- **Retry level** in one tap
+- Stable judgment windows between runs
+- BEST persists and shows after a run
+- Optional **0s** countdown for instant restarts
 
-<details>
-  <summary>📸 Settings & Accessibility Wireframe</summary>
+---
 
-![Settings Wireframe](assets/images/readme/wire-settings.png)  
-*Reduce Motion / No Flash / HUD expand, labels and focus order.*
-</details>
+#### 9) Site Visitor / Curious Onlooker
+**Persona:** Drops in from a link; needs a 5‑second explanation.  
+**User Story:** As a first‑time visitor, I want a welcoming first screen that explains the basics so I know how to play before I start.  
+**Acceptance Criteria**
+- **Play overlay** gives a one‑line how‑to with iconography
+- **Tutorial** tab shows the core rule (hit target at judge line)
+- Clear Play/Pause wording and icons; no jargon
+
+---
+
+#### 10) Maintainer / Future Me
+**Persona:** Future me after a long week.  
+**User Story:** As the maintainer, I want clean modules and a predictable UI lifecycle so I can add a song or tweak levels without breaking overlays.  
+**Acceptance Criteria**
+- ES modules with named exports; no duplicate listeners
+- Overlay lifecycle: `data-starting` during countdown, `data-paused` on pause; events `song:ready|started|ended|error`
+- Settings persist via localStorage (volume, HUD, motion/flash, countdown)
+- README includes testing steps, validators, Lighthouse, and known issues
+
+---
+
+### User Story Testing (Traceability)
+
+| Story ID | Key Checks | How Verified | Status |
+|---|---|---|---|
+| 1 — Young Player | Big arrows; L1 practice; countdown; calm modes; mute | Manual mobile test (360–480px); visual L1 density check; Settings toggles; audio mute; validator/Lighthouse a11y pass | ✅ |
+| 2 — Teen Rhythm Fan | Difficulty ramp; timing windows; combo/BEST; input parity | Playthrough L1–3 (solo), L4–7 (occasional doubles); HUD combo/BEST persistence; keyboard vs touch parity | ✅ |
+| 3 — Adult Casual | One‑tap Play/Pause; remembered volume/HUD; fast load | Overlay flow; localStorage keys; Lighthouse mobile perf; no extra dialogs | ✅ |
+| 4 — Parent/Guardian | Safe visuals; calm options; clear overlays | “Reduce motion/No flash” dampen effects; overlays show Paused/Play/Cleared/Game Over | ✅ |
+| 5 — Teacher/Therapist | Short runs; instant Restart; minimal reading | Results/Game Over overlays expose Restart; tutorial short; countdown adjustable | ✅ |
+| 6 — Accessibility‑First | Reduce motion; No flash; contrast; spacing | Toggle checks; HUD label contrast; button spacing and focus styles | ✅ |
+| 7 — Mobile‑First | Optimized background; minimal blocking; stable layout | AVIF/WebP/PNG pipeline; CSS order; CLS ~0; Lighthouse mobile pass | ✅ |
+| 8 — Score Hunter | Quick retry; consistent windows; 0s countdown | Retry flow; stable judgment feel; Settings→countdown=0 tested | ✅ |
+| 9 — Visitor | 5‑sec explanation; icons; Tutorial tab | Overlay copy & icons visible; tutorial succinct | ✅ |
+| 10 — Maintainer | Clean modules; lifecycle; persistence; docs | No duplicate listeners; `song:*` events fire; localStorage keys present; README testing notes | ✅ |
+
+> **Evidence:** Manual device testing (Chrome DevTools responsive + real phone), W3C HTML/CSS validators, Lighthouse (mobile & desktop), WebAIM contrast checks, in‑app Settings/overlay behavior, and console sanity tests.
+
+---
+
+## Wireframes & Mockups
+
+![Wireframe overview](assets/images/bgpng1440.png)  
+*Placeholder preview (PNG). Replace with your device mockups if desired.*
+
+---
+
+## Gameplay
+
+**One song = one level.** Press **Play**, hit notes at the judge line, build a combo, clear the song. Short, snackable runs for five‑minute breaks.
+
+### Timing & Scoring
+- Judgement: **Perfect / Great / Good / Miss** with crisp feedback at the judge line.  
+- **Combo** rewards consistency; your **BEST** is saved locally.
+
+### Hearts & Forgiveness
+- **Level 1** = practice: slow notes, one at a time, **no health loss**.  
+- From **Level 2+**, repeated misses chip hearts. When hearts reach zero → **Game Over** (one‑tap **Retry**).
+
+### Bonus Mode
+- Appears on a **clean streak**, usually **after halfway** into the song.  
+- **Levels 1–5:** extra points per hit.  
+- **Level 4+ (harder):** may occasionally grant **extra life**.  
+- Subtle, comfort‑aware cues (respects *Reduce Motion* / *No Flash*).
+
+### Level Progression
+- **Lv 1–3:** One note at a time, generous spacing.  
+- **Lv 4–6:** Occasional pairs (readable, slightly spicier).  
+- **Lv 7–10:** Denser patterns, more movement.  
+- **Lv 11–13:** Boss‑vibe, fair but challenging.
 
 ---
 
 ## Features
 
-### Global Features
-
-- Responsive grid, safe‑area aware spacing on iOS.  
-- Top overlay with **Play/Pause** and 3‑2‑1 countdown.  
-- **Quick Play/Pause** button (icon‑only) anchored near HUD row.  
-- Persistent **best score** via localStorage.
-
-### Core Gameplay
-
-- Falling notes aligned to chart timing; **gid** grouping for simultaneous chords.  
-- **Perfect / Great / Good / Miss** windows configurable per level.  
-- **Combo → multiplier** grants modest score boosts.  
-- **Lives** with tolerant damage (partial hearts) and **Game Over** route.  
-- **Bonus mode** after a streak: +10 points per hit; **extra life** awarded upon reaching **hits/points goal**; resets the counter and continues.
-
-### Difficulty & Levels
-
-- 15 levels total; early levels restrict simultaneity and slow travel.  
-- **Songs loop** to ensure later levels run longer without slowing the track.  
-- Policy gradually allows **pairs → trios → quads** respecting `maxSimultaneous`.  
-- Level config overrides **judge windows**, **travelBeats**, and **bonus thresholds**.
-
-### Settings
-
-- **Reduce Motion** — tones down animations and parallax.  
-- **No Flash** — dims bright glows/flash cues.  
-- **HUD Expand** — switch between compact and expanded modes.  
-All settings reflect **immediately** and persist between sessions.
-
-### Controls
-
-- **Keyboard:** Arrow keys (← ↑ ↓ →) to hit lanes; **Space/Enter** to toggle Play/Pause.  
-- **Touch:** On‑screen arrows; ghost‑click filtered for better mobile feel.  
-- **Overlay Play/Pause** clickable during countdown; label shows a pause icon while starting.
+- **Overlay Play/Pause** with large CTA and configurable **countdown** (0 = instant).  
+- **Keyboard** (`← ↑ ↓ →`) **and touch controls** (large buttons).  
+- **Results / Game Over / Pause** panels with Next / Retry flows.  
+- **Reduce Motion** & **No Flash** comfort toggles; settings persist.  
+- **Best score** saved locally; clean, readable HUD.
 
 ---
 
-## Accessibility
+## Design
 
-- Semantic regions (`<header>`, `<main>`, `<footer>`) and role hints.  
-- Buttons use **`aria-pressed`** for toggle state and **`aria-describedby`** for hints.  
-- Visible **focus rings** on all interactive elements.  
-- **Reduce Motion** and **No Flash** settings to accommodate sensitivity.  
-- Color palette checked for sufficient contrast against dark theme.  
-- Mobile hit targets ≥ 44px.  
-- **Known to watch:** avoid orphaned `<label>` elements; label buttons with `aria-labelledby` instead of `for=` when not using inputs.
+### Visual Language
+- Neon arcade palette over deep space‑blue.  
+- Pixel‑arcade type (Press Start 2P + VT323).  
+- Friendly feedback; no harsh error walls.
+
+### Layout & Responsiveness
+- **Mobile‑first CSS**; rails and controls share the same width model.  
+- Stable stage: `body { display:block }`, `main.game { min-block-size: calc(100svh - 4rem) }` to avoid vertical gaps.  
+- Quick Play/Pause icon hides under open navbar; overlay icon reflects state.
+
+### Accessibility
+- **Reduce Motion:** disables dancer movement and rail tick animations.  
+- **No Flash:** disables rail flash and heart glow (also applied to SVG hearts).  
+- Clear focus states and large tap targets.
 
 ---
 
-## Technologies Used
-
-### Languages
-- **HTML5**, **CSS3**, **JavaScript (ES modules)**
-
-### Libraries / Tools
+## Technologies
+- **HTML5**, **CSS3**, **Vanilla JS (ES modules)**  
 - **Bootstrap 5** (navbar only)  
-- **LocalStorage** for persistent settings and best score  
-- **Chrome DevTools / Lighthouse / WAVE** for auditing  
-- **VS Code** for development
+- **Google Fonts** (Press Start 2P, VT323)  
+- **GitHub Pages** for hosting
 
 ---
 
-## Deployment & Local Development
+## Deployment
+1. Push to the `main` branch.  
+2. Ensure `index.html` is at the site root.  
+3. In GitHub Pages settings, select the correct branch/folder.  
+4. Hard refresh after deploy (**Ctrl/Cmd+Shift+R**).
 
-### Deployment (GitHub Pages)
+Live: <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>
 
-The site is deployed to GitHub Pages from the `main` branch.
+---
 
-1. Open the repo → **Settings → Pages**.  
-2. **Source**: Deploy from a branch → `main` → `/ (root)`.  
-3. Save and wait for the deployment banner to confirm.
-
-**Live:** <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>
-
-### Local Development
-
-```bash
-git clone https://github.com/GooldenApple/Jazz-the-Cat-in-the-Hat.git
-cd Jazz-the-Cat-in-the-Hat
-# Open index.html directly or start a local server (e.g., Live Server in VS Code)
-```
-
-### How to Fork
-
-1. Go to the repo and click **Fork** (top right).  
-2. Work in your fork; submit PRs back to `main` when ready.
-
-### How to Clone
-
-```bash
-git clone https://github.com/GooldenApple/Jazz-the-Cat-in-the-Hat.git
-cd Jazz-the-Cat-in-the-Hat
-```
+## Usage
+- **Start / Pause:** Big overlay CTA or navbar Play/Pause.  
+- **Hit notes:** Arrow keys or on‑screen arrows at the judge line.  
+- **Settings:** Toggle *Reduce Motion*, *No Flash*, and set **countdown**.  
+- **Instant restarts:** Set countdown to **0** in Settings.
 
 ---
 
 ## Testing
 
-### Manual Feature Testing
+### Testing strategy (overview)
+ manual UX checks, HTML/CSS validation, Lighthouse audits, and targeted **console sanity tests** for overlay lifecycle, HUD rendering (hearts/score), input judging, and song events. Automated unit tests are planned.
 
-| Area | Action | Expected | Status |
-|------|--------|----------|--------|
-| Overlay | Click Play | 3‑2‑1 then song starts; icon shows Pause during countdown | ✅ |
-| Overlay | Click during countdown | Pauses immediately, overlay remains interactive | ✅ |
-| Quick‑PP | Tap icon | Toggles Play/Pause, HUD label updates | ✅ |
-| HUD | Lives/combo/score/best | Values update on hits/misses; best persists | ✅ |
-| Bonus | Reach activate combo | Bonus banner appears and tracks progress | ✅ |
-| Bonus | Reach hits/points goal | +1 life awarded (≥ L4), counters reset | ✅ |
-| Settings | Reduce Motion | Animations toned down; persists | ✅ |
-| Settings | No Flash | Bright glows reduced; persists | ✅ |
-| Controls | Keyboard arrows | Inputs grade correctly | ✅ |
-| Controls | Touch arrows | Responsive with ghost‑click filter | ✅ |
+### Tools & Methods
+- **Browsers:** Chrome (desktop) + DevTools device emulation.  
+- **Validation:** W3C HTML Validator, W3C CSS Validator (pass).  
+- **Audits:** Lighthouse (Performance/Best Practices/Accessibility).  
+- **Accessibility toggles:** *Reduce Motion* and *No Flash* verified visually and via DOM state.  
+- **Console tests:** Quick commands to verify flows after changes/deploys.
 
-> See screenshots in **Testing Artifacts** (placeholders included).
+### Manual Test Matrix
 
-### Game Logic & Console Harness
+| Area | Scenario | Expected | Result |
+|---|---|---|---|
+| Overlay (Play) | First load → Play visible | Overlay visible, label “Play”, icon=play | Pass |
+| Countdown | Default 3s | Label 3→2→1→GO, then start | Pass |
+| Countdown = 0 | Settings set to 0 | No countdown, starts immediately | Pass |
+| Pause | Press Play while running | Paused, `data-paused="true"`, Pause panel | Pass |
+| End (clear) | Survive to end | Results panel, Next available | Pass |
+| End (fail) | Lose all hearts | Game Over, Retry available | Pass |
+| Hearts | On load | Hearts render in `#lives` | Pass |
+| Hearts | On miss | Hearts update reflect damage | Pass |
+| Navbar | Toggle | `data-nav-open` syncs; Quick Play/Pause hides under open navbar | Pass |
+| Rotate overlay | Orientation changes | Rotate overlay appears/disappears correctly | Pass |
+| Reduce Motion | Toggle on | Animations stop (dancer/rails) | Pass |
+| No Flash | Toggle on | Rail flash + heart glow disabled | Pass |
+| Persistence | Reload | Settings persist | Pass |
 
-We built small **diagnostic runners** to simulate gameplay without manual input:
+### Developer Console Sanity Tests
 
-- **Orb density per level** – counts events and computed `orbsPerSec`, confirming density ramp.  
-  Placeholder: `assets/images/readme/test-orb-stats.png`
+```js
+!!document.getElementById('overlay');                      // true on boot
+document.body.hasAttribute('data-paused');                 // true before start
+document.querySelectorAll('#lives .svg-heart').length>=1;  // hearts drawn
+document.querySelectorAll('.rail .note').length;           // active notes count
+window.clearAllNotes?.();                                  // clears visuals
 
-- **Lives tolerance** – verifies partial‑heart logic:  
-  - **Level 1:** immunity (no life loss).  
-  - **Level 3:** **3 misses → ¼ heart**; after 4 quarters, −1 life.  
-  - **Level 8:** **5 misses → ¼ heart**.  
-  - **Bonus mode:** ends on miss; no life loss inside bonus.  
-  Placeholder: `assets/images/readme/test-miss-logic.png`
+// Moves (if test helpers available)
+window.doLeftMove?.(); window.doRightMove?.();
+window.doUpMove?.();   window.doDownMove?.();
 
-- **Bonus progress** – auto‑generate hits to validate `bonus:progress` events, counters, and **life award** (+ reset).  
-  Placeholder: `assets/images/readme/test-bonus.png`
+// Lifecycle
+addEventListener('song:ready',   e=>console.log('ready', e.detail));
+addEventListener('song:started', e=>console.log('started', e.detail));
+addEventListener('song:ended',   e=>console.log('ended', e.detail));
+addEventListener('song:error',   e=>console.error('error', e.detail));
 
-- **Song cutoff** – confirms stop timer fires after last note + travel padding, showing **Results/Game Over** overlays properly.  
-  Placeholder: `assets/images/readme/test-cutoff.png`
-
-### Accessibility Testing
-
-- **WAVE**: caught an *Orphaned form label* in Settings.  
-  **Action:** Replace stray `<label for=…>` with either `<span id>` + `aria-labelledby` or associate labels with real inputs.  
-  Placeholder: `assets/images/readme/wave-orphaned-label.png`
-
-- **Keyboard‑only**: all interactive elements reachable; outline visible.  
-- **Reduce Motion / No Flash** verified to affect visuals live and on reload.
-
-### Browser & Device Testing
-
-- Chrome (latest), Edge (latest), Firefox (latest), iOS Safari, Android Chrome.  
-
-
-### Automated Testing
-
-- **Lighthouse** (mobile & desktop): performance/accessibility/SEO recorded with screenshots.  
-  Placeholders:  
-  `assets/images/readme/lh-home-mobile.png`, `assets/images/readme/lh-home-desktop.png`
-
-- **W3C Validators** for HTML & CSS (screenshots placed under `/assets/images/readme/validators/`).
-
-### Code Validation
-
-- HTML validated with W3C; resolved stray attributes and ensured alt text.  
-- CSS validated; removed unused rules where identified.  
-- JS run through **strict ES modules**; avoided duplicate event listeners.
-
-### Bug Fixes & Future Improvements
-
-**Implemented**
-- Chart‑driven spawns with **gid** for grouped hits.  
-- **Bonus mode** with points/hits goals and **life awards** (≥ L4).  
-- **Tolerant miss** system (3 or 5 misses → ¼ heart).  
-- Quick‑PP icon‑only button with subtle glow and better centering.  
-- Song **looping** to keep higher levels longer without slowing audio.
-
-**Planned / Known Issues**
-- Rare overlay mis‑routing between **Results/Game Over** after stop — keep verifying after changes.  
-- Replace any orphaned form labels in Settings and ensure ARIA mapping is correct.  
-- Tighten difficulty pacing once final charts are locked; ensure anti‑simultaneous rules for L1–3.  
-- Add sound FX toggle and volume slider to Settings.
-
----
-
-## Grading Criteria Mapping (Pass/Merit)
-
-> Based on Code Institute “Interactive Frontend / Web App” criteria (as provided).
-
-| Criterion | Evidence in this project |
-|---|---|
-| **Responsive, accessible UI** | Mobile‑first CSS, visible focus, contrast‑checked palette, settings for motion/flash. |
-| **Interactive features** | Chart‑driven notes, scoring, combo multiplier, bonus mode with life awards, settings toggles. |
-| **Code quality** | ES modules, event protocol, single source of truth in `scoring.js`; comments and naming consistent. |
-| **Testing** | Manual scenarios + console harness (orb density, lives tolerance, bonus awards, cutoff). Screenshots attached. |
-| **Deployment** | GitHub Pages with reproducible steps. |
-| **Documentation** | This README with UX, features, testing evidence, and future work. |
-| **Merit focus** | Clear UX rationale, traceable user stories, testing depth (logic harness), accessibility accommodations, and maintainable architecture. |
-
----
-
-## Appendix / Process & Artifacts
-
-### Architecture & File Structure
-
-```
-/assets/
-  /audio/                # songs (Kevin MacLeod), CC-BY
-  /charts/               # chart JSON files (bpm, offsetMs, notes[])
-  /css/style.css         # neon theme + HUD + overlays
-  /images/readme/        # screenshots & diagrams (placeholders added)
-/assets/js/
-  game.js                # bootstrap + lifecycle + overlay countdown
-  ui.js                  # DOM helpers, HUD, overlays, quick-pp
-  input.js               # keyboard/touch handlers (ghost-click filter)
-  scoring.js             # single source of truth: score/lives/combo/bonus
-  songPlayer.js          # load audio+chart, schedule spawns, loop if needed
-  songRegistry.js        # curated songs + level mapping
-  difficulty.js          # LEVELS config and chart simplifier
-  test.js                # console harness for local diagnostics (dev only)
-index.html               # entry point (Bootstrap navbar + game layout)
+// Instant starts
+localStorage.setItem('countdownSec','0'); location.reload();
 ```
 
-### Event Protocol
+### Regression Tests (Recent Fixes)
+1) **Overlay/hearts missing after JS cleanup** → Export `setPlayTip`, `setOverlayIcon`, `initTopbarAutoHeight` from `ui.js` to match imports.  
+2) **Countdown=0 ignored** → Replace `||` with `??`, zero‑safe parsing; `runOverlayCountdown(0)` skips timer.  
+3) **Layout gap** → Keep `body { display:block }`; ensure `main.game { min-block-size: calc(100svh - 4rem) }`.  
+4) **A11y toggles** → Verify *Reduce Motion* halts animations; *No Flash* disables flash + heart glow.
 
-- `ui:requestStartRun`, `ui:requestPause`  
-- `song:ready`, `song:started`, `song:ended`, `song:error`  
-- `game:livesDepleted`, `ui:nextLevel`, `ui:retryLevel`, `ui:restartLevel`  
-- `bonus:started`, `bonus:progress`, `bonus:lifeAwarded`, `bonus:ended`
+### Validation
+- **HTML:** W3C – no blocking errors.  
+- **CSS:** W3C – pass.  
+- **Lighthouse:** Minor “preload not used soon” warnings may appear; non‑blocking.
 
-![Event flow diagram](assets/images/readme/event-flow.png)
+### Known Issues / Non‑blocking
+- Preload warnings for background/fonts in some sessions; acceptable for this scope.
 
-### Difficulty Reference
-
-| Level | Intent | Simultaneity | Travel | Judge Windows | Bonus |
-|------:|--------|---------------|--------|----------------|-------|
-| 1–3 | Training / Casual | 1 | long | generous | points only; no life awards |
-| 4–6 | Casual+ / Groove | 2 | moderate | forgiving | life awards via hits/points goals |
-| 7–10 | Challenge | 2–3 | faster | tighter | life awards |
-| 11–15 | Boss tiers | 3–4 | fast | tightest | life awards |
-
-### Testing Artifacts
-
-- **Orb density per level:** `assets/images/readme/test-orb-stats.png`  
-- **Miss tolerance:** `assets/images/readme/test-miss-logic.png`  
-- **Bonus progress & award:** `assets/images/readme/test-bonus.png`  
-- **Song cutoff & overlays:** `assets/images/readme/test-cutoff.png`  
-- **WAVE reports:** `assets/images/readme/wave-orphaned-label.png`  
-- **Lighthouse:** `assets/images/readme/lh-home-mobile.png`, `...desktop.png`  
-- **Validators:** `/assets/images/readme/validators/*.png`
-
-> Replace these placeholders with real screenshots after running the tests on the deployed site.
+### Future Testing
+- **Jest unit tests:** scoring (combo/lives/bonus), difficulty spacing.  
+- **Integration:** song scheduling alignment and event order.  
+- **E2E:** overlay flows and responsive checkpoints with visual diffs.  
+- **Automated console harness:** script streaks/misses and assert score/lives.
 
 ---
 
 ## Credits
 
-### Code & Libraries
-- **Bootstrap 5** (navbar) – <https://getbootstrap.com/>  
-- Minor snippets and documentation support with **ChatGPT (OpenAI)**.  
+### Music — Kevin MacLeod (Incompetech), CC BY 3.0/4.0
+C‑Funk • Style Funk • Funkorama • Flutey Funk • Funk Game Loop • Aces High • Protofunk • Smooth Move • Funky Chunk • Celebration • Your Call • Enter the Party • Fork and Spoon
 
-### Media
-- **Music:** Kevin MacLeod (Incompetech) – CC‑BY. Tracks include C‑Funk, Style Funk, Funkorama, Flutey Funk, Funk Game Loop, Aces High, Protofunk, Smooth Move, Funky Chunk, Celebration, Your Call, Enter the Party, Fork and Spoon. Each track credit will be listed in‑game and here with links in the final submission.  
-- **Frame graphic** (HUD frame) from **Freepik** (credited in‑game and here).  
-- **Icons:** built‑in glyphs (play/pause); any external icon packs will be credited if used.
+### Background Artwork
+The neon space backdrop is delivered as an optimised ladder: `assets/images/background.(avif|webp|png)` and responsive variants (`bg1024.*`, `bg1440.*`, `bg1920.*`, `bg2560.webp`).  
+**Credit:** *[Add title/description]* by *[Author]* — *[Source URL]* — *[License]*. Transcoded to AVIF/WebP/PNG for performance.
+
+### Fonts
+Press Start 2P & VT323 — Google Fonts.
+
+### Frameworks & Libraries
+Bootstrap 5 (navbar only).
+
+### Icons / Graphics 
+Custom SVG character and UI graphics created for this project.
 
 ---
 
 ## Acknowledgements
-
-- **Code Institute** tutors and community for guidance.  
- 
-  Special thanks to Friends/family for testing and feedback.
-
----
+- Code Institute guidance and materials.  
+- Patient playtesting from friends & family.  
+- Thanks to Kevin MacLeod (Incompetech) for generous CC‑licensed music.

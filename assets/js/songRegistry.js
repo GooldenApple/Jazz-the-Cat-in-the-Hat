@@ -1,4 +1,5 @@
 //songRegistry.js
+
 export const SONGS = Object.freeze([
   Object.freeze({
     id: 'itty-bitty-8bit',
@@ -107,6 +108,7 @@ export const SONGS = Object.freeze([
     chart: 'assets/charts/forkandspoon.json',
   }),
 ]);
+
 
 
 export const LEVEL_TO_SONG = Object.freeze({

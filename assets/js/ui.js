@@ -1187,4 +1187,7 @@ export {
   wireHudInlineToggle,
   wireMenuPlayToggle,
   wirePlayButton,
+  setPlayTip,
+  setOverlayIcon,
+  initTopbarAutoHeight,
 };
