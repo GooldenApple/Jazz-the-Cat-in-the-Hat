@@ -275,11 +275,13 @@ body[data-nav-open] .hamburger span:nth-child(3) {
   text-shadow: 0 0 2px currentColor, 0 0 5px currentColor, 0 0 8px currentColor;
   transform: translateX(1px);
 }
+
 /* When running (or during countdown) show Pause */
 #quickPlayPause[aria-pressed="true"]::before {
   content: "⏸";
   transform: translateX(0);
 }
+
 /* Hide quick play/pause while nav is open */
 body[data-nav-open="true"] #quickPlayPause {
   display: none !important;
@@ -288,6 +290,7 @@ body[data-nav-open="true"] #quickPlayPause {
 /* =========================
    HUD (fixed under navbar)
 ========================= */
+
 .hud {
   position: fixed;
   top: 4rem;
@@ -300,6 +303,7 @@ body[data-nav-open="true"] #quickPlayPause {
   z-index: 2300;
   pointer-events: none;
 }
+
 .hud-bottom {
   order: 0;
   display: flex;
@@ -307,6 +311,7 @@ body[data-nav-open="true"] #quickPlayPause {
   inline-size: 100%;
   pointer-events: none;
 }
+
 .hud-item.hud-item--plain {
   pointer-events: auto;
   border: none;
@@ -315,11 +320,16 @@ body[data-nav-open="true"] #quickPlayPause {
   padding: 0;
   text-align: center;
 }
+
 .hud-item.hud-item--plain .hud-label {
   display: block;
   margin-bottom: 0.375rem;
   color: var(--neon-pink);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
 }
+
 .lives {
   display: flex;
   flex-wrap: wrap;
@@ -328,6 +338,7 @@ body[data-nav-open="true"] #quickPlayPause {
   align-items: center;
   padding: 0.125rem;
 }
+
 .svg-heart {
   inline-size: 1.75rem;
   block-size: 1.75rem;
@@ -338,27 +349,33 @@ body[data-nav-open="true"] #quickPlayPause {
   );
   transition: opacity 0.25s ease, fill 0.25s ease;
 }
+
 .svg-heart.full {
   opacity: 1;
   fill: var(--neon-red);
 }
+
 .svg-heart.threequarter {
   opacity: 0.85;
   fill: var(--neon-red);
 }
+
 .svg-heart.half {
   opacity: 0.65;
   fill: var(--neon-red);
 }
+
 .svg-heart.quarter {
   opacity: 0.4;
   fill: var(--neon-red);
 }
+
 .svg-heart.empty {
   opacity: 0.15;
   fill: var(--muted);
   filter: none;
 }
+
 /* a11y: subtle chip behind HUD label (visually minimal) */
 #hud .label, .hud .label, .hud-label {
   position: relative;
