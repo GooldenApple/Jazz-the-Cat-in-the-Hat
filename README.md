@@ -1,5 +1,5 @@
-![Wireframe overview](assets/images/wireframe/colors.avif)
-*Wireframe overview — replace with your final mockup if preferred.*
+![Mockup overview](assets/images/mockup.png)
+* Mockup overview *
 
 # Jazz the Cat in the Hat
 
@@ -357,6 +357,7 @@ And also a lot of playing!
 | Settings: Reduce Motion | Toggle on | Animations stop: dancer moves/rail ticks disabled | Pass |
 | Settings: No Flash | Toggle on | Rail flash and heart glow disabled | Pass |
 | Local storage | Reload after changing settings | Settings persist across reload | Pass |
+| 404 Page | Visit a non-existent URL (e.g. `/this-page-does-not-exist`) | Custom 404 page displays with “Back to Home” button and clickable homepage URL | Pass |
 
 ---
 
@@ -518,6 +519,10 @@ Hosted on **GitHub Pages**.
 
 Live: <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>
 
+### 404 Page
+A custom `404.html` is included for GitHub Pages to handle broken links with a clear return path to the homepage (Back to Home) and a visible, clickable homepage URL.
+
+
 ---
 
 ## Roadmap
@@ -531,6 +536,12 @@ Live: <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>
 ---
 
 ## Credits
+
+Sound Effect by <a href="https://pixabay.com/users/floraphonic-38928062/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=207131">floraphonic</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=207131">Pixabay</a>
+
+Sound Effect by <a href="https://pixabay.com/users/jesuschristisgod-44370300/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=299607">I Love Jesus Christ</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=299607">Pixabay</a>
+
+https://pixabay.com/sound-effects/search/yay/
 
 ### Music — Kevin MacLeod (Incompetech), CC BY 3.0/4.0
 C‑Funk • Style Funk • Funkorama • Flutey Funk • Funk Game Loop • Aces High • Protofunk • Smooth Move • Funky Chunk • Celebration • Your Call • Enter the Party • Fork and Spoon
@@ -563,3 +574,6 @@ Custom SVG character and UI graphics created for this project.
 - Wireframe overview: `assets/images/wireframe/colors.avif`  
 - Palette: assets/images/wireframe/colors.avif  
 - Lighthouse example: assets/images/lighthouse/Skärmbild 2025-11-09 024326.avif
+
+## mockup
+https://techsini.com/multi-mockup/

@@ -593,9 +593,10 @@ main.game,
   block-size: var(--r1);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 0.125rem solid rgba(255, 255, 255, 0.25);
-  opacity: 0.65;
+  border: 0.125rem solid currentColor;
+  opacity: 1;
   box-shadow: 0 0 0.625rem currentColor, 0 0 1.375rem rgba(255, 255, 255, 0.25);
+  background: none;
 }
 .judge-target::after {
   content: "";
@@ -606,9 +607,10 @@ main.game,
   block-size: var(--r2);
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 0.125rem solid rgba(255, 255, 255, 0.4);
-  opacity: 0.4;
+  border: 0.125rem solid currentColor;
+  opacity: 1;
   box-shadow: 0 0 0.75rem currentColor, 0 0 1.75rem rgba(255, 255, 255, 0.4);
+  background: none;
 }
 .jt-left {
   color: var(--label-left);
@@ -757,27 +759,40 @@ body[data-bonus="true"] .feedback {
 /* HUD: Persistent bonus banner */
 #bonusBanner {
   position: absolute;
-  top: 4rem;
+  top: 6.25rem;
   left: 0;
   right: 0;
   display: grid;
   place-items: center;
   pointer-events: none;
   z-index: 60;
-}
-#bonusBanner[hidden] {
-  display: none;
-}
-#bonusBanner .pill {
+  color: var(--neon-pink);
+  box-shadow: 0 0 0.6rem currentColor;
+  backdrop-filter: blur(2px);
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   background: rgba(255, 0, 170, 0.12);
-  color: var(--neon-pink);
-  box-shadow: 0 0 0.6rem currentColor;
-  backdrop-filter: blur(2px);
+  
+}
+#bonusBanner[hidden] {
+  display: none;
+}
+
+
+/* Bonus banner one-shot flash (plan: toggle class on #bonusBanner) */
+#bonusBanner.flash-once {
+  animation: bonusFlash 0.6s ease-out 1;
+  will-change: transform, opacity;
+}
+
+@keyframes bonusFlash {
+  0%   { transform: scale(0.96); opacity: 0; }
+  30%  { transform: scale(1.08); opacity: 1; }
+  60%  { transform: scale(1.00); }
+  100% { transform: scale(1.00); }
 }
 
 /* Controls row */
@@ -1454,6 +1469,17 @@ body[data-no-flash] .tail-back {
 #overlay .rb-card {
   pointer-events: auto;
 }
+
+/* Ensure results/game-over contents are interactive even though .overlay uses pointer-events:none */
+#overlay .play-cta,
+#overlay .play-cta * ,
+#overlay #resultsCta,
+#overlay #resultsCta * ,
+#overlay #gameOverCta,
+#overlay #gameOverCta * {
+  pointer-events: auto;
+}
+
 .overlay.hidden {
   display: none;
 }
@@ -2120,6 +2146,10 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
     font-size: 3rem;
   }
 
+  #bonusBanner { 
+    top: 6.75rem; 
+  }
+
   #overlay .play-tip,
   #overlay .play-label {
     text-shadow: var(--text-glow), -1.5px 0 rgba(0, 0, 0, 0.92),
@@ -2132,7 +2162,7 @@ body[data-starting="true"] #overlay .play-btn .icon-pause {
 /* ≤1199.98px — burger mode */
 @media (max-width: 1199.98px) {
 
-  body { background-image: url("/images/bg1920.avif"); }
+  body { background-image: url("../images/bg1920.avif"); }
 
   :root {
     --floor-bottom: 40px;
@@ -2519,4 +2549,14 @@ body[data-no-flash] .svg-heart {
   transform: translateY(0);     /* slide into view on focus */
   outline: 2px solid #fd0404;
   outline-offset: 3px;
+}
+
+/* Reduce Motion: bonus mode flash/pulse */
+body[data-reduce-motion="true"] #bonusBanner.flash-once {
+  animation: none !important;
+}
+
+/* No Flash: bonus mode */
+body[data-no-flash] #bonusBanner {
+  box-shadow: none !important;
 }

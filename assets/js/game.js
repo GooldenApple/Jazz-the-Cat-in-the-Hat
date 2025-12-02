@@ -3,6 +3,7 @@
    ============================= */
 
 import { SONGS } from './songRegistry.js';
+
 // ui (DOM helpers used during app bootstrap and UI wiring)
 import {
   setOverlayLabel,
@@ -26,6 +27,9 @@ import {
   initTopbarAutoHeight,
   wireMenuPlayToggle,
   setPlayTip,
+  updateHUD,
+  initBonusBannerFX,
+  unlockFxOnce,
 } from './ui.js';
 
 import {
@@ -49,6 +53,7 @@ import {
   setHooks,
   clearAllNotes,
   resetPerLevelForNextRun,
+  setJudgeWindows,
 } from './scoring.js'; // scoring API
 
 // song player (chart-driven spawns + audio lifecycle)
@@ -60,9 +65,6 @@ import {
 // --- TEMP DEBUG: module loaded ---
 console.log('[game] module loaded'); // prints that this module loaded
 
-/* ------------------
-   Countdown seconds 
--------------------- */
 
 /**
  * getCountdownSec()
@@ -184,6 +186,7 @@ function setupScoringAndHUD() {
   setHooks({ onUpdate: (snapshot) => updateHUD(snapshot) });  // hook HUD updates
   updateHUD(getSnapshot());                                   // paint HUD once
   setOverlayLabel('Play');                                    // default overlay label
+  setOverlayIcon('play');                                   // default overlay ICON
   setPlayTip('Hit the correct arrow when an orb crosses the neon target!'); // tip text
   document.body.setAttribute('data-paused', 'true');          // visuals paused
   updatePlayMenuLabel();                                      // sync labels
@@ -259,6 +262,11 @@ function wireGlobalListeners() {
   window.addEventListener('song:error', onSongError);
   window.addEventListener('ui:requestPause', onPauseRequested);
   window.addEventListener('game:livesDepleted', onLivesDepleted);
+  window.addEventListener('ui:requestStartRun', () => startLevelWithCountdown());
+
+  window.addEventListener('ui:nextLevel', onNextLevel);
+  window.addEventListener('ui:restartLevel', onRestartLevel);
+  window.addEventListener('ui:retryLevel', onRetryAfterGameOver);
 }
 
 /**
@@ -298,18 +306,27 @@ function onSongStarted() {
 }
 
 /**
- * onPauseRequested()
- * Pause flow: stop playback via stopSong('paused').
+ * Pause intent from quick PP or menu
+ * If countdown is active, abort it and freeze in Pause
  */
+
 function onPauseRequested() {
-  cancelOverlayCountdown();                                   // clear timers
-  try { stopSong('paused'); } catch {}                        // route to pause overlay
-  state.running = false;                                      // not running
-  document.body.setAttribute('data-paused', 'true');          // visuals paused
-  setOverlayIcon('play');                                     // play glyph
-  showPauseOverlay();                                         // show pause panel
-  updatePlayMenuLabel();                                      // sync labels
+  if (document.body.dataset.starting === 'true') {
+    cancelOverlayCountdown();                      // stop countdown UI/timers
+    document.body.removeAttribute('data-starting'); // no longer starting
+    document.body.setAttribute('data-paused', 'true'); // keep visuals frozen
+    setOverlayIcon('play');                        // show big Play to resume
+    updatePlayMenuLabel();                         // sync menu label
+    showPauseOverlay();                            // show Pause panel
+    state.running = false;                         // not running
+    return;                                        // do NOT stopSong() here
+  }
+
+  // Normal pause during gameplay
+  stopSong('paused');                              // this path is fine
+  showPauseOverlay();                              // show Pause panel
 }
+
 
 /**
  * onSongEnded(e)
@@ -322,12 +339,44 @@ function onSongEnded(e) {
   setOverlayIcon('play');                                     // play glyph
   updatePlayMenuLabel();                                      // sync labels
 
-  const reason = e?.detail?.reason || 'completed';            // stop reasons
-  if (reason === 'failed' || state.lives <= 0) {              // failure routes
-    showGameOverOverlay();                                    // show Game Over
-  } else {
-    showResultsOverlay();                                     // show results/next
+  const reason = e?.detail?.reason || 'completed';            // stop reason
+
+  // Guard: pause should NOT route to Results/Game Over.
+  if (reason === 'paused') {                                  // pause flow already handled
+    return;                                                   // exit early
   }
+
+  const snap = getSnapshot();                                 // read score/level/combo
+  const payload = {                                           // overlay payload
+    level: snap.level,
+    score: snap.score,
+    maxCombo: snap.maxCombo
+  };
+
+  if (reason === 'failed' || state.lives <= 0) {              // failure route
+    showGameOverOverlay(payload);                             // show Game Over
+  } else {                                                    // success route
+    showResultsOverlay(payload);                              // show Results
+  }
+}
+
+
+
+/**
+ * onSongError(e)
+ * Handle audio/chart load errors gracefully and keep UI usable.
+ */
+function onSongError(e) {
+  cancelOverlayCountdown();                         // stop any countdown
+  state.running = false;                            // not running
+  document.body.setAttribute('data-paused', 'true');// freeze visuals
+  setOverlayIcon('play');                           // show play glyph
+  updatePlayMenuLabel();                            // sync labels
+
+  const msg = e?.detail?.message || 'Could not load the song';
+  setOverlayLabel(msg);                             // tell the user
+  showOverlay();                                    // keep overlay visible
+  console.error('[song:error]', e?.detail || e);    // log details
 }
 
 /**
@@ -360,6 +409,27 @@ function onLivesDepleted() {
 }
 
 /**
+ * onRetryAfterGameOver()
+ * Full new-run reset after Game Over: lives = 5, level = 1, score = 0.
+ * Keeps BEST score. Cleans notes and starts countdown fresh.
+ */
+function onRetryAfterGameOver() {
+  cancelOverlayCountdown();              // ensure no stale countdown
+  try { stopSong('stopped'); } catch {}  // ensure audio is fully stopped
+  clearAllNotes();                       // clean playfield
+
+  // Full scoring reset (lives to 5, level to 1, score/combo reset)
+  initScoring();
+
+  // Paint fresh HUD before starting
+  updateHUD(getSnapshot());
+
+  // Start from level 1 with the normal countdown
+  startLevelWithCountdown();
+}
+
+
+/**
  * bootstrap()
  * Entry point: wire everything and show overlay on boot.
  */
@@ -367,6 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     setupScoringAndHUD();                                     // baseline HUD/overlay
     ensureOverlayVisibleOnBoot();                             // show overlay if present
+    initResultOverlays();                                     // wire Next/Restart/Retry buttons
+    initBonusBannerFX();                                      // wire bonus flash FX (one-time)
     wireOverlayAndInput();                                    // CTA + input
     initTopbarAndNav();                                       // topbar/nav/overlays
     setupHUDInlineMode();                                     // HUD mode + watcher

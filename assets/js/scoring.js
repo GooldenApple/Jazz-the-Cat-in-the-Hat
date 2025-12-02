@@ -8,12 +8,17 @@ import { getBonusConfig } from './difficulty.js';        // thresholds for bonus
  * UI owns: visual note spawning & rail measurements (via ui.js)
  */
 
-// ----- Global state (exported) -----
+// ----- Global state -----
+const START_LIVES = 5;                  // starting lives
+const BEST_SCORE_KEY = 'best';                           // storage key for BEST
+const MAX_LIVES = 10;                                    // hard cap for lives
+
+
 const state = {
   running: false,        // game is running or paused
   score: 0,              // current score
   best: 0,               // best score (persisted)
-  lives: 5,              // full hearts
+  lives: START_LIVES,    // full hearts
   level: 1,              // current level
   partial: 0,            // quarter damage steps (0..3)
   combo: 0,              // current combo
@@ -32,7 +37,7 @@ const comboGroups = new Map();                              // track simultaneou
 function init() {
   state.running = false;            // ensure paused
   state.score   = 0;                // reset score
-  state.lives   = 5;                // reset lives
+  state.lives   = START_LIVES;      // reset lives
   state.level   = 1;                // reset level
   state.partial = 0;                // clear partial
   state.combo   = 0;                // reset combo
@@ -46,6 +51,8 @@ function init() {
   state.best = loadBestScore();     // load persisted best
   notify();                         // HUD update again
 }
+
+
 
 /**
  * getSnapshot()
@@ -83,9 +90,6 @@ function setHooks(hooks) {
   if (typeof hooks.onUpdate === 'function') onUpdate = hooks.onUpdate; // store hook
 }
 
-// ---------------- Best score persistence ----------------
-const BEST_SCORE_KEY = 'best';                           // storage key for BEST
-const MAX_LIVES = 10;                                    // hard cap for lives
 
 /**
  * loadBestScore()
@@ -114,7 +118,7 @@ const MAX_LIVES = 10;                                    // hard cap for lives
  * setJudgeWindows(newWindows)
  * Allow difficulty to override hit windows.
  */
-export function setJudgeWindows(newWindows) {
+ function setJudgeWindows(newWindows) {
   if (!newWindows) return;                                  // guard
   if (newWindows.perfect != null) judgeConfig.windows.perfect = newWindows.perfect; // set perfect
   if (newWindows.great   != null) judgeConfig.windows.great   = newWindows.great;   // set great
@@ -296,22 +300,31 @@ function removeActiveById(id) {
   if (idx !== -1) activeNotes.splice(idx, 1);          // remove if found
 }
 
+
 /**
  * resetPerLevelForNextRun()
- * Clear per-level counters while keeping lives and BEST.
+ * Clear per-level counters; ONLY refill hearts if the last run ended in Game Over.
+ * Detection: lives <= 0 at the time of reset.
  */
 function resetPerLevelForNextRun() {
-  state.score = 0;                  // fresh score
-  state.combo = 0;                  // drop combo
-  state.maxCombo = 0;               // drop per-run max combo
-  state.partial = 0;                // clean heart segment
-  state.bonusActive = false;        // bonus off between levels
-  state.bonusHits = 0;              // clear bonus progress
-  state.bonusPoints = 0;            // clear bonus points
-  _missSincePartial = 0;            // clear helper counter
-  comboGroups.clear();              // clear group map
-  notify();                         // HUD
+  state.score = 0;                   // fresh score
+  state.combo = 0;                   // drop combo
+  state.maxCombo = 0;                // drop per-run max combo
+
+  // Refill hearts only if previous run ended at 0 (Game Over)
+  if (state.lives <= 0) {
+    state.lives = START_LIVES;       // refill ONLY on Game Over retry
+  }
+
+  state.partial = 0;                 // clear quarter segments
+  state.bonusActive = false;         // bonus off between levels
+  state.bonusHits = 0;               // clear bonus progress
+  state.bonusPoints = 0;             // clear bonus points
+  _missSincePartial = 0;             // reset tolerant-miss accumulator
+  comboGroups.clear();               // clear group bookkeeping
+  notify();                          // HUD update
 }
+
 
 /**
  * _findBestCandidateInLane(dir, t)
@@ -560,6 +573,13 @@ window.addEventListener('song:ended', (e) => {
   comboGroups.clear();                                      // clear groups
 });
 
+/* resetForGameOver
+ * Purpose: Full new-run reset when the player retries after Game Over.
+ */
+function resetForGameOver() {
+  init(); // delegate to full initializer
+}
+
 // Exports
 export {
   // core state + init
@@ -567,8 +587,10 @@ export {
   // lives API
   hit, heal,
   // judging/spawn
-  spawnJudgedNote, clearAllNotes, gradeHit,
+  spawnJudgedNote, clearAllNotes, gradeHit, setJudgeWindows,
   // HUD hooks
-  getSnapshot, setHooks,
+  getSnapshot, setHooks, 
+ // resets
   resetPerLevelForNextRun,
+  resetForGameOver,
 };

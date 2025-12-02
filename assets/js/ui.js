@@ -10,6 +10,79 @@ console.log('[ui] module loaded'); // log that ui module has loaded
 // Storage key for settings, declared before loadSettings/saveSettings are used
 const SETTINGS_KEY = 'settings'; // storage key for user settings
 
+/* --------------------------------------
+   FX: one-shot sounds for overlays
+   - Preload once, reuse same Audio objects
+--------------------------------------- */
+const fxOverlay = {
+  success: new Audio('assets/audio/yay.mp3'),
+  fail:    new Audio('assets/audio/fail.mp3')
+};
+
+fxOverlay.success.preload = 'auto';
+fxOverlay.fail.preload = 'auto';
+fxOverlay.success.volume = 0.7; // adjust 
+fxOverlay.fail.volume    = 0.7; 
+
+// Follow master volume (from settings)
+window.addEventListener('audio:setMasterVolume', (e) => {
+  const master = Math.max(0, Math.min(1, e?.detail?.volume ?? 1));
+  fxOverlay.success.volume = 0.7 * master;
+  fxOverlay.fail.volume    = 0.7 * master;
+});
+
+// --- Overlay FX mute-guard (prevents sounds when closing panels) ---
+let _overlayFxMuteUntil = 0;
+function muteOverlayFx(ms = 600) { _overlayFxMuteUntil = performance.now() + ms; }
+function canPlayOverlayFx() { return performance.now() >= _overlayFxMuteUntil; }
+
+//  Plays the success sound safely (guarded)
+function playFxSuccess() {
+  try {
+    if (!canPlayOverlayFx()) return;
+    fxOverlay.success.currentTime = 0;
+    void fxOverlay.success.play();
+  } catch (_) {}
+}
+  // Plays the fail sound safely (guarded)
+function playFxFail() {
+  try {
+    if (!canPlayOverlayFx()) return;
+    fxOverlay.fail.currentTime = 0;
+    void fxOverlay.fail.play();
+  } catch (_) {}
+}
+
+
+
+// Mobile/Autoplay guard: prime FX on first user gesture
+
+let _fxUnlocked = false;
+function unlockFxOnce() {
+  if (_fxUnlocked) return;
+  _fxUnlocked = true;
+
+  // remember volumes, play once at volume 0 to unlock, then restore
+  const vSucc = fxOverlay.success.volume;
+  const vFail = fxOverlay.fail.volume;
+  fxOverlay.success.volume = 0;
+  fxOverlay.fail.volume = 0;
+
+  const p1 = fxOverlay.success.play().catch(() => {});
+  const p2 = fxOverlay.fail.play().catch(() => {});
+  Promise.allSettled([p1, p2]).finally(() => {
+    try {
+      fxOverlay.success.pause(); fxOverlay.success.currentTime = 0; fxOverlay.success.volume = vSucc;
+      fxOverlay.fail.pause();    fxOverlay.fail.currentTime    = 0; fxOverlay.fail.volume    = vFail;
+    } catch (_) {}
+  });
+}
+
+// Run once on first interaction (works across mouse/touch/keyboard)
+window.addEventListener('pointerdown', unlockFxOnce, { once: true, passive: true });
+window.addEventListener('keydown',      unlockFxOnce, { once: true });
+
+
 /* ----------------------------------------
    Screen reader live-region 
    Looks for #srLive; falls back to legacy #srRegion; otherwise creates #srLive.
@@ -338,6 +411,8 @@ function bindControls() {
   _wirePanelKeyShortcuts(); // wire global key shortcuts (S/Escape)
   _wireSettingsOpenersFromNavbar(); // wire navbar tabs to open Settings on specific pane
 }
+
+
 
 /**
  * _wireNavPanelButtons()
@@ -702,22 +777,38 @@ function hideAllOverlayPanels() {
  * Show Results panel, fill level/score/combo, and speak summary.
  */
 function showResultsOverlay({ level, score, maxCombo }) {
-  hideAllOverlayPanels(); // hide any other panel
-  showOverlay(); // show overlay layer
-  const congratsEl = document.getElementById('resCongrats'); // headline node
-  if (congratsEl) { // if exists
-    const choices = [ 'YOU DID IT!', 'AWESOME JOB!', 'YOU NAILED IT!', 'NICE WORK!' ]; // variants
-    const i = Math.floor(Math.random() * choices.length); // pick random
-    congratsEl.textContent = choices[i]; // set headline
+  // Prep overlay
+  hideAllOverlayPanels();            // hide any other panel
+  showOverlay();                     // show overlay layer
+
+  // Randomize congrats headline 
+  const congratsEl = document.getElementById('resCongrats');
+  if (congratsEl) {
+    const choices = ['YOU DID IT!', 'AWESOME JOB!', 'YOU NAILED IT!', 'NICE WORK!'];
+    const i = Math.floor(Math.random() * choices.length);
+    congratsEl.textContent = choices[i];
   }
-  const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; }; // small helper
-  set('#resLevel',  level ?? ''); // set level
-  set('#resScore',  score ?? 0); // set score
-  set('#resCombo',  maxCombo ?? 0); // set combo
-  const panel = document.getElementById('resultsCta'); // panel root
-  if (panel) panel.classList.remove('hidden'); // unhide
-  srSpeak(`Level ${level ?? ''} clear. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`); // announce
+
+  // Fill stats
+  const set = (sel, v) => {
+    const el = document.querySelector(sel);
+    if (el) el.textContent = v;
+  };
+  set('#resLevel',  level ?? '');
+  set('#resScore',  score ?? 0);
+  set('#resCombo',  maxCombo ?? 0);
+
+  // Unhide panel
+  const panel = document.getElementById('resultsCta');
+  if (panel) panel.classList.remove('hidden');
+
+  // Play success sting (non-blocking)
+  playFxSuccess();
+
+  // Screen reader summary
+  srSpeak(`Level ${level ?? ''} clear. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`);
 }
+
 
 /**
  * showPauseOverlay()
@@ -745,21 +836,37 @@ function showPauseOverlay() {
   showOverlay();                                        // reveal overlay layer
 }
 
+// helper used by Game Over overlay
+function setText(sel, v) {
+  const el = document.querySelector(sel);
+  if (el) el.textContent = v;
+}
+
 /**
  * showGameOverOverlay(data)
  * Show Game Over panel and fill level/score/combo; announce.
  */
 function showGameOverOverlay({ level, score, maxCombo }) {
-  hideAllOverlayPanels(); // hide others
-  showOverlay(); // show overlay
-  const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; }; // helper
-  set('#goLevel',  level ?? ''); // set level
-  set('#goScore',  score ?? 0); // set score
-  set('#goCombo',  maxCombo ?? 0); // set combo
-  const panel = document.getElementById('gameOverCta'); // panel root
-  if (panel) panel.classList.remove('hidden'); // unhide panel
-  srSpeak(`Game over. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`); // announce
+  hideAllOverlayPanels();              // hide other panels
+  showOverlay();                       // ensure overlay container is visible
+
+  // Fill fields 
+  setText('#goLevel',  level ?? '');
+  setText('#goScore',  score ?? 0);
+  setText('#goCombo',  maxCombo ?? 0);
+
+  // Unhide panel
+  const panel = document.getElementById('gameOverCta');
+  if (panel) panel.classList.remove('hidden');
+
+  // Play fail sting exactly when panel appears
+  playFxFail();
+
+  // Screen reader announcement
+  srSpeak(`Game over. Score ${score ?? 0}. Max combo ${maxCombo ?? 0}.`);
 }
+
+
 
 /**
  * initResultOverlays()
@@ -772,6 +879,7 @@ function initResultOverlays() {
   if (btnNext && btnNext.dataset.wired !== 'true') { // guard
     btnNext.dataset.wired = 'true'; // mark wired
     btnNext.addEventListener('click', () => { // click
+      muteOverlayFx(600);
       hideAllOverlayPanels(); // hide panels
       window.dispatchEvent(new CustomEvent('ui:nextLevel')); // next level
     });
@@ -779,6 +887,7 @@ function initResultOverlays() {
   if (btnRestart && btnRestart.dataset.wired !== 'true') { // guard
     btnRestart.dataset.wired = 'true'; // mark wired
     btnRestart.addEventListener('click', () => { // click
+      muteOverlayFx(600);
       hideAllOverlayPanels(); // hide panels
       window.dispatchEvent(new CustomEvent('ui:restartLevel')); // restart level
     });
@@ -786,6 +895,7 @@ function initResultOverlays() {
   if (btnRetry && btnRetry.dataset.wired !== 'true') { // guard
     btnRetry.dataset.wired = 'true'; // mark wired
     btnRetry.addEventListener('click', () => { // click
+      muteOverlayFx(600);
       hideAllOverlayPanels(); // hide panels
       window.dispatchEvent(new CustomEvent('ui:retryLevel')); // retry level
     });
@@ -924,11 +1034,24 @@ function saveSettings(s) {
  * Apply reduce-motion/no-flash to body and notify audio volume.
  */
 function applySettings(s) {
-  window.dispatchEvent(new CustomEvent('audio:setMasterVolume', { detail: { volume: s.muted ? 0 : s.volume } })); // audio volume
-  if (s.reduceMotion) document.body.setAttribute('data-reduce-motion', 'true'); else document.body.removeAttribute('data-reduce-motion'); // toggle reduce motion
-  if (s.noFlash) document.body.setAttribute('data-no-flash', 'true'); else document.body.removeAttribute('data-no-flash'); // toggle flashes
-  window.__settings = window.__settings || {}; // ensure global bag
-  window.__settings.countdown = Number(s.countdown) || 3; // expose countdown for overlay
+  // audio volume
+  window.dispatchEvent(new CustomEvent('audio:setMasterVolume', {
+    detail: { volume: s.muted ? 0 : s.volume }
+  }));
+
+  // comfort flags
+  if (s.reduceMotion) document.body.setAttribute('data-reduce-motion', 'true');
+  else document.body.removeAttribute('data-reduce-motion');
+
+  if (s.noFlash) document.body.setAttribute('data-no-flash', 'true');
+  else document.body.removeAttribute('data-no-flash');
+
+
+  const raw = Number(s.countdown);
+  const cd = Number.isFinite(raw) ? raw : 3;
+
+  window.__settings = window.__settings || {};
+  window.__settings.countdown = cd; 
 }
 
 /**
@@ -982,11 +1105,15 @@ function _syncFormFromSettings(refs, s) {
  */
 function _attachSettingsListeners(refs, s, persist) {
   const { elVolume, elMute, elReduce, elNoFlash, elCountdown, elReset } = refs; // destructure
-  if (elVolume) elVolume.addEventListener('input', () => { s.volume = Math.max(0, Math.min(1, Number(elVolume.value) / 100)); persist(); }); // volume change
+    if (elVolume) elVolume.addEventListener('input', () => { s.volume = Math.max(0, Math.min(1, Number(elVolume.value) / 100)); persist(); }); // volume change
   if (elMute)   elMute.addEventListener('change', () => { s.muted = !!elMute.checked; persist(); }); // mute change
   if (elReduce) elReduce.addEventListener('click', () => { const next = elReduce.getAttribute('aria-pressed') !== 'true'; elReduce.setAttribute('aria-pressed', next ? 'true' : 'false'); s.reduceMotion = next; persist(); }); // reduce motion toggle
   if (elNoFlash)elNoFlash.addEventListener('click', () => { const next = elNoFlash.getAttribute('aria-pressed') !== 'true'; elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false'); s.noFlash = next; persist(); }); // flashes toggle
-  if (elCountdown) elCountdown.addEventListener('change', () => { s.countdown = Number(elCountdown.value) || 3; persist(); }); // countdown change
+  if (elCountdown) elCountdown.addEventListener('change', () => {
+  const v = Number(elCountdown.value);
+  s.countdown = (Number.isFinite(v) && v >= 0) ? v : 3;
+  persist();
+});
   if (elReset) elReset.addEventListener('click', () => { // reset data
     const ok = confirm('Reset all saved progress and settings?'); // confirm
     if (!ok) return; // abort if canceled
@@ -1061,6 +1188,47 @@ function wireSettingsTabs() {
   selectSettingsTab('audio'); // default pane
 }
 
+/* -----------------------------------------
+ * Bonus banner FX: one-shot flash on start
+ * ----------------------------------------- */
+
+let _bonusFXWired = false;
+function initBonusBannerFX() {
+  if (_bonusFXWired) return;         // guard against duplicates
+  _bonusFXWired = true;
+
+  const sel = '#bonusBanner';         // target the banner element itself
+
+  // one-shot flash helper
+  const flashOnce = () => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    el.classList.remove('flash-once'); // reset
+    void el.offsetWidth;               // reflow to allow retrigger
+    el.classList.add('flash-once');    // play once
+  };
+
+  // when bonus starts → flash
+  window.addEventListener('bonus:started', flashOnce);
+
+  // when bonus ends → remove flash class
+  window.addEventListener('bonus:ended', () => {
+    const el = document.querySelector(sel);
+    if (el) el.classList.remove('flash-once');
+  });
+
+  // natural song end → ensure flash class is cleared
+  window.addEventListener('song:ended', (e) => {
+    const reason = e?.detail?.reason || 'completed';
+    if (reason !== 'paused' && reason !== 'stopped') {
+      const el = document.querySelector(sel);
+      if (el) el.classList.remove('flash-once');
+    }
+  });
+}
+
+
+
 /* ---------------------------------------------
    Bonus Banner (separate from feedback)
    - Sits ABOVE #feedback (not overlapping).
@@ -1093,7 +1261,7 @@ function _ensureBonusBanner() {
  * showBonusBanner(text)
  * Show the bonus banner with an initial text.
  */
-function showBonusBanner(text = 'BONUS MODE!') {
+function showBonusBanner(text = 'BONUS MODE ACTIVATED!') {
   const node = _ensureBonusBanner(); // ensure node exists
   node.textContent = text; // set text
   node.classList.remove('hidden'); // ensure visible
@@ -1164,9 +1332,13 @@ function hideBonusBanner() {
   });
 })();
 
-/* ---------------------------
-   Export UI functions
----------------------------- */
+/* Placeholder so game.js import doesn't crash (no-op) */
+function bindFutureControlsPlaceholder() { /* intentionally empty */ }
+
+
+
+// Export UI functions
+
 export {
   HUD_MODE_KEY,
   bindControls,
@@ -1190,4 +1362,7 @@ export {
   setPlayTip,
   setOverlayIcon,
   initTopbarAutoHeight,
+  bindFutureControlsPlaceholder,
+  initBonusBannerFX,
+  unlockFxOnce,
 };
