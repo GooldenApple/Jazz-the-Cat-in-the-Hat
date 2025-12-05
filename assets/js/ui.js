@@ -1246,7 +1246,7 @@ function _ensureBonusBanner() {
   const feedback = document.getElementById('feedback'); // locate feedback
   node = document.createElement('div'); // create banner
   node.id = 'bonusBanner'; // set id
-  node.className = 'bonus-banner'; // set class for styling (CSS optional)
+  node.className = 'bonus-banner'; // set class for styling 
   node.setAttribute('aria-live', 'polite'); // announce updates softly
   node.setAttribute('aria-atomic', 'true'); // replace whole text
   if (feedback && feedback.parentNode) { // if feedback exists
@@ -1261,7 +1261,7 @@ function _ensureBonusBanner() {
  * showBonusBanner(text)
  * Show the bonus banner with an initial text.
  */
-function showBonusBanner(text = 'BONUS MODE ACTIVATED!') {
+function showBonusBanner(text = 'BONUS MODE!') {
   const node = _ensureBonusBanner(); // ensure node exists
   node.textContent = text; // set text
   node.classList.remove('hidden'); // ensure visible
@@ -1298,7 +1298,7 @@ function hideBonusBanner() {
     document.body.removeAttribute('data-bonus');               // clear body flag
     showBonusBanner('BONUS MODE ENDED');                       // show end banner text
     srSpeak('Bonus mode ended');                               // announce to SR
-    endTimer = setTimeout(() => { hideBonusBanner(); }, 900);  // hide after a short delay
+    endTimer = setTimeout(() => { hideBonusBanner(); }, 1800);  // hide after a short delay
   });
 
   window.addEventListener('song:ended', (e) => {
@@ -1307,7 +1307,7 @@ function hideBonusBanner() {
       document.body.removeAttribute('data-bonus');             // clear flag
       showBonusBanner('BONUS MODE ENDED');                     // mirror end flow
       srSpeak('Bonus mode ended');                             // announce to SR
-      endTimer = setTimeout(() => { hideBonusBanner(); }, 900);// hide after delay
+      endTimer = setTimeout(() => { hideBonusBanner(); }, 1500);// hide after delay
     }
   });
 })();

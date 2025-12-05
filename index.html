@@ -9,7 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
     <!-- Preload background (same path as in CSS) -->
-    <link rel="preload" as="image" type="image/avif" href="assets/images/bg1920.avif"  imagesizes="100vw">
+    <link rel="preload" as="image" type="image/avif" href="assets/images/bg1920.avif" 
+    imagesrcset="assets/images/bg1024.avif 1024w, assets/images/bg1440.avif 1440w, assets/images/bg1920.avif 1920w"
+  imagesizes="100vw">
 
     <!-- Document identity -->
     <title>Jazz the Cat in the Hat</title>
@@ -453,14 +455,30 @@
               <h3 class="sr-only">Tutorial</h3>
               <fieldset>
                 <legend>Tutorial</legend>
-                <p class="hint">Make Jazz shake his azz!<br>
-                  To make Jazz dance, hit the correct arrow when an orb crosses the neon circle target!.<br>
-                  Streak perfect hits and get bonuses + extra lives!
+                <p class="hint">MAKE JAZZ SHAKE HIS AZZ!
+                  <br><br>
+                  HIT THE CORRECT ARROW WHEN AN ORB CROSSES THE NEON CIRCLE TARGET. 
+                  <br>
+                  BETTER TIMING GIVES HIGHER SCORES.
+                  <br><br>
+                  BUILD A STREAK OF HITS TO ACTIVATE BONUS MODE!
+                  <br>
+                  EVERY HIT GIVES EXTRA POINTS — AND FROM LEVEL 4+ YOU CAN EVEN EARN EXTRA LIVES!
+                  <br><br>
+                  LEVEL 1 IS YOUR SAFE PRACTICE STAGE:
+                  <br>
+                  YOU CAN MISS WITHOUT LOSING ANY LIVES WHILE YOU LEARN THE TIMING.
+                  <br><br>
+                  ON LEVELS 2 AND UP, MISSES BREAK YOUR STREAK AND CAN COST YOU HEARTS,
+                  <br><br>
+                  SO STAY FOCUSED AND KEEP THE RHYTHM!
                 </p>
               </fieldset>
             </section>
 
+          
           <button class="ui-panel__close" data-close-panel="settings" type="button">Close</button>
+        </form>
         </div>
       </section>
     </main>

@@ -9,6 +9,16 @@ import './audio.js';
 let audio = null;        // active HTMLAudioElement
 let timers = [];         // active setTimeout ids
 let current = null;      // song, chart, bpm, travelBeats, offsetMs
+let _cancelPendingStart = false;  // tracks if current start should be cancelled
+
+/**
+ * cancelPendingStart()
+ * Mark the current in-flight start as cancelled.
+ * Used when user pauses during the "starting" countdown.
+ */
+function cancelPendingStart() {
+  _cancelPendingStart = true;     // mark that the in-flight start should bail
+}
 
 /* ----------------------------------------
    Volume bridge
@@ -349,100 +359,194 @@ function _scheduleChartCutoff(lastEventMs, startWallMs, offsetEff, travelMs, bas
   timers.push(tid);                                                          // keep id
 }
 
-/* ----------------------------------------------------------------------------------
-   startSongById(id, { countdownSec, travelBeats })
-   Purpose: Load audio+chart, apply difficulty, schedule spawns (with gid),
-            and optionally loop audio+events until level minDurationSec is met.
------------------------------------------------------------------------------------ */
+/**
+ * startSongById()
+ * Load audio + chart, apply difficulty, schedule note spawns,
+ * and optionally loop until minDurationSec is met.
+ * Structured with section headers for readability.
+ */
 async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
-  const song = _pickSongById(id);                                           // pick song
-  if (!song) throw new Error('No songs in registry');                        // guard
 
-  const { chart, bpm, chartTravelBeats, offsetMs } = await _loadChartStrict(song); // load chart
+  /* ---------------------------------------------
+   * 0) Fresh start: reset cancellation flag
+   * Ensures pause-during-countdown can abort safely.
+   --------------------------------------------- */
+  _cancelPendingStart = false;
 
-  const lvlCfg = LEVELS?.[state.level] || LEVELS?.[1] || {};                // level cfg
+  /* ---------------------------------------------
+   * 1) Resolve song, chart and level timing
+   * Picks correct song, loads chart, derives timing.
+   --------------------------------------------- */
+  const song = _pickSongById(id);
+  if (!song) throw new Error('No songs in registry');
+
+  const { chart, bpm, chartTravelBeats, offsetMs } =
+    await _loadChartStrict(song);
+
+  const lvlCfg = LEVELS?.[state.level] || LEVELS?.[1] || {};
   const { rate, travelBeatsEff, msPerBeatEff, travelMs } =
-    _deriveLevelTiming(bpm, chartTravelBeats, lvlCfg, travelBeats);         // timing
+    _deriveLevelTiming(bpm, chartTravelBeats, lvlCfg, travelBeats);
 
-  const events = (function buildEvents() {                                   // build note list
+  /* ---------------------------------------------
+   * 2) Build event list
+   * Simplifies chart for level + injects random chords.
+   --------------------------------------------- */
+  const events = (function buildEvents() {
     let simplified = [];
     try {
       if (typeof simplifyChartForLevel === 'function') {
         simplified = simplifyChartForLevel(chart.notes || [], bpm, lvlCfg) || [];
       }
-    } catch (e) { log('simplifyChartForLevel failed, using raw notes:', e); }
-    const rawNotes  = Array.isArray(chart.notes) ? chart.notes : [];        // raw
-    const base      = (Array.isArray(simplified) && simplified.length) ? simplified : rawNotes; // choose
-    return (typeof injectChordsForLevel === 'function')                      // chord injection
+    } catch (e) {
+      log('simplifyChartForLevel failed, using raw notes:', e);
+    }
+
+    const rawNotes = Array.isArray(chart.notes) ? chart.notes : [];
+    const base     = simplified.length ? simplified : rawNotes;
+
+    return typeof injectChordsForLevel === 'function'
       ? injectChordsForLevel(base, state.level)
       : base;
   })();
 
-  log('bpm=', bpm, 'travelBeatsEff=', travelBeatsEff, 'events=', events.length); // debug
+  log('bpm=', bpm, 'travelBeatsEff=', travelBeatsEff, 'events=', events.length);
 
-  _primeHtmlAudio(song.audio, rate);                                        // prepare audio
-  current = { song, chart, bpm, travelBeats: travelBeatsEff, offsetMs };    // store meta
+  /* ---------------------------------------------
+   * 3) Prime audio + store metadata + emit "ready"
+   --------------------------------------------- */
+  _primeHtmlAudio(song.audio, rate);
+  current = { song, chart, bpm, travelBeats: travelBeatsEff, offsetMs };
+  emit('song:ready', { song });
 
-  emit('song:ready', { song });                                             // UI: show countdown
-
-  if (countdownSec > 0) {                                                   // optional pre-roll
-    await new Promise(r => setTimeout(r, countdownSec * 1000));             // wait seconds
+  /* ---------------------------------------------
+   * 4) Optional pre-roll countdown
+   --------------------------------------------- */
+  if (countdownSec > 0) {
+    await new Promise(r => setTimeout(r, countdownSec * 1000));
   }
 
-  // ensure metadata to know duration (best-effort)
-  await _waitMetadata(audio);                                               // try to get duration
-  const audioCycleMs = (Number.isFinite(audio?.duration) && audio.duration > 0)
-    ? Math.round((audio.duration * 1000) / rate)                            // duration scaled by rate
-    : 0;                                                                    // unknown
+  /* ---------------------------------------------
+   * 5) Guard: user paused during countdown
+   * Cancel cleanly before metadata/audio.play().
+   --------------------------------------------- */
+  if (_cancelPendingStart) {
+    log('start cancelled before metadata/audio.play');
+    _cancelPendingStart = false;
+    try { if (audio) audio.pause(); } catch {}
+    audio = null;
+    clearTimers();
+    current = null;
+    return;
+  }
 
-  try { await audio.play(); }                                               // start audio
-  catch (err) { emit('song:error', { error: err }); throw err; }            // route error
+  /* ---------------------------------------------
+   * 6) Read metadata + second cancel guard
+   --------------------------------------------- */
+  await _waitMetadata(audio);
 
-  emit('song:started', { song });                                           // notify UI
+  if (_cancelPendingStart) {
+    log('start cancelled after metadata, before audio.play');
+    _cancelPendingStart = false;
+    try { if (audio) audio.pause(); } catch {}
+    audio = null;
+    clearTimers();
+    current = null;
+    return;
+  }
 
-  clearTimers();                                                            // clear old timers
-  const startWallMs    = performance.now();                                 // wall clock
-  const offsetEff      = offsetMs / rate;                                   // scale offset by rate
-  const bpmRateScaled  = bpm * rate;                                        // effective bpm
-  const getEventTimeMs = _makeEventTimeGetter(bpm, rate);                   // time getter
+  /* ---------------------------------------------
+   * 7) Start playback + emit "started"
+   --------------------------------------------- */
+  const audioCycleMs =
+    (Number.isFinite(audio?.duration) && audio.duration > 0)
+      ? Math.round((audio.duration * 1000) / rate)
+      : 0;
 
-  // --- Schedule first loop ---
+  try {
+    await audio.play();
+  } catch (err) {
+    emit('song:error', { error: err });
+    throw err;
+  }
+
+  emit('song:started', { song });
+
+  /* ---------------------------------------------
+   * 8) Schedule note spawns + loop logic
+   * First loop → optional extra loops → final cutoff.
+   --------------------------------------------- */
+  clearTimers();
+
+  const startWallMs    = performance.now();
+  const offsetEff      = offsetMs / rate;
+  const bpmRateScaled  = bpm * rate;
+  const getEventTimeMs = _makeEventTimeGetter(bpm, rate);
+
+  // First loop events 
   const lastEventMsFirst = _scheduleAllEvents(
-    events, startWallMs, offsetEff, travelMs, travelBeatsEff, bpmRateScaled, getEventTimeMs, 0
-  );                                                                        // first loop notes
+    events,
+    startWallMs,
+    offsetEff,
+    travelMs,
+    travelBeatsEff,
+    bpmRateScaled,
+    getEventTimeMs,
+    0
+  );
 
-  // compute a "chart span" fallback (if no audio duration)
-  const stopPadMs   = Math.round(travelMs * 0.70);                          // pad for last notes
-  const chartSpanMs = offsetEff + lastEventMsFirst + stopPadMs;             // one-loop span by chart
-  const cycleMs     = audioCycleMs > 0 ? audioCycleMs : chartSpanMs;        // prefer audio, else chart
+   // Compute cycle duration 
+  const stopPadMs   = Math.round(travelMs * 0.70);
+  const chartSpanMs = offsetEff + lastEventMsFirst + stopPadMs;
+  const cycleMs     = audioCycleMs > 0 ? audioCycleMs : chartSpanMs;
 
-  // decide loops based on level minDurationSec (default ≥ one loop)
-  const minDurMs = Math.max(0, Math.floor((lvlCfg?.minDurationSec || 0) * 1000)); // requested min
-  const loopsNeeded = Math.max(1, Math.ceil((minDurMs || chartSpanMs) / cycleMs)); // at least 1
+  const minDurMs    = Math.max(0, Math.floor((lvlCfg?.minDurationSec || 0) * 1000));
+  const loopsNeeded = Math.max(1, Math.ceil((minDurMs || chartSpanMs) / cycleMs));
+
   log('cycleMs=', cycleMs, 'minDurMs=', minDurMs, 'loopsNeeded=', loopsNeeded);
 
-  // if more loops needed: enable audio.loop and schedule subsequent loops' notes
+  // Multi-loop scheduling 
   if (loopsNeeded > 1) {
-    if (audio) audio.loop = true;                                           // let audio restart seamlessly
-    // schedule loops 2..N with baseOffsetMs = loopIndex * cycleMs
+    if (audio) audio.loop = true;
+
     for (let i = 1; i < loopsNeeded; i++) {
-      const baseOffsetMs = i * cycleMs;                                     // shift timeline for this loop
+      const baseOffsetMs = i * cycleMs;
       _scheduleAllEvents(
-        events, startWallMs, offsetEff, travelMs, travelBeatsEff, bpmRateScaled, getEventTimeMs, baseOffsetMs
+        events,
+        startWallMs,
+        offsetEff,
+        travelMs,
+        travelBeatsEff,
+        bpmRateScaled,
+        getEventTimeMs,
+        baseOffsetMs
       );
     }
-    // put final cutoff on the last loop so overlays show right after it
-    const finalBase = (loopsNeeded - 1) * cycleMs;                          // base offset for last loop
-    _scheduleChartCutoff(lastEventMsFirst, startWallMs, offsetEff, travelMs, finalBase); // final stop
+
+    const finalBase = (loopsNeeded - 1) * cycleMs;
+    _scheduleChartCutoff(
+      lastEventMsFirst,
+      startWallMs,
+      offsetEff,
+      travelMs,
+      finalBase
+    );
   } else {
-    // single loop: normal cutoff after last event
-    _scheduleChartCutoff(lastEventMsFirst, startWallMs, offsetEff, travelMs, 0); // one-loop stop
+    _scheduleChartCutoff(
+      lastEventMsFirst,
+      startWallMs,
+      offsetEff,
+      travelMs,
+      0
+    );
   }
 
-  // Safety: if for some reason audio doesn't stop (e.g., metadata wrong), also stop on ended.
-  // This will usually fire *after* scheduled cutoff; stopSong() is idempotent enough here.
-  audio.addEventListener('ended', () => stopSong('completed'), { once: true }); // one-time safety
+  /* ---------------------------------------------
+   * 9) Safety handler: ensure stop on audio ended
+   * Prevents rare cases where cutoff never fires.
+   --------------------------------------------- */
+  audio.addEventListener('ended', () => stopSong('completed'), { once: true });
 }
+
 
 /* --------------------------------------------------------
    stopSong(reason)
@@ -466,4 +570,4 @@ async function startSongForLevel(level, options) {
 }
 
 /* ---- exports ---- */
-export { stopSong, startSongForLevel };
+export { stopSong, startSongForLevel, cancelPendingStart, };

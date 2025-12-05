@@ -60,6 +60,7 @@ import {
 import {
   startSongForLevel,
   stopSong,
+  cancelPendingStart,
 } from './songPlayer.js';
 
 // --- TEMP DEBUG: module loaded ---
@@ -305,27 +306,32 @@ function onSongStarted() {
   document.body.removeAttribute('data-starting');             // clear starting flag
 }
 
-/**
- * Pause intent from quick PP or menu
- * If countdown is active, abort it and freeze in Pause
- */
 
+/**
+ * onPauseRequested()
+ * Pause intent from quick Play/Pause, menu, or overlay.
+ * If countdown is active, abort it and cancel any pending song start.
+ */
 function onPauseRequested() {
   if (document.body.dataset.starting === 'true') {
-    cancelOverlayCountdown();                      // stop countdown UI/timers
-    document.body.removeAttribute('data-starting'); // no longer starting
+    // Countdown phase: stop UI countdown and cancel pre-roll in songPlayer
+    cancelOverlayCountdown();                         // stop countdown UI/timers
+    cancelPendingStart();                             // cancel pre-roll start safely
+
+    document.body.removeAttribute('data-starting');   // no longer starting
     document.body.setAttribute('data-paused', 'true'); // keep visuals frozen
-    setOverlayIcon('play');                        // show big Play to resume
-    updatePlayMenuLabel();                         // sync menu label
-    showPauseOverlay();                            // show Pause panel
-    state.running = false;                         // not running
-    return;                                        // do NOT stopSong() here
+    setOverlayIcon('play');                           // show big Play to resume
+    updatePlayMenuLabel();                            // sync menu label
+    showPauseOverlay();                               // show Pause panel
+    state.running = false;                            // not running
+    return;                                           // do NOT stopSong() here
   }
 
-  // Normal pause during gameplay
-  stopSong('paused');                              // this path is fine
-  showPauseOverlay();                              // show Pause panel
+  // Normal pause during active gameplay path
+  stopSong('paused');                                 // stop audio + timers, emit song:ended(paused)
+  showPauseOverlay();                                 // show Pause panel
 }
+
 
 
 /**

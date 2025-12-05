@@ -57,120 +57,7 @@ A **four‑lane rhythm game**. Tap/press the matching arrow as a neon orb hits t
 
 ## User Stories
 
-### 1) Young Player (6–10)
-**Persona:** Plays on phone/tablet; loves cats, bright colors, and instant feedback. Reading optional.  
-**User Story:** As a young player, I want big, friendly arrows and a simple “3-2-1” start so I can jump in and dance with Jazz without needing to read instructions.  
-**Acceptance Criteria**
-- Large tap targets with clear labels and strong contrast
-- Level 1 is “practice”: no health loss, slow notes, **one note at a time**
-- Big Play/Pause with clear label; overlay always explains current state
-- One-screen tutorial with minimal text
-- Adjustable **countdown** (0/3/5s), default 3s
-- **Reduce motion** and **No flash** toggles available
-- Cute sounds with a single **Mute** switch
 
----
-
-### 2) Pre-Teen / Teen Rhythm Fan (11–16)
-**Persona:** Keyboard or mobile; wants legit rhythm feel, combos, and grindable BEST scores.  
-**User Story:** As a teen, I want a fair difficulty ramp, responsive input, and a visible combo so I can chase scores and feel my skill improving.  
-**Acceptance Criteria**
-- Clear curve across **Levels 1–13** (L1–3 solo notes; L4–7 occasional doubles; L8+ frequent chords)
-- Consistent timing windows (**Perfect / Great / Good / Miss**)
-- Combo, max combo, and **BEST** persist to localStorage
-- **Retry** and **Next level** after a run
-- Keyboard + touch are equally responsive; no ghost clicks
-- Bonus mode during streaks (extra points on lower levels; extra life on higher)
-
----
-
-### 3) Adult Casual Player (Parent with 5 minutes)
-**Persona:** One hand on phone, needs zero friction.  
-**User Story:** As a busy parent, I want tap-to-play and quick pause, with remembered volume, so I can enjoy a short break without fiddling.  
-**Acceptance Criteria**
-- One-tap **Play**, one-tap **Pause**
-- **Mute** + **Volume** remembered between sessions
-- HUD collapse remembered
-- Fast load on mobile (good Lighthouse scores)
-- No sign-ups, no ads, no distractions
-
----
-
-### 4) Parent/Guardian (Safety & Comfort)
-**Persona:** Observes a child playing; wants calm visuals and a safe space.  
-**User Story:** As a parent, I want gentle visual options and a safe environment so my child can play without flashing lights or unwanted links.  
-**Acceptance Criteria**
-- **No ads**, no IAP, no outbound links from play area
-- **Reduce motion** and **No flash** visibly reduce intensity
-- Clear language; friendly tone
-- Overlays explain **Paused**, **Play**, **Level cleared**, **Game Over**
-
----
-
-### 5) Teacher/Therapist (Short, repeatable sessions)
-**Persona:** Uses short runs for focus/timing/motor practice.  
-**User Story:** As a teacher, I want short, repeatable runs with clear feedback and minimal text so I can use the game for warm-ups.  
-**Acceptance Criteria**
-- Quick starts with short countdown
-- Immediate **Restart** option
-- Minimal reading; icons and short labels
-- Predictable patterns and steady pacing on early levels
-- Works well in **portrait** on tablets/phones
-
----
-
-### 6) Accessibility-First Player (ADHD / Dyslexia / Autism traits)
-**Persona:** Sensitive to overload; needs clarity and control over effects.  
-**User Story:** As a player who gets overwhelmed by busy screens, I want simple visuals, adjustable countdown, and reduced effects so I can enjoy the rhythm without stress.  
-**Acceptance Criteria**
-- **Reduce motion** disables non-essential animations
-- **No flash** removes broad flashes/glow bursts
-- Big, consistent **countdown** numerals
-- High-contrast HUD labels; legible pixel font
-- Comfortable spacing; no time-critical menus
-
----
-
-### 7) Mobile-First Player (Slow network / older device)
-**Persona:** Mid-range Android, spotty 4G.  
-**User Story:** As a mobile player on a slow device, I want fast load and smooth input so I’m not waiting or dropping notes.  
-**Acceptance Criteria**
-- Compressed hero/background (AVIF/WebP with PNG fallback)
-- Optimized CSS; minimal render-blocking
-- Low-latency input; animation scales with **Reduce motion**
-- Stable layout (no CLS); strategic preloads
-
----
-
-### 8) Power-User / Score Hunter
-**Persona:** Chases PBs; demands consistency.  
-**User Story:** As a score hunter, I want consistent timing windows, quick retries, and a visible BEST so I can grind levels and improve.  
-**Acceptance Criteria**
-- **Retry level** in one tap
-- Stable judgment windows between runs
-- BEST persists and shows after a run
-- Optional **0s** countdown for instant restarts
-
----
-
-### 9) Site Visitor / Curious Onlooker
-**Persona:** Drops in from a link; needs a 5-second explanation.  
-**User Story:** As a first-time visitor, I want a welcoming first screen that explains the basics so I know how to play before I start.  
-**Acceptance Criteria**
-- **Play overlay** gives a one-line how-to with iconography
-- **Tutorial** tab shows the core rule (hit target at judge line)
-- Clear Play/Pause wording and icons; no jargon
-
----
-
-### 10) Maintainer / Future Me
-**Persona:** Future me after a long week.  
-**User Story:** As the maintainer, I want clean modules and a predictable UI lifecycle so I can add a song or tweak levels without breaking overlays.  
-**Acceptance Criteria**
-- ES modules with named exports; no duplicate listeners
-- Overlay lifecycle: `data-starting` during countdown, `data-paused` on pause; events `song:ready|started|ended|error`
-- Settings persist via localStorage (volume, HUD, motion/flash, countdown)
-- README includes testing steps, validators, Lighthouse, and known issues
 
 
 ## User Story Testing (Traceability)
@@ -450,6 +337,9 @@ document.querySelector('#menuPlayToggle')?.textContent.trim();
 **No Flash:** rail flash and heart glow disabled (explicit override for `.svg-heart`).  
 **Verify:** Toggle both settings and observe changes; confirm DOM flags.
 
+5) **404 Page**
+Tested by visiting a non-existent URL (e.g. `/banan`) to confirm the custom `404.html` displays with a “Back to Home” button and a visible, clickable homepage URL.
+
 ---
 
 ## Validation
@@ -523,8 +413,17 @@ Live: <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>
 A custom `404.html` is included for GitHub Pages to handle broken links with a clear return path to the homepage (Back to Home) and a visible, clickable homepage URL.
 
 
+
 ---
 
+## Future improvments
+- add sad face to Jazz the Cat when game over and confetti rain when cleared level.
+- make the orbs/notes be fully controled by beat.
+- make the game never ending. 
+- make Jazz dance moves better and more fun. 
+- make Jazz the Cat more fluffy and groovy.
+- add break points to start from when "game over".
+- organize settings panels better.
 ## Roadmap
 
 - Tune levels so **Lv 1–3** strictly guarantee one orb at a time.  

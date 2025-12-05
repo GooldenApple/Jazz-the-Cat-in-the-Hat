@@ -15,7 +15,8 @@ let currentBuffer = null;        // last decoded AudioBuffer
 /* Create (once) and wire AudioContext + master gain */
 function ensureContext() {
   if (!ctx) {
-    ctx = new (window.AudioContext || window.webkitAudioContext)(); // create context
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+		ctx = new AudioContextClass(); // create context
     master = ctx.createGain();                                      // master gain
     master.gain.value = 1;                                          // default 100%
     master.connect(ctx.destination);                                 // route to speakers

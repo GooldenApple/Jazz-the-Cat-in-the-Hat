@@ -1,5 +1,3 @@
-
-
 /* =============================
    Difficulty levels (game pacing)
    - Keep travelBeats exactly as before
@@ -240,14 +238,7 @@ export const LEVELS = {
   },
 };
 
-/* =============================
-   quantizeMsToFraction(ms, msPerBeat, denom)
-   Purpose: Snap a time in ms to a neat beat fraction.
-============================= */
-function quantizeMsToFraction(ms, msPerBeat, denom = 4) {
-  const step = msPerBeat / denom;              // compute sub-beat step in ms
-  return Math.round(ms / step) * step;         // round to nearest step
-}
+
 
 /**
   *simplifyChartForLevel(rawNotes, bpm, lvlCfg)
@@ -271,8 +262,7 @@ export function simplifyChartForLevel(rawNotes, bpm, lvlCfg) {
     .map(ev => {
       const dir = String(ev.dir || '').toLowerCase();                            // lane
       if (!DIRS.includes(dir)) return null;                                      // drop bad
-      let t = (ev.t != null)
-        ? Number(ev.t)
+      let t = (ev.t != null) ? Number(ev.t)
         : (ev.timeMs != null ? Number(ev.timeMs) : Number(ev.time));
       if (!Number.isFinite(t)) return null;                                      // drop bad time
       if (!lvl.allowSyncopation) t = quantizeMsToFraction(t, 4);                 // optional snap
@@ -298,19 +288,33 @@ export function simplifyChartForLevel(rawNotes, bpm, lvlCfg) {
   const policy   = (lvl.chordPolicy || 'single');                                // 'single'|'pair'|'all'
   const maxSim   = Math.max(1, lvl.maxSimultaneous ?? 1);                        // cap simultaneity
   const baseSimChance =
-    (lvl.simChance != null)
-      ? Math.max(0, Math.min(1, Number(lvl.simChance)))                          // explicit chance
+    (lvl.simChance != null) ? Math.max(0, Math.min(1, Number(lvl.simChance)))                          // explicit chance
       : (policy === 'pair' ? 0.5 : policy === 'all' ? 0.85 : 0.0);               // defaults
 
   // small helper: return a random subset of unique lanes from a chord
-  function pickRandomDistinct(chord, count) {
-    const seen = new Set();                                                      // dedupe lanes
-    const uniq = [];                                                             // unique by lane
-    for (const ev of chord) { if (!seen.has(ev.dir)) { seen.add(ev.dir); uniq.push(ev); } }
-    // shuffle uniq in-place (Fisher–Yates)
-    for (let i = uniq.length - 1; i > 0; i--) { const j = (Math.random()*(i+1))|0; [uniq[i],uniq[j]]=[uniq[j],uniq[i]]; }
-    return uniq.slice(0, Math.max(0, count|0));                                  // slice N
+function pickRandomDistinct(chord, count) {
+  const seen = new Set();                                                      // dedupe lanes
+  const uniq = [];                                                             // unique by lane
+
+  for (const ev of chord) {                                                    // loop over all events in this chord
+    if (!seen.has(ev.dir)) {                                                   // only keep first event per lane
+      seen.add(ev.dir);                                                        // remember that this lane is used
+      uniq.push(ev);                                                           // store the event as unique
+    }
   }
+
+  // shuffle uniq in-place (Fisher–Yates)
+  for (let i = uniq.length - 1; i > 0; i--) {                                  // walk backwards through the array
+    const j = Math.floor(Math.random() * (i + 1));                             // pick random index 0..i
+    const tmp = uniq[i];                                                       // store current element
+    uniq[i] = uniq[j];                                                         // move random element into position i
+    uniq[j] = tmp;                                                             // put stored element at position j
+  }
+
+  const safeCount = Math.max(0, Math.floor(Number(count) || 0));               // clamp requested size to a non-negative integer
+
+  return uniq.slice(0, safeCount);                                             // return at most safeCount items
+}
 
   const picked = [];
   for (const chord of groups) {
@@ -325,7 +329,8 @@ export function simplifyChartForLevel(rawNotes, bpm, lvlCfg) {
         const used = new Set(keep.map(e => e.dir));
         const avail = DIRS.filter(d => !used.has(d));
         if (!avail.length) break;
-        const d = avail[(Math.random()*avail.length)|0];
+        const d = avail[Math.floor(Math.random() * avail.length)];
+
         keep.push({ dir: d, timeMs: baseTime });
       }
     } else if (policy === 'pair') {
@@ -338,7 +343,7 @@ export function simplifyChartForLevel(rawNotes, bpm, lvlCfg) {
           const used = new Set(keep.map(e => e.dir));
           const avail = DIRS.filter(d => !used.has(d));
           if (avail.length) {
-            const d = avail[(Math.random()*avail.length)|0];
+            const d = avail[Math.floor(Math.random() * avail.length)];
             keep.push({ dir: d, timeMs: baseTime });
           }
         }
