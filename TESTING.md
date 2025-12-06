@@ -7,7 +7,27 @@ Testing was carried out continuously during development using manual play sessio
 
 ---
 
-## Testing Strategy (Overview)
+## Table of Contents
+
+- [Testing Strategy - Overview](#testing-strategy-overview)
+- [How to Run the Tests - Quick Start](#how-to-run-the-tests-quick-start)
+- [Tools & Methods](#tools--methods)
+- [Manual Testing](#manual-testing)
+- [User Story Testing - Traceability](#user-story-testing-traceability)
+- [Developer Console Sanity Tests](#developer-console-sanity-tests)
+- [Edge Case & Error Flow Tests](#edge-case--error-flow-tests)
+- [Regression Tests - Recent Fixes](#regression-tests-recent-fixes)
+- [Validation](#validation)
+  - [HTML & CSS Validation](#html--css-validation)
+  - [JavaScript Validation (JSHint)](#javascript-validation-jshint)
+- [Responsiveness Testing](#responsiveness-testing)
+- [Browser Compatibility](#browser-compatibility)
+- [Known Limitations / Issues](#known-limitations--issues)
+- [Testing Summary](#testing-summary)
+
+---
+
+## Testing Strategy - Overview
 
 Testing for this project combined:
 
@@ -22,14 +42,15 @@ Because this is an interactive, timing-sensitive rhythm game, a large part of th
 
 ---
 
-## How to Run the Tests (Quick Start)
+## How to Run the Tests - Quick Start
 
-1. Open the live game in **Chrome**.
+1. Open the live game in **Browser**.   
+**Live Site:** <https://gooldenapple.github.io/Jazz-the-Cat-in-the-Hat/>  
 2. Open **DevTools → Console**.
 3. (Optional) Set a shorter countdown while testing:
 
-       localStorage.setItem('countdownSec', '0');
-       location.reload();
+   - Open the **Settings** panel.
+   - Change the **Countdown** option to `0` (settings are saved automatically).
 
 4. Use the **Manual Testing** table as a checklist while playing on different breakpoints (mobile / tablet / desktop).
 5. Use the **Developer console sanity tests** (section below) to quickly verify critical flows after changes or new deployments.
@@ -69,114 +90,6 @@ Because this is an interactive, timing-sensitive rhythm game, a large part of th
 
 ---
 
-## User Story Testing (Traceability)
-
-Each user story from the README has been linked to one or more concrete tests.  
-The table below summarises how each story was verified, with references to manual test IDs and evidence.
-
-*The full user stories are described in the main README under **UX → User Stories**.  
-The table below shows how each story was verified through testing.*
-
-| Story | Acceptance Criteria (summary) | How Verified | Evidence | Status |
-|------|-------------------------------|--------------|----------|--------|
-| Child Player / first-time player | Play visible, countdown, touch + keyboard, clear feedback, Level 1 no life loss | Manual play test on mobile + desktop; verify countdown and feedback; confirm Level 1 rule | Screenshots: countdown + gameplay feedback + Level 1; Manual Testing rows | Pass |
-| Player (Mobile) | Responsive touch, no double taps, alignment across sizes | Manual test on 320px & 375px + real device/DevTools; rapid tap test; visual check | Screenshots: 320/375; Manual Testing rows | Pass |
-| Player (Desktop) | Arrow keys match lanes, consistent input, pause/resume | Manual test on desktop; press keys during play; pause/resume mid-run | Manual Testing rows | Pass |
-| Player (Progression) | Level 1 safe, Level 2+ increases challenge, results overlay replay/next | Manual play test across Level 1–4; confirm results panel options | Screenshots: results panel | Pass |
-| Player (Rewards) | Bonus triggers, +10 per hit, ends on miss, extra life on Level 4+ | Manual test: trigger bonus, capture +10 feedback, force miss to end, verify extra life | Screenshots: bonus +10, bonus ended, extra life | Pass |
-| Player (Accessibility) | Reduce Motion works, No Flash works, settings accessible | Toggle settings during play; compare before/after visuals | Screenshots: settings toggles + before/after | Pass |
-
-### Evidence Screenshots – User Stories
-
-Most of the visual evidence for core flows is grouped below in collapsible sections per user story.
-
-<details>
-<summary><strong>US01 — Child Player / first-time player</strong></summary>
-
-![Pause overlay](assets/images/testing/pause-overlay.png)  
-*Pause overlay.*
-
-![Countdown](assets/images/testing/countdown-5.png)  
-*Countdown shown before gameplay begins, giving the player time to prepare.*
-
-![Timing feedback](assets/images/testing/feedback-great.png)  
-*Timing feedback displayed clearly near the target area after a successful hit.*
-
-![Level 1 safe](assets/images/testing/level1-full-hearts.png)  
-*Level 1 keeps all hearts even after misses, confirming the beginner-friendly rules.*
-
-</details>
-
----
-
-<details>
-<summary><strong>US02 — Player (Mobile)</strong></summary>
-
-![Touch controls](assets/images/testing/controls-mob.png)  
-*On-screen touch controls used on mobile devices, aligned and fully responsive.*
-
-</details>
-
----
-
-<details>
-<summary><strong>US03 — Player (Desktop)</strong></summary>
-
-![Keyboard play](assets/images/testing/controls-desk.png)  
-*Gameplay started on desktop, confirming keyboard input responsiveness.*
-
-![Pause overlay](assets/images/testing/pause-over.png)  
-*Pause overlay displayed correctly after pressing the pause control.*
-
-</details>
-
----
-
-<details>
-<summary><strong>US04 — Player (Progression)</strong></summary>
-
-![Results overlay](assets/images/testing/u-did-it.png)  
-*Results overlay shown after clearing a level, offering replay/next options.*
-
-![Game over](assets/images/testing/gameover.png)  
-*Game Over overlay displayed after losing all lives from Level 2 and onwards.*
-
-</details>
-
----
-
-<details>
-<summary><strong>US05 — Player (Rewards)</strong></summary>
-
-![Bonus +10](assets/images/testing/bo-plus.png)  
-*Bonus Mode active, awarding +10 extra points for each successful hit.*
-
-![Bonus ended](assets/images/testing/bo-end.png)  
-*Bonus Mode ends immediately after a miss, confirming correct behaviour.*
-
-![Extra life](assets/images/testing/bo-extra.png)  
-*Extra life rewarded during Bonus Mode on higher levels.*
-
-</details>
-
----
-
-<details>
-<summary><strong>US06 — Player (Accessibility)</strong></summary>
-
-![Audio settings](assets/images/testing/audio-menu.png)  
-*Audio settings panel.*
-
-![Accessibility settings](assets/images/testing/acc-menu.png)  
-*Accessibility settings panel.*
-
-![No Flash and Reduce Motion](assets/images/testing/no-mo-flash.png)  
-*No Flash and Reduce Motion enabled.*
-
-</details>
-
-
----
 
 ## Manual Testing
 
@@ -184,44 +97,61 @@ The game was manually tested using an Expected vs Actual approach. Each test cas
 
 > MT = Manual Test case ID.
 
-| ID | Related Story | Feature | Steps | Expected Result | Result |
-|----|--------------|---------|-------|-----------------|--------|
-| MT01 | Child Player | Play (Overlay) | Click **Play** on the overlay | Overlay visible, label “Play”, icon shows play; countdown starts | Pass |
-| MT02 | Child Player | Countdown | Start game with default settings | Label shows 3 → 2 → 1 → GO, then song starts | Pass |
-| MT03 | Child Player | Countdown = 0 | Set countdown to 0 in settings and start game | No countdown, game starts immediately | Pass |
-| MT04 | Child Player | Pause | Click **Pause** during gameplay | Gameplay pauses, `data-paused="true"`, pause overlay is visible | Pass |
-| MT05 | Child Player | Resume | Click **Play** while paused | Gameplay resumes from the same state | Pass |
-| MT06 | Child Player | Quick Play/Pause | Use the quick button in the HUD | Toggles Play/Pause correctly | Pass |
-| MT07 | Child Player | Menu Play/Pause | Use Play/Pause in the navbar menu | Toggles Play/Pause correctly and menu label stays in sync | Pass |
-| MT08 | Player (Desktop) | Keyboard controls | Press arrow keys during gameplay | Matching lane input is registered | Pass |
-| MT09 | Player (Mobile) | Touch controls | Tap on-screen arrow buttons | Matching lane input is registered | Pass |
-| MT10 | Player (Mobile) | Touch responsiveness | Rapid tap arrow buttons | Inputs respond immediately and remain playable | Pass |
-| MT11 | Player (Mobile) | Ghost click protection | Tap once repeatedly in the same lane | No accidental double inputs occur from a single tap | Pass |
-| MT12 | Player (Mobile) | Alignment across sizes | Test at 320px and 375px widths | Controls remain aligned across screen sizes | Pass |
-| MT13 | Accessibility | Settings open/close | Open settings from menu and close it | Panel opens and closes without breaking gameplay | Pass |
-| MT14 | Accessibility | Volume slider | Move the slider while playing | Audio volume changes smoothly | Pass |
-| MT15 | Accessibility | Mute toggle | Enable **Mute** | Audio is muted | Pass |
-| MT16 | Accessibility | Reduce Motion | Enable **Reduce Motion** | Key animations (dancer moves/rail ticks) are reduced or disabled | Pass |
-| MT17 | Accessibility | No Flash | Enable **No Flash** | Rail flash and heart glow are disabled | Pass |
-| MT18 | Child Player | Countdown setting persisted | Change countdown option and reload | Countdown matches the selected value after reload | Pass |
-| MT19 | Progression | Level 1 safety | Play Level 1 and intentionally miss | Level 1 does not reduce lives on misses | Pass |
-| MT20 | Progression | Level 2+ lives | Play Level 2+ and miss | Lives reduce according to miss rules | Pass |
-| MT21 | Rewards | Bonus Mode trigger | Reach the streak threshold | Bonus Mode activates and banner is shown | Pass |
-| MT22 | Rewards | Bonus scoring | Hit notes during Bonus Mode | Feedback shows `+10` extra points per hit | Pass |
-| MT23 | Rewards | Bonus Mode end | Miss once during Bonus Mode | Bonus Mode ends immediately and “bonus ended” feedback appears | Pass |
-| MT24 | Rewards | Extra life (Level 4+) | Reach bonus goal during Bonus Mode | Extra life is awarded | Pass |
-| MT25 | Progression | Results overlay | Finish a level with lives remaining | Results overlay appears with replay/next options | Pass |
-| MT26 | Progression | Game Over overlay | Lose all lives (Level 2+) | Game Over overlay appears with retry option | Pass |
-| MT27 | Layout | Rotate overlay | Rotate device to a landscape layout on small screens | Rotate overlay appears, suggesting portrait; disappears again when rotated back | Pass |
-| MT28 | Layout | HUD hearts on load | Load the game | Hearts render in `#lives` | Pass |
-| MT29 | Layout | HUD hearts on damage | Play and take a hit | Hearts update to reflect damage | Pass |
-| MT30 | Navigation | Navbar behaviour | Toggle navbar open/close on mobile | `data-nav-open` syncs and Quick Play/Pause hides under open navbar | Pass |
-| MT31 | Visitor | 404 page | Visit a non-existent URL (for example `/this-page-does-not-exist`) | Custom 404 page displays with “Back to Home” and clickable homepage URL | Pass |
+| ID | Related Story | Feature | Steps | Expected Result | Evidence / Reference | Result |
+|----|---------------|---------|-------|-----------------|----------------------|--------|
+| MT01 | Child Player | Play (Overlay) | Click **Play** on the overlay | Overlay visible, label “Play”, icon shows play; countdown starts | [Play/Pause overlay](assets/images/testing/pause-overlay.png) · [Countdown](assets/images/testing/countdown-5.png) | Pass |
+| MT02 | Child Player | Countdown | Start game with default settings | Label shows 3 → 2 → 1 → GO, then song starts | [Countdown](assets/images/testing/countdown-3.png) · [Gameplay started](assets/images/testing/gameplay-started.png) | Pass |
+| MT03 | Child Player / Accessibility | Countdown = 0 | Set countdown to 0 in settings and start game | No countdown, game starts immediately | [Countdown settings panel](assets/images/testing/countdown-menu.png) | Pass |
+| MT04 | Child Player / Desktop | Pause | Click **Pause** during gameplay | Gameplay pauses, `data-paused="true"`, pause overlay is visible | [Pause overlay](assets/images/testing/pause-over.png) | Pass |
+| MT05 | Child Player | Resume | Click **Play** while paused | Gameplay resumes from the same state | [Gameplay resumed](assets/images/testing/gameplay-started.png) | Pass |
+| MT06 | Child Player | Quick Play/Pause | Use the quick button in the HUD | Toggles Play/Pause correctly | [Quick Play button](assets/images/testing/quickplay.png) · [Quick Pause button](assets/images/testing/quickp.png) | Pass |
+| MT07 | Child Player | Menu Play/Pause | Use Play/Pause in the navbar menu | Toggles Play/Pause correctly and menu label stays in sync | [Mobile navbar open with Play/Pause](assets/images/testing/mob-hud-nav.png) · [Mobile navbar closed](assets/images/testing/nav-closed-mob.png) | Pass |
+| MT08 | Player (Desktop) | Keyboard controls | Press arrow keys during gameplay | Matching lane input is registered | [Desktop controls](assets/images/testing/controls-desk.png) | Pass |
+| MT09 | Player (Mobile) | Touch controls | Tap on-screen arrow buttons | Matching lane input is registered | [Mobile controls](assets/images/testing/controls-mob.png) · [Arrow design](assets/images/arrows.png) | Pass |
+| MT10 | Player (Mobile) | Touch responsiveness | Rapid tap arrow buttons | Inputs respond immediately and remain playable | [Mobile controls](assets/images/testing/controls-mob.png) · [Gameplay started](assets/images/testing/gameplay-started.png) | Pass |
+| MT11 | Player (Mobile) | Ghost click protection | Tap once repeatedly in the same lane | No accidental double inputs occur from a single tap | [Mobile controls](assets/images/testing/controls-mob.png) | Pass |
+| MT12 | Player (Mobile) | Alignment across sizes | Test at 320px and 375px widths | Controls remain aligned across screen sizes | [320px layout](assets/images/testing/small-mob-res.png) · [375px layout](assets/images/testing/med-mob-res.png) | Pass |
+| MT13 | Accessibility | Settings open/close | Open settings from menu during a run and then close it | Panel opens on top of the paused game and closes cleanly without breaking gameplay when you return | [Audio settings](assets/images/testing/audio-menu.png) · [Accessibility settings](assets/images/testing/acc-menu.png) | Pass |
+| MT14 | Accessibility | Volume slider | Open settings during a run, move the volume slider, then return to the game | New volume level is applied; game audio plays at the adjusted level when you resume | [Audio settings](assets/images/testing/audio-slide.png) | Pass |
+| MT15 | Accessibility | Mute toggle | Enable **Mute** in the audio settings | Game audio is muted when you resume play | [Audio settings](assets/images/testing/audio-menu.png) | Pass |
+| MT16 | Accessibility | Reduce Motion | Enable **Reduce Motion** | Key animations (dancer moves/rail ticks) are reduced or disabled | [Default visuals](assets/images/testing/accessibility-before.png) · [Less motion](assets/images/testing/less-motion.png) | Pass |
+| MT17 | Accessibility | No Flash | Enable **No Flash** | Rail flash and heart glow are disabled | [No Flash enabled](assets/images/testing/no-mo-flash.png) · [Less motion](assets/images/testing/less-motion.png) | Pass |
+| MT18 | Child Player / Accessibility | Countdown setting persisted | Change countdown option and reload | Countdown matches the selected value after reload | [Countdown settings](assets/images/testing/countdown-menu.png) | Pass |
+| MT19 | Progression | Level 1 safety | Play Level 1 and intentionally miss | Level 1 does not reduce lives on misses | [Level 1 full hearts](assets/images/testing/level1-full-hearts.png) | Pass |
+| MT20 | Progression | Level 2+ lives | Play Level 2+ and miss | Lives reduce according to miss rules | [Level 2+ heart loss](assets/images/testing/level2-heart-loss.png) | Pass |
+| MT21 | Rewards | Bonus Mode trigger | Reach the streak threshold | Bonus Mode activates and banner is shown | [Bonus Mode banner](assets/images/testing/bonus-mode.png) | Pass |
+| MT22 | Rewards | Bonus scoring | Hit notes during Bonus Mode | Feedback shows `+10` extra points per hit | [GOOD +10](assets/images/testing/bonus-good.png) · [GREAT +10](assets/images/testing/bonus-great.png) · [PERFECT +10](assets/images/testing/bonus-perfect.png) · [Bonus +10 summary](assets/images/testing/bo-plus.png) | Pass |
+| MT23 | Rewards | Bonus Mode end | Miss once during Bonus Mode | Bonus Mode ends immediately and “bonus ended” feedback appears | [Bonus ended](assets/images/testing/bo-end.png) | Pass |
+| MT24 | Rewards | Extra life (Level 4+) | Reach bonus goal during Bonus Mode | Extra life is awarded | [Extra life](assets/images/testing/bo-extra.png) | Pass |
+| MT25 | Progression | Results overlay | Finish a level with lives remaining | Results overlay appears with replay/next options | [Results overlay](assets/images/testing/results-overlay.png) | Pass |
+| MT26 | Progression | Game Over overlay | Lose all lives (Level 2+) | Game Over overlay appears with retry option | [Game Over overlay](assets/images/testing/game-over.png) | Pass |
+| MT27 | Layout | Rotate overlay | Rotate device to a landscape layout on small screens | Rotate overlay appears, suggesting portrait; disappears again when rotated back | [Rotate – small mobile](assets/images/testing/rotate-small-mobile.png) · [Rotate – large mobile](assets/images/testing/rotate-overlay-large-mobile.png) | Pass |
+| MT28 | Layout | HUD hearts on load | Load the game | Hearts render in `#lives` | [HUD overview](assets/images/testing/hud.png) · [Level 1 full hearts](assets/images/testing/level1-full-hearts.png) | Pass |
+| MT29 | Layout | HUD hearts on damage | Play and take a hit | Hearts update to reflect damage | [Level 2+ heart loss](assets/images/testing/level2-heart-loss.png) | Pass |
+| MT30 | Navigation | Navbar behaviour | Toggle navbar open/close on mobile | `data-nav-open` syncs and Quick Play/Pause hides under open navbar | [Navbar open – Quick PP hidden](assets/images/testing/navbar-open-mobile.png) | Pass |
+| MT31 | Visitor | 404 page | Visit a non-existent URL (for example `/this-page-does-not-exist`) | Custom 404 page displays with “Back to Home” and clickable homepage URL | [404 page](assets/images/testing/404-page.png) | Pass |
 
-### Evidence Screenshots
+*All visual evidence for manual testing is linked directly in the **Evidence / Reference** column of the table above.*
 
-Most of the visual evidence for manual testing overlaps with the User Story evidence in the section above.  
-Any extra screenshots used for manual spot checks (for example rotate overlay or 404 page) are referenced where relevant in this document.
+---
+
+## User Story Testing - Traceability
+
+Each user story from the README has been linked to one or more concrete tests.  
+The table below summarises how each story was verified, with references to manual test IDs and evidence screenshots.
+
+*The full user stories are described in the main README under **UX → User Stories**.  
+The table below shows how each story was verified through testing and how all parts of each story’s acceptance criteria were covered.*
+
+| Story | Acceptance Criteria (summary) | How Verified | Evidence | Status |
+|------|-------------------------------|--------------|----------|--------|
+| Child Player / first-time player | Play visible, countdown (3s / 5s), optional countdown = 0, touch + keyboard support, clear feedback, Level 1 no life loss | Manual tests **MT01–MT07, MT08–MT09, MT18–MT19**. Verified that Play overlay is visible on load, countdown runs at default (3s) and alternative (5s), countdown = 0 starts immediately, both keyboard and touch inputs work, feedback is shown for hits/misses, and Level 1 does not reduce lives on misses. | [Play/Pause overlay](assets/images/testing/pause-overlay.png) · [Countdown 3s](assets/images/testing/countdown-3.png) · [Gameplay started](assets/images/testing/gameplay-started.png) · [PERFECT](assets/images/testing/feedback-perfect.png) · [MISS](assets/images/testing/miss.png) · [Level 1 full hearts](assets/images/testing/level1-full-hearts.png) · [HUD](assets/images/testing/hud.png) · [Quick PP](assets/images/testing/quick.png) · [Tutorial](assets/images/testing/tutorial.png) | Pass |
+| Player (Mobile) | Responsive touch controls, no ghost taps, alignment across small mobile sizes | Manual tests **MT09–MT12** on 320px and 375px widths. Verified that on-screen arrow buttons register inputs correctly, rapid tapping feels responsive, ghost clicks are filtered, and controls remain visually aligned across mobile viewports. | [Mobile controls](assets/images/testing/controls-mob.png) · [Arrow design](assets/images/arrows.png) · [320px layout](assets/images/testing/small-mob-res.png) · [375px layout](assets/images/testing/med-mob-res.png) | Pass |
+| Player (Desktop) | Keyboard lanes map correctly, input feels consistent, pause/resume works during play | Manual tests **MT04–MT08** on desktop. Verified that arrow keys trigger matching lanes, input remains stable during gameplay, and both overlay Play/Pause and quick Play/Pause behave predictably while keeping state and labels in sync. | [Desktop controls](assets/images/testing/controls-desk.png) · [Pause overlay](assets/images/testing/pause-over.png) · [Desktop layout](assets/images/testing/desktop-res.png) | Pass |
+| Player (Progression) | Level 1 safe (no life loss), Level 2+ increases difficulty and can reduce lives, results overlay allows replay/next, Game Over after losing all lives on higher levels | Manual tests **MT19–MT20, MT25–MT26**. Verified that Level 1 never reduces hearts on misses, Level 2+ does reduce hearts according to miss rules, Results overlay appears after clearing a level with replay/next options, and Game Over overlay appears after losing all lives from Level 2 onwards. | [Level 1 full hearts](assets/images/testing/level1-full-hearts.png) · [Level 2+ heart loss](assets/images/testing/level2-heart-loss.png) · [Results overlay](assets/images/testing/results-overlay.png) · [Game Over overlay](assets/images/testing/game-over.png) | Pass |
+| Player (Rewards) | Bonus Mode triggers on a streak, bonus hits add +10 points, ends on a miss, extra lives possible on Level 4+ | Manual tests **MT21–MT24**. Verified that Bonus Mode activates at the configured streak threshold, each hit during Bonus Mode shows `+10` extra points, Bonus Mode ends immediately on a miss, and an extra life is awarded on higher levels when the bonus goal is reached. | [Bonus banner](assets/images/testing/bonus-mode.png) · [GOOD +10](assets/images/testing/bonus-good.png) · [GREAT +10](assets/images/testing/bonus-great.png) · [PERFECT +10](assets/images/testing/bonus-perfect.png) · [Bonus +10 summary](assets/images/testing/bo-plus.png) · [Bonus ended](assets/images/testing/bo-end.png) · [Extra life](assets/images/testing/bo-extra.png) | Pass |
+| Player (Accessibility) | Reduce Motion, No Flash, audio/mute and countdown settings available and behave as described | Manual tests **MT13–MT18**. Verified that settings panels can be opened/closed safely, volume slider and mute control audio, Reduce Motion removes or reduces key animations, No Flash disables rail flashes and heart glow, and countdown settings (0s/3s/5s) persist correctly between reloads. | [Audio settings](assets/images/testing/audio-menu.png) · [Accessibility menu](assets/images/testing/acc-menu.png) · [Default visuals](assets/images/testing/accessibility-before.png) · [Less motion](assets/images/testing/less-motion.png) · [No Flash close-up](assets/images/testing/no-mo-flash.png) · [Countdown menu](assets/images/testing/countdown-menu.png) | Pass |
+
 
 ---
 
@@ -237,7 +167,7 @@ These snippets can be run in the browser console to quickly verify critical flow
     // Game is paused while overlay is up
     document.body.hasAttribute('data-paused');  // -> true before first start
 
-### HUD Render (Hearts)
+### HUD Render - Hearts
 
     // Hearts present in HUD
     document.querySelectorAll('#lives .svg-heart').length >= 1;  // -> true
@@ -270,8 +200,11 @@ These snippets can be run in the browser console to quickly verify critical flow
 
 ### Countdown = 0 (Skip Test)
 
-    localStorage.setItem('countdownSec', '0');  // allow immediate start
-    location.reload();                          // hard refresh, then press Play
+    // Force countdown = 0 in stored settings, then reload once
+    const s = JSON.parse(localStorage.getItem('settings') || '{}');
+    s.countdown = 0;
+    localStorage.setItem('settings', JSON.stringify(s));
+    location.reload();
 
 ### Menu Label Sync
 
@@ -290,7 +223,7 @@ In addition to the main manual tests, a few edge cases and error flows were cons
 
 - **Countdown set to an unexpected value:**  
   - Steps: Manually set `localStorage.setItem('countdownSec', '999')` or a negative value and reload.  
-  - Expected: The game falls back to sensible behaviour (long countdown is still allowed, but does not break play).
+  - Expected: The game ignores invalid countdown values and falls back to a valid option (0s, 3s or 5s) without breaking play.
 
 - **Refresh during gameplay:**  
   - Steps: Start a level and reload the page mid-run.  
@@ -300,7 +233,7 @@ These edge cases do not reveal additional breaking issues and confirm that the g
 
 ---
 
-## Regression Tests (Recent Fixes)
+## Regression Tests - Recent Fixes
 
 These are targeted regression checks for bugs that were found and fixed during development.
 
@@ -337,8 +270,8 @@ These are targeted regression checks for bugs that were found and fixed during d
    - **Verify:**  
      - Visiting a non-existent URL (for example `/this-page-does-not-exist`) shows the custom 404 page with a working “Back to Home” link.
 
-
 ---
+
 ## Validation
 
 Validation covers HTML, CSS and JavaScript.  
@@ -378,37 +311,52 @@ Each file was pasted and checked individually using the same configuration.
 <summary><strong>JSHint configuration screenshot</strong></summary>
 
 ![JSHint configuration](assets/images/validation/jshint.png)
-*Global JSHint options used for all JavaScript files (`esversion: 11`, `browser: true`, `devel: true`, `undef: true`, `unused: true`).*
+*JSHint browser configuration used for all JavaScript files.*
 
-</details>  
+</details>
 
-This configuration includes :
+**Configure panel options**
 
-- /* jshint esversion: 11 */
-- /* jshint browser: true */
-- /* jshint devel: true */
-- /* jshint strict: implied */
-- /* jshint unused: true */ 
+In the **Configure** panel on jshint.com, the following options were used:
 
-ES module files use `export` / `import`, and JSHint warnings related to ES module strict mode were treated as style-only.
+- ES version set to **ES2020 / esversion: 11**
+- **Browser** environment enabled
+- **Development** (allow `console` and debugging helpers)
+- **Assume strict mode**
+- Warn on **undefined variables** (`undef: true`)
+- Warn on **unused variables** (`unused: true`)
+
+These options were applied consistently for every file that was pasted into the JSHint browser tool.
+
+**Per-file JSHint directives in the code**
+
+In addition to the Configure panel, each JS module has inline JSHint directives at the top of the file:
+
+/* jshint esversion: 11 */  
+/* jshint browser: true */  
+/* jshint devel: true */  
+/* jshint strict: implied */  
+/* jshint unused: true */
+
+In ui.js there is one extra directive:  
+/* global bootstrap */
+
+ES module files use `export` / `import`, and JSHInt warnings related to ES module strict mode were treated as style-only.
 
 ---
 
 ### game.js
 
-JSHint reports several “defined but never used” variables and functions inside game.js.
+JSHint reports several “defined but never used” variables and functions inside game.js.  
 These are not actual errors. They exist intentionally within the game architecture.
 
-During development, cleanup attempts were made to remove them.
+During development, cleanup attempts were made to remove them.  
 However, removing these variables caused the game to break due to:
 
-internal module dependencies
-
-event-driven hooks that JSHint cannot detect statically
-
-functions used indirectly through custom events
-
-setup functions that are intentionally defined for future levels and bonus features
+- internal module dependencies  
+- event-driven hooks that JSHint cannot detect statically  
+- functions used indirectly through custom events  
+- setup functions that are intentionally defined for future levels and bonus features  
 
 Because these functions participate in the game lifecycle (through events, DOM wiring, or shared state), but are not directly invoked in the same file, JSHint marks them as “unused”.
 
@@ -418,15 +366,15 @@ To avoid reintroducing functional bugs, these variables have been intentionally 
 <summary><strong>game.js validation</strong></summary>
 
 ![game.js JSHint validation](assets/images/validation/game.png)  
-*`game.js` passes JSHint with no errors and only intentional “defined but never used” style warnings (kept as event hooks and lifecycle helpers).*
+*game.js passes JSHint with no errors and only intentional “defined but never used” style warnings (kept as event hooks and lifecycle helpers).*
 
 </details>
 
 ---
 
-**ui.js**
+### ui.js
 
-`ui.js` owns most of the user interface wiring for the game: overlays (Play, Pause, Results, Game Over), HUD updates, hearts, judge flashes, the quick Play/Pause button, the settings panel, and the Bootstrap navbar collapse sync. It listens for custom game events, updates DOM state (attributes, classes and labels), and keeps the visual layer in sync with the underlying game state.
+ui.js owns most of the user interface wiring for the game: overlays (Play, Pause, Results, Game Over), HUD updates, hearts, judge flashes, the quick Play/Pause button, the settings panel, and the Bootstrap navbar collapse sync. It listens for custom game events, updates DOM state (attributes, classes and labels), and keeps the visual layer in sync with the underlying game state.
 
 Two warnings appeared during validation:
 
@@ -436,7 +384,7 @@ Two warnings appeared during validation:
 To resolve these:
 
 - A `/* global bootstrap */` directive was added alongside the JSHint options so that JSHint recognises `bootstrap` as an intentional global provided by the page.
-- The unused `playBtn` constant was removed from the overlay controls block in `ui.js`, as all overlay wiring now uses a locally scoped button reference inside `wirePlayButton()` instead.
+- The unused `playBtn` constant was removed from the overlay controls block in ui.js, as all overlay wiring now uses a locally scoped button reference inside `wirePlayButton()` instead.
 
 After these small cleanups, `ui.js` now passes JSHint with **no errors or warnings**.
 
@@ -444,24 +392,23 @@ After these small cleanups, `ui.js` now passes JSHint with **no errors or warnin
 <summary><strong>ui.js – JSHint validation</strong></summary>
 
 ![ui.js JSHint validation](assets/images/validation/ui.js.png)  
-*`ui.js` passes JSHint with no errors or warnings using the shared configuration. The Bootstrap global is declared explicitly and an unused overlay button reference has been removed.*
+*ui.js passes JSHint with no errors or warnings using the shared configuration. The Bootstrap global is declared explicitly and an unused overlay button reference has been removed.*
 
 </details>
-
 
 ---
 
 ### scoring.js
 
-`scoring.js` is the single source of truth for game state and judging. It owns the score, lives, level, combo and max combo, partial damage, bonus mode flags and internal counters. It also contains the timing windows, grading logic for hits, miss handling, and the hooks that notify the HUD (for example via `setFeedback` and bonus/extra-life events).
+scoring.js is the single source of truth for game state and judging. It owns the score, lives, level, combo and max combo, partial damage, bonus mode flags and internal counters. It also contains the timing windows, grading logic for hits, miss handling, and the hooks that notify the HUD (for example via `setFeedback` and bonus/extra-life events).
 
-`scoring.js` was validated using the shared JSHint configuration. The only initial reports were “misleading line break before '?'” style warnings on a few ternary expressions in the bonus logic (selecting bonus mode and calculating the bonus goal). These expressions were rewritten to keep the `?` and `:` on clearer lines without changing the underlying behaviour. After this small readability refactor, `scoring.js` now passes JSHint with no errors or warnings.
+scoring.js was validated using the shared JSHint configuration. The only initial reports were “misleading line break before '?'” style warnings on a few ternary expressions in the bonus logic (selecting bonus mode and calculating the bonus goal). These expressions were rewritten to keep the `?` and `:` on clearer lines without changing the underlying behaviour. After this small readability refactor, scoring.js now passes JSHint with no errors or warnings.
 
 <details>
 <summary><strong>scoring.js validation</strong></summary>
 
 ![scoring.js JSHint validation](assets/images/validation/scoring.png)  
-*`scoring.js` passes JSHint with no errors or warnings using the shared configuration. Previous style warnings on ternary line breaks in the bonus logic were resolved by making the expressions more readable.*
+*scoring.js passes JSHint with no errors or warnings using the shared configuration. Previous style warnings on ternary line breaks in the bonus logic were resolved by making the expressions more readable.*
 
 </details>
 
@@ -471,15 +418,15 @@ After these small cleanups, `ui.js` now passes JSHint with **no errors or warnin
 
 input.js connects all player input (keyboard arrows, WASD/space and on-screen DDR buttons) to the move and judge logic. It also handles mobile-friendly behaviour using pointerdown for instant response, filters out “ghost clicks”, and keeps keyboard and mouse controls working alongside touch.
 
-input.js was validated using the global JSHint configuration. After removing an unused parameter from one click listener, the only remaining report is a single, intentional style warning on the line dancer.offsetWidth;. 
+input.js was validated using the global JSHint configuration. After removing an unused parameter from one click listener, the only remaining report is a single, intentional style warning on the line `dancer.offsetWidth;`.  
 
-This expression is deliberately used to force a layout reflow so that re-adding a move class cleanly restarts the CSS animation. Removing it breaks the animation restart behaviour, so the warning is treated as non-blocking and the line is kept by desig
+This expression is deliberately used to force a layout reflow so that re-adding a move class cleanly restarts the CSS animation. Removing it breaks the animation restart behaviour, so the warning is treated as non-blocking and the line is kept by design.
 
 <details>
 <summary><strong>input.js validation</strong></summary>
 
 ![input.js JSHint validation](assets/images/validation/input.png)  
-*`input.js` the remaining warning on `dancer.offsetWidth;` is an intentional reflow trigger and treated as a non-blocking style warning.*
+*input.js the remaining warning on `dancer.offsetWidth;` is an intentional reflow trigger and treated as a non-blocking style warning.*
 
 </details>
 
@@ -487,8 +434,8 @@ This expression is deliberately used to force a layout reflow so that re-adding 
 
 ### difficulty.js
 
-`difficulty.js` defines the difficulty levels and pacing rules for the game.  
-It controls timing windows, travelBeats, playbackRate, maximum simultaneous notes and anti-simultaneous note rules for each level.
+difficulty.js defines the difficulty levels and pacing rules for the game.  
+It controls timing windows, `travelBeats`, `playbackRate`, maximum simultaneous notes and anti-simultaneous note rules for each level.
 
 JSHint reported **no errors or warnings** for this file.
 
@@ -496,23 +443,23 @@ JSHint reported **no errors or warnings** for this file.
 <summary><strong>difficulty.js – JSHint validation</strong></summary>
 
 ![difficulty.js JSHint validation](assets/images/validation/diff.png)  
-*`difficulty.js` passes JSHint with no errors or warnings.*
+*difficulty.js passes JSHint with no errors or warnings.*
 
 </details>
 
 ---
 
-### songpPlayer.js
+### songPlayer.js
 
-`songPlayer.js` controls the chart-driven playback system. It loads the selected song and chart, applies the current level’s difficulty (via `LEVELS`), derives timing values (`rate`, `travelBeatsEff`, `travelMs`), simplifies the chart for the level, injects random chords, and schedules all note spawns. It also handles looping to meet a minimum duration, manages cancellation during the countdown (`cancelPendingStart`), and emits the main lifecycle events: `song:ready`, `song:started`, `song:ended`, and `song:error`.
+songPlayer.js controls the chart-driven playback system. It loads the selected song and chart, applies the current level’s difficulty (via `LEVELS`), derives timing values (`rate`, `travelBeatsEff`, `travelMs`), simplifies the chart for the level, injects random chords, and schedules all note spawns. It also handles looping to meet a minimum duration, manages cancellation during the countdown (`cancelPendingStart`), and emits the main lifecycle events: `song:ready`, `song:started`, `song:ended`, and `song:error`.
 
- Initial reports were limited to style-only warnings: an unused destructured value (`msPerBeatEff`) in `startSongById` and an “Unexpected use of '|'” warning from a fast-floor pattern in `_pickRandomSubset`. These were resolved by removing the unused destructured variable and replacing the bitwise floor with a clearer `Math.floor(...)` expression, without changing the underlying timing or randomisation behaviour. After these small cleanups, `songPlayer.js` now passes JSHint with **no errors or warnings**.
+Initial reports were limited to style-only warnings: an unused destructured value (`msPerBeatEff`) in `startSongById` and an “Unexpected use of '|'” warning from a fast-floor pattern in `_pickRandomSubset`. These were resolved by removing the unused destructured variable and replacing the bitwise floor with a clearer `Math.floor(...)` expression, without changing the underlying timing or randomisation behaviour. After these small cleanups, `songPlayer.js` now passes JSHint with **no errors or warnings**.
 
 <details>
 <summary><strong>songPlayer.js – JSHint validation</strong></summary>
 
 ![songPlayer.js JSHint validation](assets/images/validation/songplayer.png)  
-*`songPlayer.js` passes JSHint with no errors or warnings using the shared configuration. Earlier style warnings were removed by simplifying destructuring and replacing a bitwise fast-floor with `Math.floor()`.*
+*songPlayer.js passes JSHint with no errors or warnings using the shared configuration. Earlier style warnings were removed by simplifying destructuring and replacing a bitwise fast-floor with `Math.floor()`.*
 
 </details>
 
@@ -520,7 +467,7 @@ JSHint reported **no errors or warnings** for this file.
 
 ### songRegistry.js
 
-`songRegistry.js` provides a clean, read-only registry of all songs used in the game.  
+songRegistry.js provides a clean, read-only registry of all songs used in the game.  
 Each entry is frozen with `Object.freeze()` to prevent accidental mutations during gameplay.  
 The file only contains static metadata: `id`, display title, artist, and paths to the audio file and chart JSON.  
 Because it has no logic or dynamic behaviour, it is one of the simplest files to validate.
@@ -532,7 +479,7 @@ There are no unused variables, no implicit expressions, and no syntax issues —
 <summary><strong>songRegistry.js – JSHint validation</strong></summary>
 
 ![songRegistry.js JSHint validation](assets/images/validation/songregistry.png)  
-*`songRegistry.js` passes JSHint with no errors or warnings using the shared configuration.*
+*songRegistry.js passes JSHint with no errors or warnings using the shared configuration.*
 
 </details>
 
@@ -540,16 +487,16 @@ There are no unused variables, no implicit expressions, and no syntax issues —
 
 ### audio.js
 
-`audio.js` was validated using the global JSHint configuration shown above.  
+audio.js was validated using the global JSHint configuration shown above.  
 After a small refactor of the Web Audio constructor and using `strict: implied`, the file now passes JSHint with **no errors or warnings**.
 
 A minor adjustment was made to replace the inline constructor pattern with a linter-friendly version (`AudioContextClass` + `new AudioContextClass()`), which keeps the same behaviour while removing the previous “Bad constructor” warning.
 
 <details>
-<summary><strong>audio.js – JSHint validation</strong></summary>
+<summary><strong>audio.js – JSHInt validation</strong></summary>
 
 ![audio.js JSHInt validation](assets/images/validation/audio.js.png)  
-*`audio.js` passes JSHint with no errors or warnings using the configuration above.*
+*audio.js passes JSHint with no errors or warnings using the configuration above.*
 
 </details>
 
@@ -557,13 +504,16 @@ A minor adjustment was made to replace the inline constructor pattern with a lin
 
 ## Responsiveness Testing
 
-Responsiveness was tested using Chrome DevTools device emulation at several common viewport widths and by resizing the browser window. The goal was to ensure that:
+Responsiveness was tested using **Chrome DevTools device emulation** at several common viewport widths, by **resizing the browser window**, and on **real physical devices**.  
+The goal was to ensure that:
 
 - The HUD remains readable.  
 - Rails, judge line and controls stay aligned.  
 - Overlays remain centred and usable across devices.  
 
-Tested widths:
+### Tested widths in DevTools
+
+The following viewport widths were tested manually in DevTools, as they represent the most common responsive ranges:
 
 - 320px  
 - 375px  
@@ -650,46 +600,93 @@ Tested widths:
 <summary><strong>HUD behind Play overlay (cosmetic)</strong></summary>
 
 ![Hud](assets/images/testing/hud-mob.png)  
-*HUD sitting behind pause overlay text on some mobile screens (cosmetic).*
+*HUD sitting behind pause overlay text on some screens (cosmetic).*
 
 </details>
 
-**Result:**  
-No major layout issues were found. Controls and HUD elements remained readable and aligned across all tested breakpoints. The rotation overlay is shown on very small landscape layouts to guide the player back to portrait mode.
+**Real device testing**
 
-On some mobile screens, the expanded HUD can sit visually behind the Pause overlay text.  
-This does not affect gameplay or usability: the HUD is fully readable during gameplay, and the Pause/Play overlay remains clear and fully functional. The behaviour is cosmetic and will be refined in a future update.
+In addition to DevTools, the game was tested on several **real devices**, including:
+
+- iPhone models  
+- Samsung Galaxy phones  
+- Samsung Galaxy tablet
+- Google Pixel phones  
+- Huawei phones  
+- MacBook laptop  
+- Windows laptop & desktop  
+
+On all of these physical devices, the layout remained centred and playable, and controls, HUD and overlays behaved as expected.
+
+**Result:**  
+No major layout issues were found. Controls and HUD elements remained readable and aligned across all tested breakpoints and real devices. The rotation overlay is shown on very small landscape layouts to guide the player back to portrait mode.
+
+On some screens, the expanded HUD can sit visually behind the Pause overlay text.  
+This does not affect gameplay or usability: the HUD is fully readable during gameplay, and the Pause/Play overlay remains clear and fully functional.
+
+A few **uncommon DevTools presets** (for example certain “foldable” or tablet profiles with unusual viewport heights) can show the dancer and on-screen controls very close to, or slightly below, the bottom edge in portrait mode.  
+On those specific emulated sizes the game would be difficult or impossible to play without adjustment, but rotating the preset or switching to a more standard viewport immediately restores the intended centred layout.  
+
+So far this edge-case behaviour has **only appeared in DevTools emulation** and has **not been reproduced on the physical iOS/Android devices** used during testing. It is noted here as a potential limitation for very unusual aspect ratios and will be addressed in future improvements.
+
 
 ---
 
 ## Browser Compatibility
 
-The live site was manually tested on multiple browsers and platforms to confirm that core gameplay, overlays, audio and controls behaved as expected.
+The live game was tested on multiple physical devices and platforms to confirm that core gameplay, overlays, audio and controls behave as expected across different environments.
 
-| Browser / Platform | Result |
-|--------------------|--------|
-| Chrome (desktop)   | Pass |
-| Edge (desktop)     | Pass |
-| Firefox (desktop)  | Pass |
-| Safari (macOS/iOS) | Pass |
-| Android mobile     | Pass |
-| iPhone             | Pass |
+### Tested Physical Devices & System Environments
+
+The following real devices and operating systems were used during manual testing to ensure accurate behaviour across hardware types.
+
+| Device / Type                         | Operating System | Browser(s) Tested        | Result |
+|--------------------------------------|------------------|--------------------------|--------|
+| **iPhone (multiple models)**         | iOS              | Safari, Chrome           | Pass   |
+| **Samsung Android phones (various)** | Android          | Chrome                   | Pass   |
+| **Samsung Android tablet**           | Android          | Chrome                   | Pass   |
+| **Huawei Android phones (various)**  | Android          | Chrome                   | Pass   |
+| **Google Pixel phones**              | Android          | Chrome                   | Pass   |
+| **MacBook laptop**                   | macOS            | Chrome, Safari           | Pass   |
+| **Windows desktop PC**               | Windows          | Chrome, Edge, Firefox    | Pass   |
+| **Windows laptop**                   | Windows          | Chrome, Edge             | Pass   |
+
+### Summary
+
+Across all tested devices and browsers:
+
+- Overlays (Play/Pause, Results, Game Over) rendered and behaved correctly.  
+- HUD elements (hearts, score, combo, bonus indicators) updated as expected.  
+- Keyboard, mouse and touch controls all worked as designed.  
+- Audio (music, mute and volume logic) behaved consistently.  
+- Layout, responsiveness and rotate overlay behaved correctly at tested screen sizes.
 
 No browser-specific breaking issues were found during testing.
+
+### Additional Testing (DevTools Emulation)
+
+In addition to physical devices, **Chrome DevTools device emulation** was used to spot-check behaviour on a wider range of viewport sizes and device profiles (such as iPhone SE, Pixel 5, iPad, and generic responsive widths).  
+These checks confirmed that:
+
+- The game continued to render correctly at all emulated sizes  
+- Rails, judge line and controls remained aligned  
+- Overlays stayed centred  
+- The rotate overlay appeared only on small landscape layouts  
+
+This supports confidence that the game layout adapts correctly even beyond the set of physical devices available for testing.
+
 
 ---
 
 ## Known Limitations / Issues
 
 ### Rapid Play/Pause Clicking Immediately After Pausing
-
 **Severity:** Low  
 
 **Description:**  
 After pausing the game there is a very short safety window (a few hundred milliseconds) where additional Play/Pause clicks are ignored. This prevents race conditions while the audio engine and timers settle.
 
 **Steps to Reproduce:**
-
 1. Start a level and press **Pause**.
 2. Immediately spam-click the Play/Pause control several times.
 3. Observe that some rapid clicks are ignored during a short safety window.
@@ -702,14 +699,12 @@ The delay ensures stable internal state transitions and does not affect normal g
 ---
 
 ### Minor Lighthouse / Preload Warnings
-
 **Severity:** Low  
 
 **Description:**  
 In some Lighthouse or DevTools audits, warnings such as “preload not used soon” can appear for the background image or fonts.
 
 **Steps to Reproduce:**
-
 1. Open Chrome DevTools.
 2. Run a Lighthouse or Performance audit on the live site.
 3. Review the audit report for resource preload hints.
@@ -721,40 +716,55 @@ These warnings do not affect gameplay or UX. They can be fine-tuned in future it
 
 ---
 
-## 12. Future Testing & Improvements
+### Unusual Aspect Ratios in DevTools Emulation
+**Severity:** Medium (emulation-only so far)
 
-Planned or potential future improvements:
+**Description:**  
+On some unusual aspect ratios and custom sizes in Chrome DevTools emulation, the stage layout can become misaligned. In these profiles, the rails and/or on-screen controls may move partially out of view, making the game hard or impossible to play without rotating the device.
 
-- **Unit tests (Jest):**  
-  - `scoring.js`: combo, multipliers, lives decrement, bonus mode thresholds.  
-  - `difficulty.js`: spacing/anti-simultaneous rules per level (especially “one note at a time” for Level 1–3).
+**Steps to Reproduce:**
+1. Open the live site in Chrome.  
+2. Open **DevTools → Device emulation** and test a series of non-standard viewport sizes and aspect ratios.  
+3. Observe that on a few extreme combinations, the rails and controls no longer sit fully within the visible area.
 
-- **Integration tests:**  
-  - `songPlayer.js` scheduling: spawn time alignment to judge line (within timing windows for Perfect / Great / Good).  
-  - Lifecycle events order: `song:ready` → `song:started` → `song:ended(reason)`.
+**Workarounds / Mitigations:**
+- Rotating the emulated device back to **portrait** usually restores a playable layout.  
+- On physical iOS/Android devices used during testing, the layout remained playable in portrait orientation.
 
-- **End-to-end tests (Playwright/Cypress):**  
-  - Overlay flows (Play / Pause / Results / Game Over).  
-  - Responsive layout checkpoints (mobile/tablet/desktop) with visual diffs.
+**Status:** Known limitation – planned for future improvement.  
 
-- **Automatic console harness:**  
-  - Scripted runs that simulate sequences of hits/misses across lanes, log timing deltas, and assert final score/remaining lives. A first draft exists via the `window.*` helpers; this could be formalised into a repeatable suite.
-
-- **Extra polish ideas (beyond assessment scope):**  
-  - Add a sad face to Jazz the Cat on Game Over and confetti rain when a level is cleared.  
-  - Make orbs fully controlled by beat in an endless mode.  
-  - Add more expressive dance moves and fluffier, groovier animations.  
-  - Add checkpoints or “resume from level X” options for longer runs.  
-  - Further organise and group options in the settings panel.
+**Reason:**  
+So far this edge-case behaviour has **only appeared in DevTools emulation** and has **not been reproduced on the physical iOS/Android devices** used during testing. It is noted here as a potential limitation for very unusual aspect ratios and will be addressed in future improvements.
 
 ---
 
-## 13. Testing Summary
+## Testing Summary
 
-- All core user stories have at least one corresponding manual test and passed as expected.  
-- HTML and CSS validate without critical errors; remaining warnings are minor and non-blocking.  
-- JavaScript files are being validated with JSHint, with style-related warnings documented and addressed where appropriate.  
-- The game remains playable and readable from small mobile screens up to large desktop displays.  
-- No major cross-browser issues were found, and only low-severity limitations are documented and accepted by design.
+- All **user stories** from the README (**US01–US06**) are traced into this document, and each acceptance criterion within those stories is covered by one or more explicit tests (MTxx) and, where relevant, **screenshots**.  
+  The mapping is documented in **User Story Testing (Traceability)** and cross-referenced with the **Manual Testing** table.
+
+- **Manual testing** was carried out continuously during development and summarised in the **MT01–MT31** table.  
+  These tests cover **overlays**, **controls** (keyboard, mouse and touch), **progression**, **rewards**, **settings**, **accessibility**, **layout behaviour**, and **navigation**.  
+  For each feature described in the user stories, there is at least one **MT case** that confirms the **expected behaviour**.
+
+- **Edge case and error-flow tests** confirm that the game **fails gracefully** in less common scenarios (for example audio issues, unusual countdown values, or reloads mid-run) without breaking core gameplay.
+
+- **Regression testing** was performed after each major fix (**overlay/game flow**, **countdown logic**, **layout gap on the stage**, **accessibility toggles** and **404 page**).  
+  The targeted regression checks in this document show that previously found **critical bugs have been resolved** and did not reappear.
+
+- **HTML** and **CSS** were validated with the official **W3C validators**.  
+  No **critical errors** remain; any **minor warnings** are non-blocking and relate to expected cross-browser differences.
+
+- All **JavaScript modules** were validated using **JSHint** with a shared configuration.  
+  Remaining **style-related warnings** are either resolved or **explicitly documented as intentional** (for example the deliberate `dancer.offsetWidth;` reflow in `input.js`).
+
+- **Responsiveness testing** across common breakpoints (**320px–1920px**) shows that the game remains **readable and playable** on small mobile screens, tablets, laptops and large desktop displays.  
+  **Rails, judge line, controls and HUD** stay aligned, and a **rotate overlay** guides players on very small landscape layouts.
+
+- **Browser compatibility testing** on **Chrome**, **Edge**, **Firefox**, **Safari (macOS/iOS)** and **Android/iPhone** devices did not reveal any major **browser-specific issues**.  
+  **Gameplay, overlays, audio and controls** behave consistently across the tested platforms.
+
+- **Lighthouse audits** were run for both **mobile** and **desktop** to review **performance**, **best practices** and **accessibility**.  
+  Any remaining **low-severity items** are documented under **Known Limitations** and are accepted for this version of the project.
 
 This concludes the testing report for **Jazz the Cat in the Hat**.
