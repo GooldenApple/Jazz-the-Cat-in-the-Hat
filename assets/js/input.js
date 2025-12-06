@@ -31,7 +31,7 @@ function applyMove(moveClass) {
   removeAllMoveClasses(dancer);                            // clears any previous move
   // Force a reflow so re-adding a class restarts the animation cleanly:
   // eslint-disable-next-line no-unused-expressions
-  dancer.offsetWidth;                                      // triggers reflow by reading layout
+  dancer.offsetWidth;              // triggers reflow by reading layout
   dancer.classList.add(moveClass);                         // applies requested move class
 
   const onEnd = () => {                                    // declares cleanup handler
@@ -93,7 +93,7 @@ function wireMoveButtons() {
     }, { passive: false });
 
     // Fallback for keyboard (Space/Enter dispatches click) and mouse
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', () => {
       // If a pointerdown just happened, this is likely the ghost click → skip
       if ((performance.now() - lastPointerDown) < 400) return;
       fire();                                         // trigger for keyboard/mouse click

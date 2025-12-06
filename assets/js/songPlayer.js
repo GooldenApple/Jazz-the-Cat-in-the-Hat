@@ -1,3 +1,9 @@
+/* jshint esversion: 11 */
+/* jshint browser: true */
+/* jshint devel: true */
+/* jshint strict: implied */
+/* jshint unused: true */ 
+
 // songplayer.js
 //  Minimal chart-driven song player: loads audio + chart and schedules orb spawns.
 
@@ -105,9 +111,7 @@ function _deriveLevelTiming(bpm, chartTravelBeats, levelConfig, travelBeatsOverr
   if (levelConfig && levelConfig.windows) setJudgeWindows(levelConfig.windows);  // override judge windows
   const rawRate = Number.isFinite(levelConfig?.playbackRate) ? levelConfig.playbackRate : 1.0; // configured rate
   const rate = Math.max(1.0, rawRate);                                           // never slow down (>= 1.0)
-  const travelBeatsEff = (typeof travelBeatsOverride === 'number')               // explicit override?
-    ? travelBeatsOverride
-    : (typeof levelConfig?.travelBeats === 'number' ? levelConfig.travelBeats : chartTravelBeats); // else cfg/chart
+  const travelBeatsEff = (typeof travelBeatsOverride === 'number') ? travelBeatsOverride : (typeof levelConfig?.travelBeats === 'number' ? levelConfig.travelBeats : chartTravelBeats); // else cfg/chart
   const msPerBeatEff = (60000 / bpm) / rate;                                     // ms per beat at effective rate
   const travelMs     = travelBeatsEff * msPerBeatEff;                            // fall time in ms
   return { rate, travelBeatsEff, msPerBeatEff, travelMs };                       // timing pack
@@ -171,7 +175,7 @@ function _pickRandomSubset(arr, k) {
   const a = arr.slice();                                                  // copy
   const n = Math.min(k, a.length);                                        // count
   for (let i = 0; i < n; i++) {                                           // partial shuffle
-    const j = i + ((Math.random() * (a.length - i)) | 0);                 // random index
+    const j = i + Math.floor(Math.random() * (a.length - i));                // random index
     [a[i], a[j]] = [a[j], a[i]];                                          // swap
   }
   return a.slice(0, n);                                                   // take n
@@ -384,8 +388,8 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
     await _loadChartStrict(song);
 
   const lvlCfg = LEVELS?.[state.level] || LEVELS?.[1] || {};
-  const { rate, travelBeatsEff, msPerBeatEff, travelMs } =
-    _deriveLevelTiming(bpm, chartTravelBeats, lvlCfg, travelBeats);
+  const { rate, travelBeatsEff, travelMs } =
+  _deriveLevelTiming(bpm, chartTravelBeats, lvlCfg, travelBeats);
 
   /* ---------------------------------------------
    * 2) Build event list
@@ -404,9 +408,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
     const rawNotes = Array.isArray(chart.notes) ? chart.notes : [];
     const base     = simplified.length ? simplified : rawNotes;
 
-    return typeof injectChordsForLevel === 'function'
-      ? injectChordsForLevel(base, state.level)
-      : base;
+    return typeof injectChordsForLevel === 'function' ? injectChordsForLevel(base, state.level) : base;
   })();
 
   log('bpm=', bpm, 'travelBeatsEff=', travelBeatsEff, 'events=', events.length);
@@ -458,9 +460,7 @@ async function startSongById(id, { countdownSec = 0, travelBeats } = {}) {
    * 7) Start playback + emit "started"
    --------------------------------------------- */
   const audioCycleMs =
-    (Number.isFinite(audio?.duration) && audio.duration > 0)
-      ? Math.round((audio.duration * 1000) / rate)
-      : 0;
+    (Number.isFinite(audio?.duration) && audio.duration > 0) ? Math.round((audio.duration * 1000) / rate) : 0;
 
   try {
     await audio.play();

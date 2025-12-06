@@ -1,5 +1,5 @@
 // ui.js
-
+/* global bootstrap */
 // --- TEMP DEBUG ---
 console.log('[ui] module loaded'); // log that ui module has loaded
 
@@ -173,12 +173,11 @@ window.addEventListener('resize', scheduleReMeasureNoteBox); // on resize re-mea
 window.addEventListener('orientationchange', scheduleReMeasureNoteBox); // on orientation change re-measure
 
 // **Overlay (Play/Pause) controls */
-const overlayEl = document.getElementById('overlay'); // overlay root
-const playBtn   = overlayEl ? overlayEl.querySelector('.play-btn') : null; // play btn ref
-const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null; // play icon
-const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null; // pause icon
+const overlayEl = document.getElementById('overlay'); // overlay root 
+const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null; 
+const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null;
 // --- Overlay label lock (prevents other code from changing text while paused)
-let _overlayLabelLock = null; // null | 'pause'
+let _overlayLabelLock = null;
 
 /**
  * showOverlay()

@@ -180,10 +180,10 @@ function startBonus() {
   window.dispatchEvent(new CustomEvent('bonus:started'));          // UI shows banner
 
   const cfg = getBonusConfig(state.level) || {};                   // level config
-  const mode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits')
-    ? cfg.bonusAwardMode : 'hits';                                 // default to hits
-  const goal = (mode === 'points')
-    ? (Number(cfg.pointsPerHeart) > 0 ? Number(cfg.pointsPerHeart) : defaultPointsGoalForLevel(state.level))
+  const mode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits') ?
+  cfg.bonusAwardMode :
+  'hits';                                // default to hits
+  const goal = (mode === 'points') ? (Number(cfg.pointsPerHeart) > 0 ? Number(cfg.pointsPerHeart) : defaultPointsGoalForLevel(state.level))
     : (Number(cfg.hitsPerHeart)   > 0 ? Number(cfg.hitsPerHeart)   : defaultHitsGoalForLevel(state.level));
 
   window.dispatchEvent(new CustomEvent('bonus:progress', {         // initial progress
@@ -436,9 +436,9 @@ function _handleBonusBlock(label, cfg) {
 
   // extra life only on L4+
   if (state.level >= 4) {
-    const reached = (awardMode === 'points')
-      ? (state.bonusPoints >= ptsGoal)
-      : (state.bonusHits   >= hitsGoal);
+    const reached = (awardMode === 'points') ?
+  (state.bonusPoints >= ptsGoal) :
+  (state.bonusHits >= hitsGoal);
 
     if (reached) {
       state.bonusHits = 0;          // reset progress counters
