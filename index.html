@@ -120,23 +120,23 @@
           <!-- Collapsible metric stack -->
           <div id="hudStackPanel" class="hud-stack">
             <div class="hud-item">
-              <span class="hud-label">Score</span>
-              <div id="score" class="metric" aria-live="polite">0</div>
+              <span class="hud-label" id="hudLabelScore">Score</span>
+              <div id="score" class="metric" aria-live="polite" aria-labelledby="hudLabelScore">0</div>
             </div>
             <div class="hud-item">
-              <span class="hud-label">Best</span>
-              <div id="best" class="metric" aria-live="polite">0</div>
+              <span class="hud-label" id="hudLabelBest">Best</span>
+              <div id="best"  class="metric" aria-live="polite" aria-labelledby="hudLabelBest">0</div>
             </div>
             <div class="hud-item">
-              <span class="hud-label">Level</span>
-              <div id="level" class="metric" aria-live="polite">1</div>
+              <span class="hud-label" id="hudLabelLevel">Level</span>
+              <div id="level" class="metric" aria-live="polite" aria-labelledby="hudLabelLevel">1</div>
             </div>
           </div>
         </div>
 
         <!-- HUD bottom: lives row -->
         <div class="hud-bottom">
-          <div class="hud-item hud-item--plain">
+          <div class="hud-item hud-item--plain" aria-labelledby="hudLabelLives">
             <span class="hud-label">Lives:</span>
             <div id="lives" class="lives" aria-live="polite"></div>
           </div>

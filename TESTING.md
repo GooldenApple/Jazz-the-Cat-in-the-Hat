@@ -90,47 +90,108 @@ Because this is an interactive, timing-sensitive rhythm game, a large part of th
 
 ---
 
-### Accessibility Testing
+## Accessibility Testing
 
-Accessibility for this project was validated using both manual checks and automated tools:
+Accessibility testing was carried out using a mix of automated tools, manual checks and assistive technology.  
+The goal was to ensure that the game remains perceivable, operable and understandable for a wide range of users.
 
-- **Keyboard Navigation**
-  - All interactive elements (Play/Pause overlay, navigation, settings, controls, HUD toggle) are reachable using only the keyboard.
-  - Focus order follows the visual layout, and focus styles remain clearly visible at all times.
+<br>
 
-- **Reduce Motion & No Flash**
-  - **Reduce Motion** disables non-essential animations such as dancer movement and rail ticks.
-  - **No Flash** removes strong glow/flash effects, including rail flash and heart glow, to make the game more comfortable for sensitive players.
-  - Both settings are persisted via `localStorage`, so comfort preferences remain between visits.
+---
 
-- **Lighthouse Accessibility Audit**
-  - Lighthouse audits were run for both desktop and mobile views.
-  - Accessibility scored between 98–100 with no critical issues; remaining suggestions were minor and non-blocking.
+### Keyboard Navigation
 
-- **WAVE Accessibility Tool**
-  - Checked for structural issues, missing labels and colour-contrast warnings.
-  - No critical accessibility errors were reported.
+- All key interactive elements (Play/Pause overlay, navbar, settings, HUD toggle, on-screen controls) are reachable using the keyboard.
+- Focus order follows the visual structure of the page.
+- Focus outlines are clearly visible against the neon background.
+- Keyboard-only users can fully start, pause, resume and navigate through settings.
 
-- **WebAIM Contrast Checker**
-  - Tested key text/foreground combinations (HUD labels, feedback text, overlay copy) against the dark background.
-  - All core text meets at least WCAG 2.1 AA contrast requirements.
+<br>
 
-- **Screen Reader Spot Checks**
-  - Basic navigation, headings and links were tested with a screen reader to confirm that core UI is announced in a meaningful order.
+---
+
+### Reduce Motion & No Flash
+
+Two comfort settings are provided for players who are sensitive to movement or flashing effects:
+
+- **Reduce Motion**
+  - Disables or reduces non-essential animations such as dancer movement and rail ticks.
+- **No Flash**
+  - Removes strong glow/flash effects, including rail flash and heart glow.
+
+Both settings are persisted via `localStorage`, so comfort preferences remain between visits.  
+Visual evidence for these settings is already included in the Manual Testing table (MT16–MT17).
+
+
+
+<br>
+
+---
+
+### Automated Accessibility Audits
+
+---
+
+#### WAVE WebAIM
+
+- The page was checked with the **WAVE Web Accessibility Evaluation Tool** (WebAIM).
+- **No errors** and **no contrast errors** were reported in the Summary panel.
+- WAVE reported **4 alerts** in total:
+  - 2 × “orphaned form label” alerts on the **Reduce motion** and **Disable screen glow and flashes** toggles in the Accessibility panel.
+  - 2 × alerts related to the `<noscript>` element used for fallback messaging.
+- The orphaned-label alerts are accepted for this version because the toggles are already clearly labelled in text and fully operable with mouse and keyboard.  
+  These controls are planned to be refactored into fully semantic buttons/switches in a future improvement so the alerts disappear.
+
+<details>
+<summary>WAVE screenshots</summary>
+
+![WAVE accessibility](assets/images/validation/wave.png)  
+*Full WAVE summary showing 0 Errors, 0 Contrast Errors and 4 low-severity alerts.*
+
+![WAVE alert details](assets/images/validation/wave.alert.png.png)  
+*Zoomed view of the alerts on the Reduce motion and Disable screen glow and flashes controls.*
+
+</details>
+
+<br>
 
 
 ---
 
-### Interaction States
 
-Buttons and controls in the game were checked to ensure that interaction states are clear and accessible:
+### Screen Reader Testing (NVDA)
 
-- On-screen controls, menu items and settings toggles all provide visible **hover** and **focus** states.
-- The Play/Pause overlay button, navbar Play/Pause, and quick Play/Pause icon change appearance when active so players always know the current state.
-- The HUD toggle and settings links use text + icon where appropriate, not colour alone, to communicate meaning.
-- Focus outlines remain visible against the neon background, even when Reduce Motion or No Flash is enabled.
+Screen reader testing was carried out using **NVDA on Windows with Chrome** to verify that the main landmarks and controls are announced in a usable order.
+
+Checked:
+
+- Page title and main heading (`Jazz the Cat in the Hat`)
+- Skip link: **“Skip to game”** correctly moves focus to the `<main>` game area
+- Main landmark and `gameHelp` description are announced when entering the game
+- Top navigation (Tutorial, Settings, Best Score, Play/Pause) is read as clickable buttons
+- Play/Pause overlay button and Results/Game Over dialogs are announced as dialogs with titles and summaries
+- Settings dialog tabs (Audio, Accessibility, Best Score, Tutorial) are announced as a tablist with the correct selected tab
+
+**HUD announcement**
+
+Originally NVDA only read the HUD container, not the individual values.  
+To improve this, the following attributes were added:
+
+- `Score`, `Best` and `Level` values (`#score`, `#best`, `#level`) now have  
+  `aria-live="polite"` and `aria-labelledby` pointing to their visible labels.
+- The `Lives` row uses `aria-live="polite"` and `aria-labelledby="livesLabel"`.
+
+Result: NVDA now announces updates like **“Score 1200”**, **“Best 2500”**,  
+**“Level 3”** and the number of **Lives** when focus moves through the HUD and when values change during play.
+
+**Future improvement**
+
+The real-time gameplay feedback (“Perfect!”, “Miss!”, “Bonus Mode!”) is currently treated as primarily visual.  
+A potential future improvement would be to route selected feedback messages through the existing `#srLive` region for players who rely more heavily on screen readers, while keeping the rhythm gameplay focused on visuals for most users.
 
 
+
+<br>
 
 ---
 
@@ -722,6 +783,80 @@ This supports confidence that the game layout adapts correctly even beyond the s
 
 
 ---
+
+## Lighthouse Testing
+
+Lighthouse was used in Chrome DevTools to check **Performance**, **Accessibility**, **Best Practices**, and **SEO** for both mobile and desktop views.  
+Each audit was run multiple times, which naturally introduced some variation in the scores due to the simulated network and CPU throttling that Lighthouse applies.
+
+---
+
+### Overall results
+
+In most runs, Lighthouse reported **high scores** for both device types:
+
+- **Desktop**
+  - Performance usually between **95–100**
+  - Several runs reached **100 Performance**
+  - Accessibility, Best Practices and SEO were **consistently 100**
+  - CLS stayed very low (around **0.006–0.02**)
+
+- **Mobile**
+  - Performance usually between **94–98**
+  - The best runs reached **98 Performance**
+  - Accessibility, Best Practices and SEO were **consistently 100**
+  - CLS stayed in the green band (around **0.02–0.03**)
+
+A perfect desktop run achieved:
+
+- **Performance:** 100  
+- **Accessibility:** 100  
+- **Best Practices:** 100  
+- **SEO:** 100  
+- **FCP:** 0.5 s  
+- **LCP:** 0.7 s  
+- **CLS:** 0.006  
+
+This confirms that the page can perform very well under Lighthouse’s test conditions.
+
+---
+
+### Score variation
+
+Not every run produced identical numbers:
+
+- On a few occasions, the **Performance score for both desktop and mobile dropped to 84-86**, mainly linked to a higher CLS value reported for that particular run.
+- The visual experience still appeared stable, and later runs returned to the higher range (typically 94–100).
+
+Because Lighthouse uses simulated throttling, some variation between runs is expected. For this project, the focus was on ensuring that:
+
+- the layout feels stable during normal use  
+- interaction is responsive  
+- Accessibility, Best Practices and SEO remain strong across all tests  
+
+Based on the repeated audits, these goals were considered met.
+
+---
+
+### Screenshots
+
+<details>
+<summary>Desktop – Lighthouse audit (100 Performance)</summary>
+
+![Lighthouse desktop audit – 100 Performance](assets/images/lighthouse/the.final.desktop.png)  
+*Lighthouse desktop audit showing 100 Performance, 100 Accessibility, 100 Best Practices and 100 SEO.*
+
+</details>
+
+<details>
+<summary>Mobile – Lighthouse audit (high Performance)</summary>
+
+![Lighthouse mobile audit – high Performance](assets/images/lighthouse/final.mob4.png)  
+*Lighthouse mobile audit showing high Performance (around 98) with 100 Accessibility, 100 Best Practices and 100 SEO.*
+
+</details>
+
+
 
 ## Known Limitations / Issues
 
