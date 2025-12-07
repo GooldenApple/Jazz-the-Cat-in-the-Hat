@@ -1098,32 +1098,88 @@ function _syncFormFromSettings(refs, s) {
   if (elCountdown)elCountdown.value= String(s.countdown ?? 3); // set select
 }
 
-/**
- * _attachSettingsListeners(refs, s, persist)
- * Attach input/change/click listeners to persist setting updates.
- */
+
 function _attachSettingsListeners(refs, s, persist) {
-  const { elVolume, elMute, elReduce, elNoFlash, elCountdown, elReset } = refs; // destructure
-    if (elVolume) elVolume.addEventListener('input', () => { s.volume = Math.max(0, Math.min(1, Number(elVolume.value) / 100)); persist(); }); // volume change
-  if (elMute)   elMute.addEventListener('change', () => { s.muted = !!elMute.checked; persist(); }); // mute change
-  if (elReduce) elReduce.addEventListener('click', () => { const next = elReduce.getAttribute('aria-pressed') !== 'true'; elReduce.setAttribute('aria-pressed', next ? 'true' : 'false'); s.reduceMotion = next; persist(); }); // reduce motion toggle
-  if (elNoFlash)elNoFlash.addEventListener('click', () => { const next = elNoFlash.getAttribute('aria-pressed') !== 'true'; elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false'); s.noFlash = next; persist(); }); // flashes toggle
-  if (elCountdown) elCountdown.addEventListener('change', () => {
-  const v = Number(elCountdown.value);
-  s.countdown = (Number.isFinite(v) && v >= 0) ? v : 3;
-  persist();
-});
-  if (elReset) elReset.addEventListener('click', () => { // reset data
-    const ok = confirm('Reset all saved progress and settings?'); // confirm
-    if (!ok) return; // abort if canceled
-    try { localStorage.clear(); } catch (_) {} // clear storage
-    const fresh = loadSettings(); // reload defaults
-    _syncFormFromSettings(refs, fresh); // reflect defaults
-    s.volume = fresh.volume; s.muted = fresh.muted; s.reduceMotion = fresh.reduceMotion; s.noFlash = fresh.noFlash; s.countdown = fresh.countdown; // copy values
-    persist(); // apply/persist
-    alert('Game data has been reset.'); // notify user
-  });
+  const { elVolume, elMute, elReduce, elNoFlash, elCountdown, elReset } = refs; 
+
+  // Volume slider: update volume and play preview ping
+  if (elVolume) {
+    elVolume.addEventListener('input', () => {
+      const raw = Number(elVolume.value);
+      const clamped = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 80;
+      s.volume = clamped / 100;
+      persist(); 
+
+      // trigger volume preview ping at the current volume
+      window.dispatchEvent(new CustomEvent('audio:previewVolume'));
+    });
+  }
+
+  // Mute checkbox: toggle muted on/off
+  if (elMute) {
+    elMute.addEventListener('change', () => {
+      s.muted = !!elMute.checked; // true if checked
+      persist(); // apply + save
+    });
+  }
+
+  // Reduce Motion toggle: aria-pressed + setting flag
+  if (elReduce) {
+    elReduce.addEventListener('click', () => {
+      const next = elReduce.getAttribute('aria-pressed') !== 'true'; 
+      elReduce.setAttribute('aria-pressed', next ? 'true' : 'false');
+      s.reduceMotion = next; 
+      persist();
+    });
+  }
+
+  // No Flash toggle: aria-pressed + setting flag
+  if (elNoFlash) {
+    elNoFlash.addEventListener('click', () => {
+      const next = elNoFlash.getAttribute('aria-pressed') !== 'true'; // flip state
+      elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false'); // update attribute
+      s.noFlash = next; // update setting value
+      persist(); // apply + save
+    });
+  }
+
+  // Countdown select: store 0 / 3 / 5 (or fallback to 3)
+  if (elCountdown) {
+    elCountdown.addEventListener('change', () => {
+      const v = Number(elCountdown.value); // read selected value
+      s.countdown = (Number.isFinite(v) && v >= 0) ? v : 3; // safe parse / fallback
+      persist(); // apply + save
+    });
+  }
+
+  // Reset button: clear storage, reload defaults, resync form and settings
+  if (elReset) {
+    elReset.addEventListener('click', () => {
+      const ok = confirm('Reset all saved progress and settings?'); // confirm with user
+      if (!ok) return; // cancel if user says no
+
+      try {
+        localStorage.clear(); // clear all stored data
+      } catch (_) {
+        // ignore storage errors
+      }
+
+      const fresh = loadSettings(); // reload default settings
+      _syncFormFromSettings(refs, fresh); // update form fields from defaults
+
+      // copy values into current settings object
+      s.volume = fresh.volume;
+      s.muted = fresh.muted;
+      s.reduceMotion = fresh.reduceMotion;
+      s.noFlash = fresh.noFlash;
+      s.countdown = fresh.countdown;
+
+      persist(); // apply + save
+      alert('Game data has been reset.'); // notify user
+    });
+  }
 }
+
 
 /**
  * renderHighScorePane()

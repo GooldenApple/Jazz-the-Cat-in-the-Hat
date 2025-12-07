@@ -90,6 +90,50 @@ Because this is an interactive, timing-sensitive rhythm game, a large part of th
 
 ---
 
+### Accessibility Testing
+
+Accessibility for this project was validated using both manual checks and automated tools:
+
+- **Keyboard Navigation**
+  - All interactive elements (Play/Pause overlay, navigation, settings, controls, HUD toggle) are reachable using only the keyboard.
+  - Focus order follows the visual layout, and focus styles remain clearly visible at all times.
+
+- **Reduce Motion & No Flash**
+  - **Reduce Motion** disables non-essential animations such as dancer movement and rail ticks.
+  - **No Flash** removes strong glow/flash effects, including rail flash and heart glow, to make the game more comfortable for sensitive players.
+  - Both settings are persisted via `localStorage`, so comfort preferences remain between visits.
+
+- **Lighthouse Accessibility Audit**
+  - Lighthouse audits were run for both desktop and mobile views.
+  - Accessibility scored between 98–100 with no critical issues; remaining suggestions were minor and non-blocking.
+
+- **WAVE Accessibility Tool**
+  - Checked for structural issues, missing labels and colour-contrast warnings.
+  - No critical accessibility errors were reported.
+
+- **WebAIM Contrast Checker**
+  - Tested key text/foreground combinations (HUD labels, feedback text, overlay copy) against the dark background.
+  - All core text meets at least WCAG 2.1 AA contrast requirements.
+
+- **Screen Reader Spot Checks**
+  - Basic navigation, headings and links were tested with a screen reader to confirm that core UI is announced in a meaningful order.
+
+
+---
+
+### Interaction States
+
+Buttons and controls in the game were checked to ensure that interaction states are clear and accessible:
+
+- On-screen controls, menu items and settings toggles all provide visible **hover** and **focus** states.
+- The Play/Pause overlay button, navbar Play/Pause, and quick Play/Pause icon change appearance when active so players always know the current state.
+- The HUD toggle and settings links use text + icon where appropriate, not colour alone, to communicate meaning.
+- Focus outlines remain visible against the neon background, even when Reduce Motion or No Flash is enabled.
+
+
+
+---
+
 
 ## Manual Testing
 
@@ -140,7 +184,8 @@ The game was manually tested using an Expected vs Actual approach. Each test cas
 Each user story from the README has been linked to one or more concrete tests.  
 The table below summarises how each story was verified, with references to manual test IDs and evidence screenshots.
 
-*The full user stories are described in the main README under **UX → User Stories**.  
+For the full user story descriptions, see **[README – UX → User Stories](README.md#user-stories)**.
+  
 The table below shows how each story was verified through testing and how all parts of each story’s acceptance criteria were covered.*
 
 | Story | Acceptance Criteria (summary) | How Verified | Evidence | Status |
