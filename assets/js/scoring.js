@@ -2,228 +2,192 @@
 import { setFeedback, spawnNote } from './ui.js';        // UI helpers for feedback and visuals
 import { getBonusConfig } from './difficulty.js';        // thresholds for bonus per level
 
-/**
- * Scoring & Judging — single source of truth for game state
- * Owns: score/lives/level, timing queue, grading, and HUD hooks
- * UI owns: visual note spawning & rail measurements (via ui.js)
- */
+// Scoring & judging – single source of truth for game state
+// Owns: score/lives/level, combo, bonus mode and hit/miss handling
 
 // ----- Global state -----
 const START_LIVES = 5;                  // starting lives
-const BEST_SCORE_KEY = 'best';                           // storage key for BEST
-const MAX_LIVES = 10;                                    // hard cap for lives
-
+const BEST_SCORE_KEY = 'best';          // storage key for BEST
+const MAX_LIVES = 10;                   // hard cap for lives
 
 const state = {
-  running: false,        // game is running or paused
-  score: 0,              // current score
-  best: 0,               // best score (persisted)
-  lives: START_LIVES,    // full hearts
-  level: 1,              // current level
+  running: false,
+  score: 0,
+  best: 0,
+  lives: START_LIVES,
+  level: 1,
   partial: 0,            // quarter damage steps (0..3)
-  combo: 0,              // current combo
-  maxCombo: 0,           // best combo in this run
-  bonusActive: false,    // bonus mode flag
-  bonusHits: 0,          // hits inside bonus (for 'hits' mode)
-  bonusPoints: 0,        // bonus-only points inside bonus (for 'points' mode)
+  combo: 0,
+  maxCombo: 0,
+  bonusActive: false,
+  bonusHits: 0,
+  bonusPoints: 0,
 };
 
-const comboGroups = new Map();                              // track simultaneous groups
+const comboGroups = new Map();          // track simultaneous groups for chords
 
-/**
- * init()
- * Reset full state and notify HUD.
- */
+// Reset full scoring state and refresh HUD.
 function init() {
-  state.running = false;            // ensure paused
-  state.score   = 0;                // reset score
-  state.lives   = START_LIVES;      // reset lives
-  state.level   = 1;                // reset level
-  state.partial = 0;                // clear partial
-  state.combo   = 0;                // reset combo
-  state.maxCombo= 0;                // reset max combo
-  state.bonusActive = false;        // bonus off
-  state.bonusHits   = 0;            // zero bonus hits
-  state.bonusPoints = 0;            // zero bonus points
-  comboGroups.clear();              // clear group map
-  notify();                         // HUD update
+  state.running = false;
+  state.score   = 0;
+  state.lives   = START_LIVES;
+  state.level   = 1;
+  state.partial = 0;
+  state.combo   = 0;
+  state.maxCombo= 0;
+  state.bonusActive = false;
+  state.bonusHits   = 0;
+  state.bonusPoints = 0;
+  comboGroups.clear();
+  notify();
 
-  state.best = loadBestScore();     // load persisted best
-  notify();                         // HUD update again
+  state.best = loadBestScore();         // load persisted best separately
+  notify();
 }
 
-
-
-/**
- * getSnapshot()
- * Return view for HUD.
- */
+// Snapshot for HUD – keeps UI decoupled from internal state shape.
 function getSnapshot() {
   return {
-    score: state.score,             // score value
-    best: state.best,               // high score
-    lives: state.lives,             // hearts
-    level: state.level,             // level
-    partial: state.partial,         // quarter steps
-    combo: state.combo,             // combo
-    bonusActive: state.bonusActive, // bonus flag
-    bonusHits: state.bonusHits      // bonus hits (progress)
+    score: state.score,
+    best: state.best,
+    lives: state.lives,
+    level: state.level,
+    partial: state.partial,
+    combo: state.combo,
+    bonusActive: state.bonusActive,
+    bonusHits: state.bonusHits,
   };
 }
 
-let onUpdate = null;                // HUD callback holder
+let onUpdate = null;                    // HUD callback holder
 
-/**
- * notify()
- * Call onUpdate with latest snapshot (if provided).
- */
+// Call HUD hook with the latest snapshot (if present).
 function notify() {
-  if (typeof onUpdate === 'function') onUpdate(getSnapshot()); // push snapshot
+  if (typeof onUpdate === 'function') onUpdate(getSnapshot());
 }
 
-/**
- * setHooks(hooks)
- * Provide HUD updater to scoring.
- */
+// Register HUD update hook.
 function setHooks(hooks) {
-  if (!hooks) return;                                   // guard
-  if (typeof hooks.onUpdate === 'function') onUpdate = hooks.onUpdate; // store hook
+  if (!hooks) return;
+  if (typeof hooks.onUpdate === 'function') onUpdate = hooks.onUpdate;
 }
 
-
-/**
- * loadBestScore()
- * Read best score from storage; 0 on error.
- */
- function loadBestScore() {
+// Load best score from storage; fall back to 0 on error.
+function loadBestScore() {
   try {
-    const n = Number(localStorage.getItem(BEST_SCORE_KEY)); // read value
-    if (!Number.isFinite(n)) return 0;                      // invalid → 0
-    return Math.max(0, Math.floor(n));                      // clamp int ≥ 0
-  } catch { return 0; }                                     // storage blocked
+    const n = Number(localStorage.getItem(BEST_SCORE_KEY));
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.floor(n));
+  } catch {
+    return 0;
+  }
 }
 
-/**
- * saveBestScore(v)
- * Save best score to storage (safe).
- */
- function saveBestScore(v) {
+// Save best score safely to storage.
+function saveBestScore(v) {
   try {
-    const n = Math.max(0, Math.floor(Number(v) || 0));      // sanitize
-    localStorage.setItem(BEST_SCORE_KEY, String(n));         // persist
-  } catch { /* ignore */ }
+    const n = Math.max(0, Math.floor(Number(v) || 0));
+    localStorage.setItem(BEST_SCORE_KEY, String(n));
+  } catch {
+    // ignore storage failures
+  }
 }
 
-/**
- * setJudgeWindows(newWindows)
- * Allow difficulty to override hit windows.
- */
- function setJudgeWindows(newWindows) {
-  if (!newWindows) return;                                  // guard
-  if (newWindows.perfect != null) judgeConfig.windows.perfect = newWindows.perfect; // set perfect
-  if (newWindows.great   != null) judgeConfig.windows.great   = newWindows.great;   // set great
-  if (newWindows.good    != null) judgeConfig.windows.good    = newWindows.good;    // set good
+// Allow difficulty to override hit windows.
+function setJudgeWindows(newWindows) {
+  if (!newWindows) return;
+  if (newWindows.perfect != null) judgeConfig.windows.perfect = newWindows.perfect;
+  if (newWindows.great   != null) judgeConfig.windows.great   = newWindows.great;
+  if (newWindows.good    != null) judgeConfig.windows.good    = newWindows.good;
 }
 
-/**
- * getMultiplierForCombo(comboLen)
- * Return small multiplier from combo length.
- */
+// Small combo-based multiplier curve.
 function getMultiplierForCombo(comboLen) {
-  if (comboLen >= 100) return 1.5;                          // big streak
-  if (comboLen >= 50)  return 1.3;                          // large
-  if (comboLen >= 25)  return 1.2;                          // medium
-  if (comboLen >= 10)  return 1.1;                          // small
-  return 1.0;                                               // base
+  if (comboLen >= 100) return 1.5;
+  if (comboLen >= 50)  return 1.3;
+  if (comboLen >= 25)  return 1.2;
+  if (comboLen >= 10)  return 1.1;
+  return 1.0;
 }
 
 /* ---------------------------------------------------------
    Bonus configuration helpers (fallbacks if config missing)
 ----------------------------------------------------------*/
 
-/**
- * defaultHitsGoalForLevel()
- * Fallback hits needed for +1 life if cfg.hitsPerHeart missing.
- */
+// Fallback hits needed for +1 life when cfg.hitsPerHeart is missing.
 function defaultHitsGoalForLevel(level) {
-  const L = Number(level) || 1;   // normalize
+  const L = Number(level) || 1;
   if (L >= 10) return 70;
   if (L >= 7)  return 60;
   return 50;                      // L4–6 default
 }
 
-/**
- * defaultPointsGoalForLevel()
- * Fallback bonus-points needed for +1 life if cfg.pointsPerHeart missing.
- * Counts ONLY the flat +10 bonus per hit (not base points).
- */
+// Fallback bonus-points needed for +1 life when cfg.pointsPerHeart is missing.
 function defaultPointsGoalForLevel(level) {
-  const L = Number(level) || 1;   // normalize
+  const L = Number(level) || 1;
   if (L >= 10) return 400;
   if (L >= 7)  return 300;
   return 200;                     // L4–6 default
 }
 
-const BONUS_POINT_PER_HIT = 10;   // flat points added per hit during bonus
+const BONUS_POINT_PER_HIT = 10;   // flat bonus points while in bonus mode
 
 /**
- * startBonus()
- * Enter bonus mode and notify UI to show the persistent banner + initial progress.
+ * Enter bonus mode, reset counters and broadcast initial progress.
+ * Uses level config when available, and falls back to defaults.
  */
 function startBonus() {
-  if (state.bonusActive) return;                                   // already active
-  state.bonusActive = true;                                        // flag on
-  state.bonusHits   = 0;                                           // reset
-  state.bonusPoints = 0;                                           // reset
-  notify();                                                        // HUD refresh
+  if (state.bonusActive) return;
 
-  window.dispatchEvent(new CustomEvent('bonus:started'));          // UI shows banner
+  state.bonusActive = true;
+  state.bonusHits   = 0;
+  state.bonusPoints = 0;
+  notify();
 
-  const cfg = getBonusConfig(state.level) || {};                   // level config
-  const mode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits') ?
-  cfg.bonusAwardMode :
-  'hits';                                // default to hits
-  const goal = (mode === 'points') ? (Number(cfg.pointsPerHeart) > 0 ? Number(cfg.pointsPerHeart) : defaultPointsGoalForLevel(state.level))
+  window.dispatchEvent(new CustomEvent('bonus:started'));
+
+  const cfg = getBonusConfig(state.level) || {};
+  const mode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits')
+    ? cfg.bonusAwardMode
+    : 'hits';
+
+  const goal = (mode === 'points')
+    ? (Number(cfg.pointsPerHeart) > 0 ? Number(cfg.pointsPerHeart) : defaultPointsGoalForLevel(state.level))
     : (Number(cfg.hitsPerHeart)   > 0 ? Number(cfg.hitsPerHeart)   : defaultHitsGoalForLevel(state.level));
 
-  window.dispatchEvent(new CustomEvent('bonus:progress', {         // initial progress
+  window.dispatchEvent(new CustomEvent('bonus:progress', {
     detail: { mode, hits: 0, points: 0, goal }
   }));
 }
 
-/**
- * endBonus()
- * Exit bonus mode and notify UI to hide the banner.
- */
+// Exit bonus mode and let UI hide the banner.
 function endBonus() {
-  if (!state.bonusActive) return;                                  // not active
-  state.bonusActive = false;                                       // clear flag
-  notify();                                                        // update HUD
-  window.dispatchEvent(new CustomEvent('bonus:ended'));            // UI hides banner
+  if (!state.bonusActive) return;
+  state.bonusActive = false;
+  notify();
+  window.dispatchEvent(new CustomEvent('bonus:ended'));
 }
 
-
 /**
-  * hit()
-  * Purpose: Apply immediate quarter damage.
-  * - L1: immune (no damage)
-  * - On 4 quarters → lose 1 life and reset partial
-  * - Fire game:livesDepleted when crossing to 0
-  */
+ * Apply immediate quarter-damage:
+ * - Level 1 is training-only (no damage).
+ * - Every 4 quarters becomes 1 lost life.
+ * - Emits game:livesDepleted on the transition to 0.
+ */
 function hit() {
-  if (state.level === 1) {           // training level → no damage
+  if (state.level === 1) {
     notify();
     return;
   }
-  if (state.lives <= 0) return;      // already zero
+  if (state.lives <= 0) return;
 
-  const prevLives = state.lives;     // remember before change
+  const prevLives = state.lives;
 
   if (state.partial < 3) {
-    state.partial += 1;              // +¼ heart
+    state.partial += 1;
   } else {
-    state.lives -= 1;                // −1 heart
-    state.partial = 0;               // reset quarters
+    state.lives -= 1;
+    state.partial = 0;
   }
 
   notify();
@@ -233,351 +197,324 @@ function hit() {
   }
 }
 
+// Miss penalty helpers – converts tolerant misses into quarter damage over time.
+let _missSincePartial = 0;
 
-// Miss penalty helpers — tolerant miss → partial hit after N misses.
-let _missSincePartial = 0;                            // accumulator
-
-/**
- * missesPerPartialFor(level)
- * 3 misses/partial for levels ≤ 6, 5 misses/partial for levels ≥ 7.
- */
+// 3 misses/partial for ≤ L6, 5 misses/partial for ≥ L7.
 function missesPerPartialFor(level) {
-  const L = Number(level) || 1;                     // normalize
-  return (L >= 7) ? 5 : 3;                          // threshold by tier
+  const L = Number(level) || 1;
+  return (L >= 7) ? 5 : 3;
 }
 
-/**
- * applyMissPenalty()
- * Increment tolerant miss counter; on threshold, convert to quarter damage.
- */
+// Increment tolerant miss counter; convert to quarter damage on threshold.
 function applyMissPenalty() {
-  if (state.lives <= 0) return;                     // ignore if dead
-  _missSincePartial += 1;                            // count miss
-  const need = missesPerPartialFor(state.level);     // threshold
-  if (_missSincePartial >= need) {                   // reached threshold
-    _missSincePartial = 0;                           // reset counter
-    hit();                                           // apply quarter damage
+  if (state.lives <= 0) return;
+  _missSincePartial += 1;
+  const need = missesPerPartialFor(state.level);
+  if (_missSincePartial >= need) {
+    _missSincePartial = 0;
+    hit();
   } else {
-    notify();                                        // HUD refresh (progress)
+    notify();
   }
 }
 
-/**
- * heal()
- * Restore one full life up to MAX_LIVES.
- */
+// Restore one full life (up to MAX_LIVES) and reset partial segments.
 function heal() {
-  const next = state.lives + 1;                      // compute proposed new lives
-  state.lives = Math.min(MAX_LIVES, next);           // clamp to MAX_LIVES
-  state.partial = 0;                                 // clear partial segments
-  notify();                                          // refresh HUD
+  const next = state.lives + 1;
+  state.lives = Math.min(MAX_LIVES, next);
+  state.partial = 0;
+  notify();
 }
 
 /**
- * Time-based judging (ETA queue)
- * We register each spawned note with an ETA (and gid).
+ * Time-based judging configuration.
+ * Notes are queued with ETA in ms, and judged against windows.
  */
 const judgeConfig = {
-  bpm: 120,                                          // default bpm
-  travelBeats: 2.0,                                  // default travel beats
-  windows: {                                         // centered hit windows (ms)
-    perfect: 85,                                     // perfect
-    great:   140,                                    // great
-    good:    200                                     // good
+  bpm: 120,
+  travelBeats: 2.0,
+  windows: {
+    perfect: 85,
+    great:   140,
+    good:    200
   }
 };
 
 const activeNotes = [];                               // { id, dir, eta, el, hit:false, gid }
-let _noteId = 0;                                      // incremental id
-function nowMs() { return performance.now(); }        // monotonic clock
+let _noteId = 0;
 
-/**
- * removeActiveById(id)
- * Remove a queued note by its id.
- */
+function nowMs() { return performance.now(); }        // monotonic clock wrapper
+
+// Remove a queued note by id.
 function removeActiveById(id) {
-  const idx = activeNotes.findIndex(n => n.id === id); // find index
-  if (idx !== -1) activeNotes.splice(idx, 1);          // remove if found
+  const idx = activeNotes.findIndex(n => n.id === id);
+  if (idx !== -1) activeNotes.splice(idx, 1);
 }
 
-
 /**
- * resetPerLevelForNextRun()
- * Clear per-level counters; ONLY refill hearts if the last run ended in Game Over.
- * Detection: lives <= 0 at the time of reset.
+ * Clear per-level counters for the next run.
+ * Only refills hearts if the last run ended at 0 (Game Over).
  */
 function resetPerLevelForNextRun() {
-  state.score = 0;                   // fresh score
-  state.combo = 0;                   // drop combo
-  state.maxCombo = 0;                // drop per-run max combo
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
 
-  // Refill hearts only if previous run ended at 0 (Game Over)
   if (state.lives <= 0) {
-    state.lives = START_LIVES;       // refill ONLY on Game Over retry
+    state.lives = START_LIVES;       // refill ONLY after Game Over
   }
 
-  state.partial = 0;                 // clear quarter segments
-  state.bonusActive = false;         // bonus off between levels
-  state.bonusHits = 0;               // clear bonus progress
-  state.bonusPoints = 0;             // clear bonus points
-  _missSincePartial = 0;             // reset tolerant-miss accumulator
-  comboGroups.clear();               // clear group bookkeeping
-  notify();                          // HUD update
+  state.partial = 0;
+  state.bonusActive = false;
+  state.bonusHits = 0;
+  state.bonusPoints = 0;
+  _missSincePartial = 0;
+  comboGroups.clear();
+  notify();
 }
 
-
-/**
- * _findBestCandidateInLane(dir, t)
- * Pick nearest ETA in a lane at time t.
- */
+// Find nearest candidate note in a lane at time t.
 function _findBestCandidateInLane(dir, t) {
-  let bestIdx = -1; let bestAbs = Infinity;            // init
-  for (let i = 0; i < activeNotes.length; i++) {       // loop notes
-    const n = activeNotes[i];                           // note
-    if (n.dir !== dir) continue;                        // lane mismatch
-    const adt = Math.abs(n.eta - t);                    // |Δt|
-    if (adt < bestAbs) { bestAbs = adt; bestIdx = i; }  // pick better
+  let bestIdx = -1;
+  let bestAbs = Infinity;
+  for (let i = 0; i < activeNotes.length; i++) {
+    const n = activeNotes[i];
+    if (n.dir !== dir) continue;
+    const adt = Math.abs(n.eta - t);
+    if (adt < bestAbs) {
+      bestAbs = adt;
+      bestIdx = i;
+    }
   }
-  return { bestIdx, bestAbs };                          // result
+  return { bestIdx, bestAbs };
 }
 
-/**
- * _labelFromDelta(absDelta, windows)
- * Classify by timing window.
- */
+// Classify input timing as Perfect/Great/Good/Miss.
 function _labelFromDelta(absDelta, windows) {
-  if (absDelta <= windows.perfect) return 'Perfect';    // perfect
-  if (absDelta <= windows.great)   return 'Great';      // great
-  if (absDelta <= windows.good)    return 'Good';       // good
-  return 'Miss';                                        // miss
+  if (absDelta <= windows.perfect) return 'Perfect';
+  if (absDelta <= windows.great)   return 'Great';
+  if (absDelta <= windows.good)    return 'Good';
+  return 'Miss';
 }
 
 /**
- * _applyMissRules()
- * Handle input/natural miss outside window:
- *  - Break combo
- *  - L1: no life loss
- *  - Bonus: end bonus, no life loss
- *  - Otherwise: tolerant damage via applyMissPenalty() (3 or 5 misses/partial)
+ * Unified miss rules for both input miss and natural miss:
+ * - Always break combo.
+ * - Level 1: no life loss.
+ * - During bonus: end bonus without life loss.
+ * - Otherwise: apply tolerant damage via applyMissPenalty().
  */
 function _applyMissRules() {
-  setFeedback('MISS', 'miss');                          // show miss
+  setFeedback('MISS', 'miss');
 
-  if (state.bonusActive) {                              // during bonus
-    endBonus();                                         // end bonus
-    state.combo = 0;                                    // break combo
-    notify();                                           // HUD
-    return { hit:false, label:'Miss' };                 // no life loss here
+  if (state.bonusActive) {
+    endBonus();
+    state.combo = 0;
+    notify();
+    return { hit:false, label:'Miss' };
   }
 
-  if (state.level === 1) {                              // L1 immune
-    state.combo = 0;                                    // break combo only
-    notify();                                           // HUD
-    return { hit:false, label:'Miss' };                 // done
+  if (state.level === 1) {
+    state.combo = 0;
+    notify();
+    return { hit:false, label:'Miss' };
   }
 
-  state.combo = 0;                                      // break combo
-  applyMissPenalty();                                   // tolerant damage (3/5 rule)
-  return { hit:false, label:'Miss' };                   // result
+  state.combo = 0;
+  applyMissPenalty();
+  return { hit:false, label:'Miss' };
 }
 
 /* ---------------------------------------------
    Small helpers for _handleSuccessfulHit()
 ---------------------------------------------- */
 
-// Consume and remove the judged note
+// Mark note as hit, clean DOM, and remove from queue.
 function _consumeNote(bestIdx) {
-  const n = activeNotes[bestIdx];   // read note meta
-  n.hit = true;                     // mark as hit
-  if (n.el) n.el.remove();          // remove DOM if present
-  activeNotes.splice(bestIdx, 1);   // drop from queue
+  const n = activeNotes[bestIdx];
+  n.hit = true;
+  if (n.el) n.el.remove();
+  activeNotes.splice(bestIdx, 1);
 }
 
-// Compute base points and update combo/multiplier
+// Compute base points and update combo/multiplier.
 function _applyBaseScoring(label) {
-  const base = (label === 'Perfect') ? 30 : (label === 'Great') ? 20 : 10; // base by label
-  const newCombo = state.combo + 1; // next combo
-  const mult = getMultiplierForCombo(newCombo); // small multiplier
-  state.combo = newCombo;           // save combo
-  if (state.combo > state.maxCombo) state.maxCombo = state.combo; // track run max
-  return Math.round(base * mult);   // final note points
+  const base = (label === 'Perfect') ? 30 : (label === 'Great') ? 20 : 10;
+  const newCombo = state.combo + 1;
+  const mult = getMultiplierForCombo(newCombo);
+  state.combo = newCombo;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+  return Math.round(base * mult);
 }
 
-// Handle bonus progress, awards, and feedback; returns extra points to add
+/**
+ * Handle bonus progress and extra-life awards.
+ * Returns extra points to add on top of base note score.
+ */
 function _handleBonusBlock(label, cfg) {
-  let extra = 0; // extra points from bonus
-  const awardMode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits') ? cfg.bonusAwardMode : 'hits';
+  let extra = 0;
+  const awardMode = (cfg.bonusAwardMode === 'points' || cfg.bonusAwardMode === 'hits')
+    ? cfg.bonusAwardMode
+    : 'hits';
 
-  // enter bonus if needed (safe default activateCombo = 10)
-  const activateCombo = (Number.isFinite(cfg.activateCombo) && cfg.activateCombo > 0) ? cfg.activateCombo : 10;
+  const activateCombo = (Number.isFinite(cfg.activateCombo) && cfg.activateCombo > 0)
+    ? cfg.activateCombo
+    : 10;
+
+  // Enter bonus when combo hits threshold.
   if (!state.bonusActive && state.combo >= activateCombo) startBonus();
 
   if (!state.bonusActive) {
-    setFeedback(label, 'good');     // normal feedback
-    return 0;                       // no extra points
+    setFeedback(label, 'good');
+    return 0;
   }
 
-  // inside bonus: always grant flat +10 (user-visible)
-  extra += BONUS_POINT_PER_HIT;     // add flat bonus
+  // Inside bonus: always grant flat +10 visible bonus.
+  extra += BONUS_POINT_PER_HIT;
   if (awardMode === 'points') {
-    state.bonusPoints = (state.bonusPoints || 0) + BONUS_POINT_PER_HIT; // progress by points
+    state.bonusPoints = (state.bonusPoints || 0) + BONUS_POINT_PER_HIT;
   } else {
-    state.bonusHits   = (state.bonusHits   || 0) + 1;                    // progress by hits
+    state.bonusHits   = (state.bonusHits   || 0) + 1;
   }
 
   const hitsGoal = Number(cfg.hitsPerHeart)   > 0 ? Number(cfg.hitsPerHeart)   : defaultHitsGoalForLevel(state.level);
   const ptsGoal  = Number(cfg.pointsPerHeart) > 0 ? Number(cfg.pointsPerHeart) : defaultPointsGoalForLevel(state.level);
   const goal     = (awardMode === 'points') ? ptsGoal : hitsGoal;
 
-  // push progress for UI
   window.dispatchEvent(new CustomEvent('bonus:progress', {
     detail: { mode: awardMode, hits: state.bonusHits, points: state.bonusPoints, goal }
   }));
 
-  // extra life only on L4+
+  // Extra life only on L4+.
   if (state.level >= 4) {
-    const reached = (awardMode === 'points') ?
-  (state.bonusPoints >= ptsGoal) :
-  (state.bonusHits >= hitsGoal);
+    const reached = (awardMode === 'points')
+      ? (state.bonusPoints >= ptsGoal)
+      : (state.bonusHits   >= hitsGoal);
 
     if (reached) {
-      state.bonusHits = 0;          // reset progress counters
-      state.bonusPoints = 0;        // reset progress counters
-      heal();                       // award life
-      window.dispatchEvent(new CustomEvent('bonus:lifeAwarded')); // optional UI hook
-      setFeedback('EXTRA LIFE +❤', 'good'); // feedback on award
+      state.bonusHits = 0;
+      state.bonusPoints = 0;
+      heal();
+      window.dispatchEvent(new CustomEvent('bonus:lifeAwarded'));
+      setFeedback('EXTRA LIFE +❤', 'good');
 
-      // reset progress UI explicitly
+      // Reset progress UI explicitly.
       window.dispatchEvent(new CustomEvent('bonus:progress', {
         detail: { mode: awardMode, hits: 0, points: 0, goal }
       }));
-      return extra;                 // still count the +10 for this hit
+
+      return extra; // still count +10 for this hit
     }
   }
 
-  // rolling feedback while in bonus
+  // Rolling feedback while staying in bonus.
   setFeedback(`${label} +${BONUS_POINT_PER_HIT}`, 'good');
   return extra;
 }
 
 /**
- * _handleSuccessfulHit(bestIdx, label)
- * Apply scoring/combo/bonus logic for a successful hit and update HUD/feedback.
+ * Apply scoring/combo/bonus logic for a successful hit
+ * and update HUD / BEST score.
  */
 function _handleSuccessfulHit(bestIdx, label) {
-  _consumeNote(bestIdx);                            // remove the judged orb
-  let add = _applyBaseScoring(label);              // base points + combo update
-  const cfg = getBonusConfig(state.level) || {};   // level thresholds (safe)
+  _consumeNote(bestIdx);
+  let add = _applyBaseScoring(label);
+  const cfg = getBonusConfig(state.level) || {};
 
-  add += _handleBonusBlock(label, cfg);            // bonus progress/award block
+  add += _handleBonusBlock(label, cfg);
 
-  // score + BEST
-  state.score += add;                               // apply points
-  if (state.score > (state.best || 0)) {            // new best?
-    state.best = state.score;                       // update BEST
-    saveBestScore(state.best);                      // persist BEST
+  state.score += add;
+  if (state.score > (state.best || 0)) {
+    state.best = state.score;
+    saveBestScore(state.best);
   }
 
-  notify();                                         // refresh HUD
-  return { hit: true, label };                      // result for caller
+  notify();
+  return { hit: true, label };
 }
 
-/**
- * gradeHit(dir)
- * Judge input vs. closest note; split into small helpers.
- */
+// Judge input against closest note in lane and route to hit/miss handlers.
 function gradeHit(dir) {
-  const t = nowMs();                                        // now
-  const { bestIdx, bestAbs } = _findBestCandidateInLane(dir, t); // find candidate
+  const t = nowMs();
+  const { bestIdx, bestAbs } = _findBestCandidateInLane(dir, t);
 
-  if (bestIdx === -1) return _applyMissRules();             // no candidate → miss
-  const label = _labelFromDelta(bestAbs, judgeConfig.windows); // classify
-  if (label === 'Miss') return _applyMissRules();           // outside window
+  if (bestIdx === -1) return _applyMissRules();
+  const label = _labelFromDelta(bestAbs, judgeConfig.windows);
+  if (label === 'Miss') return _applyMissRules();
 
-  return _handleSuccessfulHit(bestIdx, label);              // score
+  return _handleSuccessfulHit(bestIdx, label);
 }
 
-/**
- * registerNote(dir, travelBeats?, bpm?, gid?)
- * Compute ETA from now, push note meta into queue, and record group size.
- */
+// Register a note with ETA and optional group id (for chord bonuses).
 function registerNote(dir, travelBeats = judgeConfig.travelBeats, bpm = judgeConfig.bpm, gid = 0) {
-  const msPerBeat = 60000 / bpm;                            // ms per beat
-  const eta = nowMs() + (travelBeats * msPerBeat);          // crossing time
-  const meta = { id: ++_noteId, dir, eta, el: null, hit:false, gid }; // meta (with gid)
-  activeNotes.push(meta);                                   // enqueue
+  const msPerBeat = 60000 / bpm;
+  const eta = nowMs() + (travelBeats * msPerBeat);
+  const meta = { id: ++_noteId, dir, eta, el: null, hit:false, gid };
+  activeNotes.push(meta);
 
-  if (gid) {                                                // track group expectation
-    const g = comboGroups.get(gid) || { expected:0, hits:0, failed:false }; // ensure
-    g.expected += 1;                                        // one more member
-    comboGroups.set(gid, g);                                // store back
+  if (gid) {
+    const g = comboGroups.get(gid) || { expected:0, hits:0, failed:false };
+    g.expected += 1;
+    comboGroups.set(gid, g);
   }
 
-  return meta;                                              // return
+  return meta;
 }
 
 /**
- * spawnJudgedNote(dir, travelBeats?, bpm?, gid?)
- * Purpose: Register ETA, spawn a visual orb, and on natural miss (no input)
- *          delegate to _applyMissRules() so misses are handled uniformly.
- * Notes:   Keeps chord bookkeeping via gid to prevent group awards after a miss.
+ * Register a judged note + spawn its visual orb.
+ * On natural miss (animation end with no input), apply unified miss rules.
  */
 function spawnJudgedNote(dir, travelBeats = judgeConfig.travelBeats, bpm = judgeConfig.bpm, gid = 0) {
-  const meta = registerNote(dir, travelBeats, bpm, gid);   // push meta with computed ETA (+optional gid)
-  const el = spawnNote(dir, travelBeats, bpm);             // create orb in DOM
-  if (!el) return;                                         // guard if spawn failed
+  const meta = registerNote(dir, travelBeats, bpm, gid);
+  const el = spawnNote(dir, travelBeats, bpm);
+  if (!el) return;
 
-  meta.el = el;                                            // link DOM element to meta
-  el.__noteId = meta.id;                                   // debug hook for inspectors
+  meta.el = el;
+  el.__noteId = meta.id; // dev hook
 
-  /* Natural miss handler — unify with input miss rules */
-  el.addEventListener('animationend', () => {              // when orb reaches judge line (no hit)
-    const still = activeNotes.find(n => n.id === meta.id); // ensure the note is still pending
-    if (!still) return;                                    // was already judged as hit elsewhere
+  el.addEventListener('animationend', () => {
+    const still = activeNotes.find(n => n.id === meta.id);
+    if (!still) return;                     // already judged as a hit
 
-    removeActiveById(meta.id);                             // remove from active queue
-    el.remove();                                           // prune DOM element
+    removeActiveById(meta.id);
+    el.remove();
 
-    // Mark this time cluster as failed so chord bonuses cannot trigger later
+    // Flag this chord group so it cannot later award a clean-group bonus.
     if (meta.gid) {
-      const g = comboGroups.get(meta.gid) || { expected: 1, hits: 0, failed: false }; // ensure record
-      g.failed = true;                                     // flag cluster as failed
-      comboGroups.set(meta.gid, g);                        // persist update
+      const g = comboGroups.get(meta.gid) || { expected: 1, hits: 0, failed: false };
+      g.failed = true;
+      comboGroups.set(meta.gid, g);
     }
 
-    _applyMissRules();                                     // unified path: combo break, L1 immunity,
-                                                           // end bonus w/o life loss, tolerant 3/5→¼→life
-  }, { once: true });                                      // run exactly once
+    _applyMissRules();
+  }, { once: true });
 }
 
-/**
- * clearAllNotes()
- * Remove all notes from DOM and clear the ETA queue and group map.
- */
+// Remove all note DOM elements and clear judging queues.
 function clearAllNotes() {
-  document.querySelectorAll('.rail .note')                  // select notes
-    .forEach(n => n.remove());                              // remove DOM
-  activeNotes.length = 0;                                   // clear queue
-  comboGroups.clear();                                      // clear groups
+  document.querySelectorAll('.rail .note')
+    .forEach(n => n.remove());
+  activeNotes.length = 0;
+  comboGroups.clear();
 }
 
-// Auto-end bonus when a song ends, but **not** on pause/stop
+// Auto-end bonus on song end (but keep state for pause/stop).
 window.addEventListener('song:ended', (e) => {
-  const reason = e?.detail?.reason || 'completed';          // reason
-  if (reason === 'paused' || reason === 'stopped') {        // pause path
-    return;                                                 // keep bonus state on pause/stop
+  const reason = e?.detail?.reason || 'completed';
+  if (reason === 'paused' || reason === 'stopped') {
+    return;
   }
-  if (state.bonusActive) endBonus();                        // turn off on complete/failed
-  state.bonusHits   = 0;                                    // clear counters
-  state.bonusPoints = 0;                                    // clear points
-  comboGroups.clear();                                      // clear groups
+  if (state.bonusActive) endBonus();
+  state.bonusHits   = 0;
+  state.bonusPoints = 0;
+  comboGroups.clear();
 });
 
-/* resetForGameOver
- * Purpose: Full new-run reset when the player retries after Game Over.
- */
+// Full scoring reset when retrying after Game Over.
 function resetForGameOver() {
-  init(); // delegate to full initializer
+  init();
 }
 
 // Exports
@@ -589,8 +526,8 @@ export {
   // judging/spawn
   spawnJudgedNote, clearAllNotes, gradeHit, setJudgeWindows,
   // HUD hooks
-  getSnapshot, setHooks, 
- // resets
+  getSnapshot, setHooks,
+  // resets
   resetPerLevelForNextRun,
   resetForGameOver,
 };

@@ -1,47 +1,59 @@
 // assets/js/audio.js
 
-// ---------------------------------------------
-// Web Audio mini-mixer (lazy) for optional use
-// Purpose: centralize master gain, decode & play buffers
-// ---------------------------------------------
+/**
+ * Web Audio mini-mixer for the game.
+ * Centralises AudioContext, master gain, buffer loading and playback helpers.
+ */
 
-let ctx = null;                  // AudioContext (created on first use)
-let master = null;               // Master Gain node
-let src = null;                  // Current BufferSource
-let startAt = 0;                 // ctx.currentTime when playback started
-let playing = false;             // simple playing flag
-let currentBuffer = null;        // last decoded AudioBuffer
+let ctx = null;
+let master = null;
+let src = null;
+let startAt = 0;
+let playing = false;
+let currentBuffer = null;
 
-/* Create (once) and wire AudioContext + master gain */
+/**
+ * Ensures a single AudioContext + master gain node exists and returns it.
+ * Creates the context lazily on first use.
+ */
 function ensureContext() {
   if (!ctx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-		ctx = new AudioContextClass(); // create context
-    master = ctx.createGain();                                      // master gain
-    master.gain.value = 1;                                          // default 100%
-    master.connect(ctx.destination);                                 // route to speakers
+    ctx = new AudioContextClass();
+    master = ctx.createGain();
+    master.gain.value = 1;
+    master.connect(ctx.destination);
   }
   return ctx;
 }
 
-/* Some browsers require a user-gesture resume */
+/**
+ * Tries to resume a suspended AudioContext after a user gesture.
+ * Some browsers require this before any sound can be played.
+ */
 async function unlockAudio() {
-  ensureContext();                               // make sure ctx exists
+  ensureContext();
   if (ctx.state === 'suspended') await ctx.resume();
 }
 
-/* Decode ArrayBuffer → AudioBuffer (supports old callbacks) */
+/**
+ * Decodes an ArrayBuffer into an AudioBuffer.
+ * Supports both the modern Promise API and the older callback API.
+ */
 async function decodeArrayBufferToAudioBuffer(ab) {
   ensureContext();
-  if (ctx.decodeAudioData.length === 1) {        // Promise API
+  if (ctx.decodeAudioData.length === 1) {
     return ctx.decodeAudioData(ab);
   }
-  return new Promise((resolve, reject) => {       // Callback API
+  return new Promise((resolve, reject) => {
     ctx.decodeAudioData(ab, resolve, reject);
   });
 }
 
-/* Fetch + decode an audio file; cache as currentBuffer */
+/**
+ * Fetches and decodes an audio file, caching the result in currentBuffer.
+ * Returns the decoded AudioBuffer.
+ */
 async function loadAudioBuffer(url) {
   ensureContext();
   const res = await fetch(url, { cache: 'force-cache' });
@@ -51,7 +63,10 @@ async function loadAudioBuffer(url) {
   return currentBuffer;
 }
 
-/* Stop current playback safely */
+/**
+ * Stops any current playback and clears source-related state.
+ * Safe to call even if nothing is playing.
+ */
 function stop() {
   if (src) {
     try { src.stop(0); } catch (_) {}
@@ -62,20 +77,24 @@ function stop() {
   startAt = 0;
 }
 
-/* Play a buffer (or last loaded) at t+delaySec */
+/**
+ * Plays a given AudioBuffer (or the last loaded one) after an optional delay.
+ * Returns the scheduled start time in AudioContext seconds.
+ */
 function playBuffer(buffer = currentBuffer, delaySec = 0) {
   ensureContext();
   if (!buffer) throw new Error('No AudioBuffer to play');
 
-  stop();                                         // stop previous
-  src = ctx.createBufferSource();                 // new source
-  src.buffer = buffer;                            // attach data
-  src.connect(master);                            // to master
-  startAt = ctx.currentTime + (delaySec || 0);    // schedule start
-  src.start(startAt);                             // start
+  stop();
+  src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(master);
+
+  startAt = ctx.currentTime + (delaySec || 0);
+  src.start(startAt);
   playing = true;
 
-  src.addEventListener('ended', () => {           // clear when done
+  src.addEventListener('ended', () => {
     playing = false;
     src = null;
   }, { once: true });
@@ -83,70 +102,88 @@ function playBuffer(buffer = currentBuffer, delaySec = 0) {
   return startAt;
 }
 
-/* Time since start (ms), 0 if not playing */
+/**
+ * Returns the approximate song time in milliseconds since playback started.
+ * Returns 0 when nothing is currently playing.
+ */
 function getSongTimeMs() {
   if (!ctx || !playing) return 0;
   const t = (ctx.currentTime - startAt) * 1000;
   return t < 0 ? 0 : t;
 }
 
-/* Master volume 0..1 */
+/**
+ * Sets the master output volume in the range 0..1.
+ * Values outside the range are clamped.
+ */
 function setMasterVolume(v) {
   ensureContext();
   const vol = Math.max(0, Math.min(1, Number(v) || 0));
   master.gain.value = vol;
 }
 
-/* Bridge from Settings UI: apply master volume when event fires */
+/**
+ * Applies master volume changes from the Settings UI.
+ * Listens for `audio:setMasterVolume` events so UI code does not import audio.js.
+ */
 window.addEventListener('audio:setMasterVolume', (e) => {
   const v = (e && e.detail && typeof e.detail.volume === 'number') ? e.detail.volume : 0;
-  try { setMasterVolume(v); } catch (_) { /* context not exist yet */ }
+  try { setMasterVolume(v); } catch (_) { /* context may not exist yet */ }
 });
 
-/* Simple playing flag getter */
+/**
+ * Returns true when an AudioBuffer is currently playing.
+ */
 function isPlaying() {
   return !!playing;
 }
 
-/* ---------------------------------------------
-   Volume preview "pling"
-   Purpose: Play a very short sine beep at the current master volume
---------------------------------------------- */
-function playVolumePreview() {                             // plays a short beep
-  ensureContext();                                         // ensure AudioContext
-  const now = ctx.currentTime;                             // current time
+/**
+ * Plays a short sine beep at the current master volume.
+ * Used by the Settings UI as a volume preview.
+ */
+function playVolumePreview() {
+  ensureContext();
+  const now = ctx.currentTime;
 
-  // If context is suspended (no user gesture yet), try to resume then beep
-  if (ctx.state === 'suspended') {                         // if suspended
-    ctx.resume().then(() => _doBeep());                    // resume then beep
-    return;                                                // exit early
+  // If the context is still suspended, resume first and then run the beep.
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(() => _doBeep());
+    return;
   }
-  _doBeep();                                               // otherwise beep now
+  _doBeep();
 
-  function _doBeep() {                                     // inner helper to beep
-    const osc = ctx.createOscillator();                    // create oscillator node
-    const g   = ctx.createGain();                          // local gain for envelope
-    osc.type = 'sine';                                     // simple sine wave
-    osc.frequency.setValueAtTime(880, now);                // A5 = 880 Hz
-    g.gain.setValueAtTime(0, now);                         // start at silence
-    // Quick attack to ~90% of master.gain, then fast decay to near zero
-    g.gain.linearRampToValueAtTime(0.9 * master.gain.value, now + 0.01); // attack
-    g.gain.exponentialRampToValueAtTime(0.0001,           now + 0.13);   // decay
+  // Internal helper that builds a tiny envelope (attack/decay) and plays the beep.
+ 
+  function _doBeep() {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
 
-    osc.connect(g);                                        // osc → local gain
-    g.connect(master);                                     // local gain → master
-    osc.start(now);                                        // start immediately
-    osc.stop(now + 0.14);                                  // stop after ~140 ms
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now); // A5 = 880 Hz
+
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.9 * master.gain.value, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+
+    osc.connect(g);
+    g.connect(master);
+
+    osc.start(now);
+    osc.stop(now + 0.14);
   }
 }
 
-/* Listen for UI preview requests (so ui.js doesn't need to import audio.js) */
-window.addEventListener('audio:previewVolume', () => {      // on preview event
-  try { playVolumePreview(); } catch (_) {}                 // fire beep safely
+/**
+ * Handles volume preview requests from the UI via a custom event.
+ * Keeps the UI decoupled from the audio implementation details.
+ */
+window.addEventListener('audio:previewVolume', () => {
+  try { playVolumePreview(); } catch (_) {}
 });
 
+// Exported audio helpers for the rest of the game.
 
-/* export */
 export {
   ensureContext,
   unlockAudio,

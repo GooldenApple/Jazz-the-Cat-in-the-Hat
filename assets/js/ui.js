@@ -1,19 +1,15 @@
 // ui.js
 /* global bootstrap */
-// --- TEMP DEBUG ---
 console.log('[ui] module loaded'); // log that ui module has loaded
 
-/* ---------------------------
-   UI related functions
----------------------------- */
 
 // Storage key for settings, declared before loadSettings/saveSettings are used
 const SETTINGS_KEY = 'settings'; // storage key for user settings
 
-/* --------------------------------------
-   FX: one-shot sounds for overlays
-   - Preload once, reuse same Audio objects
---------------------------------------- */
+/** 
+  * FX: one-shot sounds for overlays
+  * Preload once, reuse same Audio objects
+  */
 const fxOverlay = {
   success: new Audio('assets/audio/yay.mp3'),
   fail:    new Audio('assets/audio/fail.mp3')
@@ -83,28 +79,29 @@ window.addEventListener('pointerdown', unlockFxOnce, { once: true, passive: true
 window.addEventListener('keydown',      unlockFxOnce, { once: true });
 
 
-/* ----------------------------------------
-   Screen reader live-region 
-   Looks for #srLive; falls back to legacy #srRegion; otherwise creates #srLive.
----------------------------------------- */
+/**
+  *Screen reader live-region 
+  *Looks for #srLive; falls back to legacy #srRegion; otherwise creates #srLive.
+  */
+
 let srRegion = // region reference holder
   document.getElementById('srLive') || // prefer #srLive
   document.getElementById('srRegion'); // fall back to legacy id
 
-if (!srRegion) { // if missing, create one
-  srRegion = document.createElement('div'); // create container
-  srRegion.id = 'srLive'; // set id
-  srRegion.className = 'sr-only'; // hide visually
-  srRegion.setAttribute('role', 'status'); // set role
-  srRegion.setAttribute('aria-live', 'polite'); // polite announcements
-  srRegion.setAttribute('aria-atomic', 'true'); // replace whole message
-  document.body.appendChild(srRegion); // attach to body
+if (!srRegion) { 
+  srRegion = document.createElement('div'); 
+  srRegion.id = 'srLive';  
+  srRegion.className = 'sr-only'; 
+  srRegion.setAttribute('role', 'status');
+  srRegion.setAttribute('aria-live', 'polite');
+  srRegion.setAttribute('aria-atomic', 'true');
+  document.body.appendChild(srRegion); 
 } else { // normalize legacy node
-  srRegion.id = 'srLive'; // enforce id
-  srRegion.classList.add('sr-only'); // ensure visually hidden class
-  srRegion.setAttribute('role', 'status'); // set role
-  srRegion.setAttribute('aria-live', 'polite'); // live mode
-  srRegion.setAttribute('aria-atomic', 'true'); // atomic updates
+  srRegion.id = 'srLive'; 
+  srRegion.classList.add('sr-only'); 
+  srRegion.setAttribute('role', 'status');
+  srRegion.setAttribute('aria-live', 'polite');
+  srRegion.setAttribute('aria-atomic', 'true');
 }
 
 /**
@@ -113,13 +110,12 @@ if (!srRegion) { // if missing, create one
  */
 function srSpeak(msg = '') {
   if (!srRegion) return; // guard when region is missing
-  srRegion.textContent = ''; // clear first to retrigger
+  srRegion.textContent = ''; 
   setTimeout(() => { srRegion.textContent = String(msg); }, 30); // async update so AT re-announces
 }
 
-/* ----------------------------------------
-   Note metrics: measure once, cache, and re-measure on layout changes.
----------------------------------------- */
+// Note metrics: measure once, cache, and re-measure on layout changes.
+
 let _noteBox = { w: 40, h: 40 }; // default note size until measured
 
 /**
@@ -127,20 +123,20 @@ let _noteBox = { w: 40, h: 40 }; // default note size until measured
  * Create a temporary note, measure it, cache width/height.
  */
 function measureNoteBox() {
-  const el = document.createElement('div'); // create temp node
-  el.className = 'note note-left'; // any note class has same size
-  el.style.position = 'absolute'; // position off-screen
-  el.style.left = '-9999px'; // move out of view
-  el.style.top = '-9999px'; // move out of view
-  el.style.pointerEvents = 'none'; // avoid interference
-  document.body.appendChild(el); // attach for layout
-  const rect = el.getBoundingClientRect(); // read size
-  _noteBox = { // cache safe rounded values
-    w: Math.max(1, Math.round(rect.width)), // width
-    h: Math.max(1, Math.round(rect.height)), // height
+  const el = document.createElement('div');
+  el.className = 'note note-left'; 
+  el.style.position = 'absolute'; 
+  el.style.left = '-9999px'; 
+  el.style.top = '-9999px'; 
+  el.style.pointerEvents = 'none';
+  document.body.appendChild(el); 
+  const rect = el.getBoundingClientRect();
+  _noteBox = { 
+    w: Math.max(1, Math.round(rect.width)), 
+    h: Math.max(1, Math.round(rect.height)),
   };
-  el.remove(); // cleanup temp node
-  return _noteBox; // return cached box
+  el.remove(); 
+  return _noteBox;
 }
 
 /**
@@ -148,7 +144,7 @@ function measureNoteBox() {
  * Return last measured note box dimensions.
  */
 function getNoteBox() {
-  return _noteBox; // return cached dimensions
+  return _noteBox;
 }
 
 /**
@@ -156,24 +152,24 @@ function getNoteBox() {
  * Re-measure note box on next animation frame.
  */
 function scheduleReMeasureNoteBox() {
-  requestAnimationFrame(measureNoteBox); // queue measure
+  requestAnimationFrame(measureNoteBox);
 }
 
 // Initial measure on ready
-if (document.readyState !== 'loading') { // if DOM ready
-  measureNoteBox(); // measure immediately
+if (document.readyState !== 'loading') { 
+  measureNoteBox();
 } else {
-  document.addEventListener('DOMContentLoaded', measureNoteBox, { once: true }); // measure once on load
+  document.addEventListener('DOMContentLoaded', measureNoteBox, { once: true }); 
 }
 
 // Re-measure when fonts load (rem-based sizes settle)
-document.fonts?.ready?.then(measureNoteBox); // when fonts ready, re-measure
+document.fonts?.ready?.then(measureNoteBox); 
 // Re-measure on viewport/orientation changes
-window.addEventListener('resize', scheduleReMeasureNoteBox); // on resize re-measure
-window.addEventListener('orientationchange', scheduleReMeasureNoteBox); // on orientation change re-measure
+window.addEventListener('resize', scheduleReMeasureNoteBox);
+window.addEventListener('orientationchange', scheduleReMeasureNoteBox);
 
-// **Overlay (Play/Pause) controls */
-const overlayEl = document.getElementById('overlay'); // overlay root 
+// Overlay (Play/Pause) controls 
+const overlayEl = document.getElementById('overlay');
 const iconPlay  = overlayEl ? overlayEl.querySelector('.icon-play')  : null; 
 const iconPause = overlayEl ? overlayEl.querySelector('.icon-pause') : null;
 // --- Overlay label lock (prevents other code from changing text while paused)
@@ -184,8 +180,8 @@ let _overlayLabelLock = null;
  * Reveal the overlay layer.
  */
 function showOverlay() {
-  const el = document.getElementById('overlay'); // lookup fresh overlay
-  if (el) el.classList.remove('hidden'); // remove hidden class
+  const el = document.getElementById('overlay');
+  if (el) el.classList.remove('hidden'); 
 }
 
 /**
@@ -193,8 +189,8 @@ function showOverlay() {
  * Hide the overlay layer.
  */
 function hideOverlay() {
-  const el = document.getElementById('overlay'); // lookup fresh overlay
-  if (el) el.classList.add('hidden'); // add hidden class
+  const el = document.getElementById('overlay');
+  if (el) el.classList.add('hidden'); 
 }
 
 /**
@@ -213,50 +209,49 @@ function setOverlayLabel(text, opts = {}) {
  * Usage: setPlayTip('Hit the matching arrow when the orb crosses the line!')
  */
 function setPlayTip(text = '') {
-  const overlay = document.getElementById('overlay'); // fetch overlay
-  if (!overlay) return; // guard if missing
-  const cta = overlay.querySelector('.play-cta'); // get CTA shell
-  if (!cta) return; // guard if missing
-  let tip = cta.querySelector('.play-tip'); // find existing tip
-  if (!tip) { // create if absent
-    tip = document.createElement('div'); // make element
-    tip.className = 'play-tip'; // set class
-    cta.insertBefore(tip, cta.firstChild); // place above button
+  const overlay = document.getElementById('overlay');
+  if (!overlay) return; 
+  const cta = overlay.querySelector('.play-cta');
+  if (!cta) return; 
+  let tip = cta.querySelector('.play-tip'); 
+  if (!tip) { 
+    tip = document.createElement('div');
+    tip.className = 'play-tip';
+    cta.insertBefore(tip, cta.firstChild); 
   }
-  tip.textContent = String(text); // set/update copy
+  tip.textContent = String(text);
 }
 
 /**
  * (rotate) shared refs
  * Keep global references for rotate overlay helpers.
  */
-const body = document.body; // quick body ref
-const rotateOverlay = document.getElementById('rotateOverlay'); // rotate overlay root
-const rotateCloseBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; // close button
+const body = document.body; 
+const rotateOverlay = document.getElementById('rotateOverlay');
+const rotateCloseBtn = rotateOverlay ? rotateOverlay.querySelector('.rb-try') : null; 
 
 // match same MQs as CSS
-const mqTinyLandscape = window.matchMedia('(max-width: 767.98px) and (orientation: landscape)'); // tiny landscape mq
-const mqShortHeight   = window.matchMedia('(max-height: 480px)'); // very short height mq
+const mqTinyLandscape = window.matchMedia('(max-width: 767.98px) and (orientation: landscape)');
+const mqShortHeight   = window.matchMedia('(max-height: 480px)');
 
 /**
  * updateRotateOverlayAria()
  * Synchronize aria/inert for rotate overlay based on MQs and dismissal flag.
  */
 function updateRotateOverlayAria() {
-  if (!rotateOverlay) return; // guard early
-  const dismissed = body.getAttribute('data-rotate-dismissed') === 'true'; // user dismissal state
-  const visibleByMQ = (mqTinyLandscape.matches || mqShortHeight.matches); // MQ visibility
-  const shouldShow = visibleByMQ && !dismissed; // final decision
-  if (shouldShow) { // show overlay
-    rotateOverlay.removeAttribute('inert'); // enable focus/interaction
-    rotateOverlay.setAttribute('aria-hidden', 'false'); // expose to a11y
-    if (rotateCloseBtn) rotateCloseBtn.focus(); // focus inside overlay
+  if (!rotateOverlay) return; 
+  const dismissed = body.getAttribute('data-rotate-dismissed') === 'true';
+  const visibleByMQ = (mqTinyLandscape.matches || mqShortHeight.matches); 
+  const shouldShow = visibleByMQ && !dismissed; 
+  if (shouldShow) {
+    rotateOverlay.removeAttribute('inert'); 
+    rotateOverlay.setAttribute('aria-hidden', 'false');
+    if (rotateCloseBtn) rotateCloseBtn.focus(); 
   } else { // hide overlay
-    if (rotateOverlay.contains(document.activeElement)) { // if focus inside
-      document.activeElement.blur?.(); // blur active element
+    if (rotateOverlay.contains(document.activeElement)) { 
+      document.activeElement.blur?.(); 
     }
-    rotateOverlay.setAttribute('inert', ''); // block background focus
-    rotateOverlay.setAttribute('aria-hidden', 'true'); // hide from a11y
+    rotateOverlay.setAttribute('aria-hidden', 'true');
   }
 }
 
@@ -265,11 +260,11 @@ function updateRotateOverlayAria() {
  * Hide rotate overlay until orientation/height normalizes again.
  */
 function dismissRotateUntilPortrait() {
-  if (rotateOverlay && rotateOverlay.contains(document.activeElement)) { // if focusing inside
-    document.activeElement.blur?.(); // blur first
+  if (rotateOverlay && rotateOverlay.contains(document.activeElement)) { 
+    document.activeElement.blur?.(); 
   }
-  body.setAttribute('data-rotate-dismissed', 'true'); // remember dismissal
-  updateRotateOverlayAria(); // apply state immediately
+  body.setAttribute('data-rotate-dismissed', 'true'); 
+  updateRotateOverlayAria();
 }
 
 /**
@@ -277,10 +272,10 @@ function dismissRotateUntilPortrait() {
  * Clear dismissal flag when not in tiny landscape anymore.
  */
 function resetDismissalIfPortrait() {
-  if (!mqTinyLandscape.matches) { // if portrait or large
-    body.removeAttribute('data-rotate-dismissed'); // clear dismissal
+  if (!mqTinyLandscape.matches) { 
+    body.removeAttribute('data-rotate-dismissed'); 
   }
-  updateRotateOverlayAria(); // resync aria/inert
+  updateRotateOverlayAria(); 
 }
 
 /**
@@ -288,17 +283,17 @@ function resetDismissalIfPortrait() {
  * Wire listeners and perform the initial sync for rotate overlay.
  */
 function initRotateOverlay() {
-  if (!rotateOverlay) return; // guard early
-  if (rotateCloseBtn && rotateCloseBtn.dataset.wired !== 'true') { // wire close once
-    rotateCloseBtn.dataset.wired = 'true'; // mark wired
-    rotateCloseBtn.addEventListener('click', (e) => { // on click
-      e.preventDefault(); // prevent default
-      dismissRotateUntilPortrait(); // dismiss overlay
+  if (!rotateOverlay) return;
+  if (rotateCloseBtn && rotateCloseBtn.dataset.wired !== 'true') { 
+    rotateCloseBtn.dataset.wired = 'true';
+    rotateCloseBtn.addEventListener('click', (e) => { 
+      e.preventDefault(); 
+      dismissRotateUntilPortrait(); 
     });
   }
-  mqTinyLandscape.addEventListener('change', updateRotateOverlayAria); // react to mq changes
-  mqShortHeight.addEventListener('change',   updateRotateOverlayAria); // react to mq changes
-  window.addEventListener('resize',          updateRotateOverlayAria); // react to resize
+  mqTinyLandscape.addEventListener('change', updateRotateOverlayAria); 
+  mqShortHeight.addEventListener('change',   updateRotateOverlayAria); 
+  window.addEventListener('resize',          updateRotateOverlayAria); 
   window.matchMedia('(orientation: landscape)').addEventListener('change', resetDismissalIfPortrait); // reset on orient
   updateRotateOverlayAria(); // initial sync
 }
@@ -308,7 +303,7 @@ function initRotateOverlay() {
  * Return the navbar Play/Pause toggle button.
  */
 function getMenuPlayToggle() {
-  return document.getElementById('menuPlayToggle'); // fetch button by id
+  return document.getElementById('menuPlayToggle');
 }
 
 /**
@@ -316,10 +311,10 @@ function getMenuPlayToggle() {
  * Set navbar toggle to ▶ Play and update aria-pressed=false.
  */
 function setMenuLabelToPlay() {
-  const btn = getMenuPlayToggle(); // get button
-  if (!btn) return; // guard
-  btn.textContent = '▶ Play'; // set label
-  btn.setAttribute('aria-pressed', 'false'); // reflect state
+  const btn = getMenuPlayToggle(); 
+  if (!btn) return; 
+  btn.textContent = '▶ Play'; 
+  btn.setAttribute('aria-pressed', 'false');
 }
 
 /**
@@ -327,10 +322,10 @@ function setMenuLabelToPlay() {
  * Set navbar toggle to ⏸ Pause and update aria-pressed=true.
  */
 function setMenuLabelToPause() {
-  const btn = getMenuPlayToggle(); // get button
-  if (!btn) return; // guard
-  btn.textContent = '⏸ Pause'; // set label
-  btn.setAttribute('aria-pressed', 'true'); // reflect state
+  const btn = getMenuPlayToggle();
+  if (!btn) return; 
+  btn.textContent = '⏸ Pause'; 
+  btn.setAttribute('aria-pressed', 'true'); 
 }
 
 /**
@@ -338,18 +333,18 @@ function setMenuLabelToPause() {
  * Sync navbar + quick Play/Pause labels with body flags.
  */
 function updatePlayMenuLabel() {
-  const isPaused   = document.body.hasAttribute('data-paused'); // paused flag
-  const isStarting = document.body.getAttribute('data-starting') === 'true'; // starting flag
-  const runningLike = (!isPaused) || isStarting; // compute running-like
-  if (!runningLike) { // if not running-like
-    setMenuLabelToPlay(); // show Play
-  } else { // otherwise
-    setMenuLabelToPause(); // show Pause
+  const isPaused   = document.body.hasAttribute('data-paused');
+  const isStarting = document.body.getAttribute('data-starting') === 'true';
+  const runningLike = (!isPaused) || isStarting;
+  if (!runningLike) {
+    setMenuLabelToPlay();
+  } else { 
+    setMenuLabelToPause(); 
   }
-  const quick = document.getElementById('quickPlayPause'); // quick button
-  if (quick) { // if present
-    quick.setAttribute('aria-pressed', runningLike ? 'true' : 'false'); // set aria-pressed
-    quick.setAttribute('aria-label',  runningLike ? 'Pause' : 'Play'); // set aria-label
+  const quick = document.getElementById('quickPlayPause');
+  if (quick) { 
+    quick.setAttribute('aria-pressed', runningLike ? 'true' : 'false');
+    quick.setAttribute('aria-label',  runningLike ? 'Pause' : 'Play');
   }
 }
 
@@ -358,19 +353,19 @@ function updatePlayMenuLabel() {
  * Bind quick and navbar Play/Pause buttons to emit start/pause intents.
  */
 function wireMenuPlayToggle() {
-  const quick = document.getElementById('quickPlayPause'); // floating round button
-  const menu  = getMenuPlayToggle(); // navbar button
-  const targets = [quick, menu].filter(Boolean); // only existing
-  targets.forEach((btn) => { // loop both
-    if (btn.dataset.wired === 'true') return; // avoid duplicates
-    btn.dataset.wired = 'true'; // mark as wired
-    btn.addEventListener('click', () => { // on click
-      const isStarting = document.body.getAttribute('data-starting') === 'true'; // countdown phase
-      const isRunning  = !document.body.hasAttribute('data-paused'); // visuals unpaused
-      if (isStarting || isRunning) { // if starting or running
-        window.dispatchEvent(new CustomEvent('ui:requestPause')); // ask to pause
-      } else { // otherwise
-        window.dispatchEvent(new CustomEvent('ui:requestStartRun')); // ask to start
+  const quick = document.getElementById('quickPlayPause');
+  const menu  = getMenuPlayToggle(); 
+  const targets = [quick, menu].filter(Boolean); 
+  targets.forEach((btn) => { 
+    if (btn.dataset.wired === 'true') return;
+    btn.dataset.wired = 'true';
+    btn.addEventListener('click', () => {
+      const isStarting = document.body.getAttribute('data-starting') === 'true';
+      const isRunning  = !document.body.hasAttribute('data-paused');
+      if (isStarting || isRunning) {
+        window.dispatchEvent(new CustomEvent('ui:requestPause'));
+      } else {
+        window.dispatchEvent(new CustomEvent('ui:requestStartRun'));
       }
     });
   });
@@ -381,19 +376,19 @@ function wireMenuPlayToggle() {
  * Bind the overlay round button to emit start/pause intents.
  */
 function wirePlayButton() {
-  const overlay = document.getElementById('overlay'); // fetch overlay
-  if (!overlay) return; // guard if absent
-  const btn = overlay.querySelector('.play-btn'); // find CTA button
-  if (!btn) return; // guard if missing
-  if (btn.dataset.wired === 'true') return; // avoid double-binding
-  btn.dataset.wired = 'true'; // mark wired
-  btn.addEventListener('click', () => { // on click
-    const isStarting = document.body.getAttribute('data-starting') === 'true'; // check starting
-    const isRunning  = !document.body.hasAttribute('data-paused'); // check running
-    if (isStarting || isRunning) { // treat both as pause intent
-      window.dispatchEvent(new CustomEvent('ui:requestPause')); // request pause
-    } else { // otherwise
-      window.dispatchEvent(new CustomEvent('ui:requestStartRun')); // request start
+  const overlay = document.getElementById('overlay'); 
+  if (!overlay) return; 
+  const btn = overlay.querySelector('.play-btn');
+  if (!btn) return; 
+  if (btn.dataset.wired === 'true') return;
+  btn.dataset.wired = 'true';
+  btn.addEventListener('click', () => {
+    const isStarting = document.body.getAttribute('data-starting') === 'true';
+    const isRunning  = !document.body.hasAttribute('data-paused'); 
+    if (isStarting || isRunning) { 
+      window.dispatchEvent(new CustomEvent('ui:requestPause'));
+    } else { 
+      window.dispatchEvent(new CustomEvent('ui:requestStartRun'));
     }
   });
 }
@@ -418,15 +413,15 @@ function bindControls() {
  * Wire navbar buttons for non-tab panels (tutorial/settings/highscore/credits via openPanel).
  */
 function _wireNavPanelButtons() {
-  const map = { tutorial: 'tutorial', settings: 'settings', highscore: 'highscore', credits: 'credits' }; // action→panel map
-  document.querySelectorAll('#primaryNav .nav-btn') // scan nav buttons
-    .forEach((btn) => { // iterate buttons
-      const action = btn.getAttribute('data-action'); // read action
+  const map = { tutorial: 'tutorial', settings: 'settings', highscore: 'highscore', credits: 'credits' };
+  document.querySelectorAll('#primaryNav .nav-btn')
+    .forEach((btn) => { 
+      const action = btn.getAttribute('data-action');
       if (['tutorial','highscore','credits','settings'].includes(action)) return; // skip tab-driven (handled elsewhere)
-      if (!map[action]) return; // skip unknown actions
+      if (!map[action]) return;
       if (btn.dataset.wired === 'true') return; // avoid duplicates
-      btn.dataset.wired = 'true'; // mark wired
-      btn.addEventListener('click', () => { openPanel(map[action]); }); // open mapped panel
+      btn.dataset.wired = 'true'; 
+      btn.addEventListener('click', () => { openPanel(map[action]); });
     });
 }
 
@@ -435,13 +430,13 @@ function _wireNavPanelButtons() {
  * Wire close buttons inside panels to call closePanel(name).
  */
 function _wirePanelCloseButtons() {
-  document.querySelectorAll('.ui-panel [data-close-panel]') // scan close buttons
-    .forEach((btn) => { // iterate
-      if (btn.dataset.wired === 'true') return; // avoid duplicates
-      btn.dataset.wired = 'true'; // mark wired
-      btn.addEventListener('click', () => { // on click
-        const name = btn.getAttribute('data-close-panel'); // read panel name
-        closePanel(name); // close that panel
+  document.querySelectorAll('.ui-panel [data-close-panel]') 
+    .forEach((btn) => { 
+      if (btn.dataset.wired === 'true') return;
+      btn.dataset.wired = 'true';
+      btn.addEventListener('click', () => { 
+        const name = btn.getAttribute('data-close-panel');
+        closePanel(name);
       });
     });
 }
@@ -451,16 +446,16 @@ function _wirePanelCloseButtons() {
  * Wire global key shortcuts for opening Settings and closing panels.
  */
 function _wirePanelKeyShortcuts() {
-  if (window.__panelKeysWired) return; // singleton guard
-  window.__panelKeysWired = true; // set guard
-  window.addEventListener('keydown', (ev) => { // on keydown
-    if (ev.key === 's' || ev.key === 'S') { // S opens settings
-      openPanel('settings'); // open settings
-      ev.preventDefault(); // prevent default behavior
+  if (window.__panelKeysWired) return;
+  window.__panelKeysWired = true;
+  window.addEventListener('keydown', (ev) => {
+    if (ev.key === 's' || ev.key === 'S') {
+      openPanel('settings'); 
+      ev.preventDefault(); 
     }
-    if (ev.key === 'Escape') { // Escape closes current panel
-      const open = document.body.getAttribute('data-panel-open'); // read open panel
-      if (open) closePanel(open); // close if any
+    if (ev.key === 'Escape') {
+      const open = document.body.getAttribute('data-panel-open');
+      if (open) closePanel(open);
     }
   });
 }
@@ -470,29 +465,29 @@ function _wirePanelKeyShortcuts() {
  * Open Settings to a specific tab when navbar items are clicked.
  */
 function _wireSettingsOpenersFromNavbar() {
-  document.querySelectorAll('#primaryNav .nav-btn') // scan nav buttons
-    .forEach((btn) => { // iterate
-      const act = btn.getAttribute('data-action'); // read action
-      if (!['tutorial','highscore','credits','settings'].includes(act)) return; // only settings tabs
-      if (btn.dataset.wiredSettingsTab === 'true') return; // avoid duplicates
-      btn.dataset.wiredSettingsTab = 'true'; // mark wired
-      btn.addEventListener('click', (ev) => { // on click
-        ev.preventDefault(); // prevent default navigation
-        const targetTab = (act === 'settings' ? 'audio' : act); // decide pane name
-        const collapseEl = document.querySelector('.topbar .navbar-collapse'); // bootstrap collapse
-        if (collapseEl && collapseEl.classList.contains('show') && window.bootstrap) { // if burger open
-          const inst = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }); // get instance
-          const openAfterCollapse = () => { // handler after hide
+  document.querySelectorAll('#primaryNav .nav-btn')
+    .forEach((btn) => { 
+      const act = btn.getAttribute('data-action'); 
+      if (!['tutorial','highscore','credits','settings'].includes(act)) return;
+      if (btn.dataset.wiredSettingsTab === 'true') return;
+      btn.dataset.wiredSettingsTab = 'true';
+      btn.addEventListener('click', (ev) => { 
+        ev.preventDefault(); 
+        const targetTab = (act === 'settings' ? 'audio' : act);
+        const collapseEl = document.querySelector('.topbar .navbar-collapse');
+        if (collapseEl && collapseEl.classList.contains('show') && window.bootstrap) {
+          const inst = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+          const openAfterCollapse = () => { 
             collapseEl.removeEventListener('hidden.bs.collapse', openAfterCollapse); // cleanup
-            openPanel('settings'); // open settings
-            selectSettingsTab(targetTab); // select tab
+            openPanel('settings');
+            selectSettingsTab(targetTab);
           };
           collapseEl.addEventListener('hidden.bs.collapse', openAfterCollapse, { once: true }); // one-time listener
-          inst.hide(); // close burger
-          return; // stop here
+          inst.hide();
+          return; 
         }
-        openPanel('settings'); // desktop path
-        selectSettingsTab(targetTab); // select tab
+        openPanel('settings');
+        selectSettingsTab(targetTab);
       });
     });
 }
@@ -503,9 +498,9 @@ function _wireSettingsOpenersFromNavbar() {
  */
 const HUD_MODE_KEY = 'hudInlineMode'; // storage key for HUD mode
 function getHudInlineMode() {
-  const attr = document.body.getAttribute('data-hud'); // body data attribute
-  const saved = localStorage.getItem(HUD_MODE_KEY); // saved value
-  return (attr || saved || 'expanded'); // prefer attr → saved → default
+  const attr = document.body.getAttribute('data-hud');
+  const saved = localStorage.getItem(HUD_MODE_KEY);
+  return (attr || saved || 'expanded'); 
 }
 
 /**
@@ -514,20 +509,20 @@ function getHudInlineMode() {
  */
 function setHudInlineMode(mode) {
   const v = (mode === 'collapsed') ? 'collapsed' : 'expanded'; // normalize mode
-  document.body.setAttribute('data-hud', v); // set body attribute
+  document.body.setAttribute('data-hud', v);
   localStorage.setItem(HUD_MODE_KEY, v); // persist choice
   const btn  = document.getElementById('hudToggle'); // toggle chip element
-  const icon = btn ? btn.querySelector('.hud-toggle__icon') : null; // icon span
-  const text = btn ? btn.querySelector('.hud-toggle__text') : null; // text span
-  if (!btn || !icon || !text) return; // guard if markup missing
+  const icon = btn ? btn.querySelector('.hud-toggle__icon') : null;
+  const text = btn ? btn.querySelector('.hud-toggle__text') : null;
+  if (!btn || !icon || !text) return;
   btn.setAttribute('aria-expanded', String(v === 'expanded')); // reflect expanded state
-  btn.setAttribute('aria-label', (v === 'expanded') ? 'Collapse HUD' : 'Expand HUD'); // label for SR
-  if (v === 'expanded') { // expanded state
-    icon.textContent = '▴'; // arrow up glyph
-    text.textContent = 'Collapse HUD'; // button text
-  } else { // collapsed state
-    icon.textContent = '▾'; // arrow down glyph
-    text.textContent = 'Expand HUD'; // button text
+  btn.setAttribute('aria-label', (v === 'expanded') ? 'Collapse HUD' : 'Expand HUD');
+  if (v === 'expanded') { 
+    icon.textContent = '▴';
+    text.textContent = 'Collapse HUD'; 
+  } else { 
+    icon.textContent = '▾'; 
+    text.textContent = 'Expand HUD';
   }
 }
 
@@ -536,7 +531,7 @@ function setHudInlineMode(mode) {
  * Flip HUD inline mode between expanded/collapsed.
  */
 function toggleHudInline() {
-  setHudInlineMode(getHudInlineMode() === 'expanded' ? 'collapsed' : 'expanded'); // toggle
+  setHudInlineMode(getHudInlineMode() === 'expanded' ? 'collapsed' : 'expanded');
 }
 
 /**
@@ -544,16 +539,16 @@ function toggleHudInline() {
  * Wire the HUD toggle chip and optional 'H' hotkey for testing.
  */
 function wireHudInlineToggle() {
-  const btn = document.getElementById('hudToggle'); // toggle button
-  if (btn && btn.dataset.wired !== 'true') { // if exists and not wired
-    btn.dataset.wired = 'true'; // mark wired
-    btn.addEventListener('click', toggleHudInline); // click toggles
+  const btn = document.getElementById('hudToggle');
+  if (btn && btn.dataset.wired !== 'true') { 
+    btn.dataset.wired = 'true'; 
+    btn.addEventListener('click', toggleHudInline);
   }
   window.addEventListener('keydown', (e) => { // global hotkey
     if (e.repeat) return; // ignore repeats
-    if ((e.key || '').toLowerCase() === 'h') { // if 'h'
-      e.preventDefault(); // prevent default behavior
-      toggleHudInline(); // toggle hud
+    if ((e.key || '').toLowerCase() === 'h') { 
+      e.preventDefault(); 
+      toggleHudInline(); 
     }
   });
 }
@@ -564,17 +559,17 @@ function wireHudInlineToggle() {
  */
 function judgeFlash(type) {
   const rails = document.querySelector('.rails'); // rails root
-  if (!rails) return; // guard early
-  rails.classList.remove('flash-good','flash-miss'); // reset classes
-  if (type === 'good') rails.classList.add('flash-good'); // success flash
-  if (type === 'miss') rails.classList.add('flash-miss'); // miss flash
+  if (!rails) return;
+  rails.classList.remove('flash-good','flash-miss');
+  if (type === 'good') rails.classList.add('flash-good');
+  if (type === 'miss') rails.classList.add('flash-miss'); 
   setTimeout(() => { rails.classList.remove('flash-good','flash-miss'); }, 320); // cleanup later
 }
 
 // Feedback timers
 let _feedbackTimer = null; // active timeout id
 let _feedbackSeq = 0; // sequence to avoid stale clears
-const FEEDBACK_CLEAR_MS = 700; // message duration
+const FEEDBACK_CLEAR_MS = 700; 
 
 /**
  * setFeedback(label, flash)
@@ -582,24 +577,18 @@ const FEEDBACK_CLEAR_MS = 700; // message duration
  * Usage: setFeedback('Perfect','good') / setFeedback('MISS','miss')
  */
 function setFeedback(label, flash) {
-  const el = document.getElementById('feedback'); // feedback node
-  if (!el) return; // guard if missing
-  if (_feedbackTimer) { clearTimeout(_feedbackTimer); _feedbackTimer = null; } // cancel prior timer
-  el.textContent = label; // set message
-  if (flash === 'good') judgeFlash('good'); // flash for good
-  if (flash === 'miss') judgeFlash('miss'); // flash for miss
-  const mySeq = ++_feedbackSeq; // increment sequence
-  _feedbackTimer = setTimeout(() => { // schedule clear
-    if (mySeq === _feedbackSeq) { el.textContent = ''; } // only clear newest
-    _feedbackTimer = null; // drop handle
-  }, FEEDBACK_CLEAR_MS); // wait before clear
+  const el = document.getElementById('feedback');
+  if (!el) return; 
+  if (_feedbackTimer) { clearTimeout(_feedbackTimer); _feedbackTimer = null; }
+  el.textContent = label;
+  if (flash === 'good') judgeFlash('good');
+  if (flash === 'miss') judgeFlash('miss');
+  const mySeq = ++_feedbackSeq; 
+  _feedbackTimer = setTimeout(() => { 
+    if (mySeq === _feedbackSeq) { el.textContent = ''; } 
+    _feedbackTimer = null;
+  }, FEEDBACK_CLEAR_MS); 
 }
-
-/* ==========================================================
-   Layout measurements (DISABLED)
-   We do not measure header/controls or write CSS vars anymore.
-   CSS-only layout manages the vertical sizing now.
-   ========================================================== */
 
 /**
  * initTopbarAutoHeight()
@@ -611,10 +600,10 @@ function initTopbarAutoHeight() {
   } catch (_) { /* no-op */ } // ignore
 }
 
-/* Guard: remove any leftover inline CSS vars */
+// Guard: remove any leftover inline CSS vars 
 (function guardLegacyLayoutCalls() {
-  const s = document?.documentElement?.style; // style ref
-  if (s) { s.removeProperty('--topbar-h'); } // remove legacy var
+  const s = document?.documentElement?.style;
+  if (s) { s.removeProperty('--topbar-h'); }
 })();
 
 /**
@@ -622,21 +611,21 @@ function initTopbarAutoHeight() {
  * Keep body[data-nav-open] synced with Bootstrap collapse; pause on open.
  */
 function initNavbarCollapseSync() {
-  const collapseEl = document.querySelector('.topbar .navbar-collapse'); // collapse el
-  const togglerEl  = document.querySelector('.navbar-toggler.hamburger'); // toggler el
-  if (!collapseEl || !togglerEl || !window.bootstrap) return; // guard early
-  const collapse = new bootstrap.Collapse(collapseEl, { toggle: false }); // get instance
+  const collapseEl = document.querySelector('.topbar .navbar-collapse'); 
+  const togglerEl  = document.querySelector('.navbar-toggler.hamburger'); 
+  if (!collapseEl || !togglerEl || !window.bootstrap) return;
+  const collapse = new bootstrap.Collapse(collapseEl, { toggle: false });
   const markOpen  = () => { document.body.setAttribute('data-nav-open', 'true'); togglerEl.setAttribute('aria-expanded', 'true'); }; // mark open
   const markClose = () => { document.body.removeAttribute('data-nav-open'); togglerEl.setAttribute('aria-expanded', 'false'); }; // mark close
   const pauseOnOpen = () => { window.dispatchEvent(new CustomEvent('ui:requestPause')); }; // pause game on open
-  collapseEl.addEventListener('show.bs.collapse',  pauseOnOpen); // listen
-  collapseEl.addEventListener('show.bs.collapse',  markOpen); // mark opening
-  collapseEl.addEventListener('hide.bs.collapse',  markClose); // mark closing
-  collapseEl.addEventListener('shown.bs.collapse', markOpen); // confirm open
-  collapseEl.addEventListener('hidden.bs.collapse', markClose); // confirm close
+  collapseEl.addEventListener('show.bs.collapse',  pauseOnOpen);
+  collapseEl.addEventListener('show.bs.collapse',  markOpen);
+  collapseEl.addEventListener('hide.bs.collapse',  markClose);
+  collapseEl.addEventListener('shown.bs.collapse', markOpen);
+  collapseEl.addEventListener('hidden.bs.collapse', markClose);
   const mqLgUp = window.matchMedia('(min-width: 992px)'); // breakpoint watcher
   const normalizeForViewport = () => { collapse.hide(); markClose(); }; // enforce closed on large
-  normalizeForViewport(); // initial normalize
+  normalizeForViewport();
   mqLgUp.addEventListener('change', normalizeForViewport); // re-normalize on change
 }
 
@@ -645,13 +634,13 @@ function initNavbarCollapseSync() {
  * Build an SVG heart in a given visual state class.
  */
 function createHeart(stateClass) {
-  const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); // create svg
-  svg.setAttribute('viewBox', '0 0 24 24'); // set viewBox
-  svg.classList.add('svg-heart', stateClass); // add classes
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); // create path
+  const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.classList.add('svg-heart', stateClass);
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', 'M12 21s-6.2-4.35-9.2-8.28C1 10.5 2.5 6 6.5 6c2.2 0 3.5 1.5 5.5 3.5C14 7.5 15.3 6 17.5 6c4 0 5.5 4.5 3.7 6.72C18.2 16.65 12 21 12 21z'); // heart path
-  svg.appendChild(path); // attach path
-  return svg; // return svg
+  svg.appendChild(path);
+  return svg;
 }
 
 /**
@@ -659,22 +648,22 @@ function createHeart(stateClass) {
  * Render hearts row based on lives and partial damage.
  */
 function renderLives(container, lives, partial = 0, steps = 4) {
-  if (!container) return; // guard
-  container.innerHTML = ''; // clear container
-  const safeLives   = Math.max(0, lives); // clamp lives
-  const safePartial = Math.min(Math.max(partial, 0), steps - 1); // clamp partial
-  for (let i = 0; i < Math.max(safeLives - 1, 0); i++) { // for all but last
-    container.appendChild(createHeart('full')); // full heart
+  if (!container) return; 
+  container.innerHTML = ''; 
+  const safeLives   = Math.max(0, lives);
+  const safePartial = Math.min(Math.max(partial, 0), steps - 1);
+  for (let i = 0; i < Math.max(safeLives - 1, 0); i++) {
+    container.appendChild(createHeart('full')); 
   }
   if (safeLives > 0) { // if one or more lives
-    let klass = 'full'; // default class
-    if (safePartial === 1) klass = 'threequarter'; // 3/4
-    if (safePartial === 2) klass = 'half'; // 1/2
-    if (safePartial === 3) klass = 'quarter'; // 1/4
-    container.appendChild(createHeart(klass)); // add last heart
+    let klass = 'full';
+    if (safePartial === 1) klass = 'threequarter';
+    if (safePartial === 2) klass = 'half';
+    if (safePartial === 3) klass = 'quarter';
+    container.appendChild(createHeart(klass));
   }
-  if (safeLives <= 0) { // if no lives
-    container.appendChild(createHeart('empty')); // empty heart
+  if (safeLives <= 0) {
+    container.appendChild(createHeart('empty'));
   }
 }
 
@@ -684,14 +673,14 @@ function renderLives(container, lives, partial = 0, steps = 4) {
  */
 function updateHUD(snapshot) {
   if (!snapshot) return; // guard
-  const livesEl = document.getElementById('lives'); // hearts container
-  const scoreEl = document.getElementById('score'); // score label
-  const levelEl = document.getElementById('level'); // level label
-  const bestEl  = document.getElementById('best'); // best label
-  renderLives(livesEl, snapshot.lives, snapshot.partial); // render hearts
-  if (scoreEl) scoreEl.textContent = snapshot.score; // set score
-  if (levelEl) levelEl.textContent = snapshot.level; // set level
-  if (bestEl && typeof snapshot.best !== 'undefined') { bestEl.textContent = snapshot.best; } // set best
+  const livesEl = document.getElementById('lives'); 
+  const scoreEl = document.getElementById('score');
+  const levelEl = document.getElementById('level');
+  const bestEl  = document.getElementById('best');
+  renderLives(livesEl, snapshot.lives, snapshot.partial);
+  if (scoreEl) scoreEl.textContent = snapshot.score;
+  if (levelEl) levelEl.textContent = snapshot.level;
+  if (bestEl && typeof snapshot.best !== 'undefined') { bestEl.textContent = snapshot.best; }
 }
 
 /**
@@ -699,13 +688,13 @@ function updateHUD(snapshot) {
  * Return cached references to the four rails.
  */
 function getRailsMap() {
-  const root = document.querySelector('.rails'); // rails root
-  if (!root) return null; // guard missing
-  return { // return lane elements
-    left:  root.querySelector('.rail-left'), // left
-    up:    root.querySelector('.rail-up'), // up
-    down:  root.querySelector('.rail-down'), // down
-    right: root.querySelector('.rail-right') // right
+  const root = document.querySelector('.rails');
+  if (!root) return null;
+  return { 
+    left:  root.querySelector('.rail-left'),
+    up:    root.querySelector('.rail-up'), 
+    down:  root.querySelector('.rail-down'),
+    right: root.querySelector('.rail-right') 
   };
 }
 
@@ -714,17 +703,17 @@ function getRailsMap() {
  * Compute px distance from rail top to judge line center (minus half note height).
  */
 function getJudgeDistancePx(railEl) {
-  if (!railEl) return 0; // guard
-  const stageTop = railEl.getBoundingClientRect().top; // top of rail
-  const judge = document.querySelector('.judge-line'); // judge line
-  const { h: noteH } = getNoteBox(); // note height
-  if (!judge) { // fallback if judge missing
-    return Math.max(0, railEl.clientHeight * 0.62 - (noteH / 2)); // approximate
+  if (!railEl) return 0; 
+  const stageTop = railEl.getBoundingClientRect().top;
+  const judge = document.querySelector('.judge-line');
+  const { h: noteH } = getNoteBox();
+  if (!judge) {
+    return Math.max(0, railEl.clientHeight * 0.62 - (noteH / 2));
   }
-  const jr = judge.getBoundingClientRect(); // judge rect
-  const judgeCenterY = jr.top + (jr.height / 2); // center y
-  const dist = Math.max(0, judgeCenterY - stageTop - (noteH / 2)); // distance adjusted
-  return dist; // return distance
+  const jr = judge.getBoundingClientRect();
+  const judgeCenterY = jr.top + (jr.height / 2);
+  const dist = Math.max(0, judgeCenterY - stageTop - (noteH / 2));
+  return dist; 
 }
 
 /**
@@ -732,9 +721,9 @@ function getJudgeDistancePx(railEl) {
  * Compute px distance from rail top to bottom minus note height.
  */
 function getBottomDistancePx(railEl) {
-  if (!railEl) return 0; // guard
-  const { h } = getNoteBox(); // note height
-  return Math.max(0, railEl.clientHeight - h); // bottom stop
+  if (!railEl) return 0; 
+  const { h } = getNoteBox();
+  return Math.max(0, railEl.clientHeight - h);
 }
 
 /**
@@ -742,24 +731,24 @@ function getBottomDistancePx(railEl) {
  * Create one falling orb in a lane; set CSS vars and animation duration.
  */
 function spawnNote(dir, travelBeats = 2, bpm = 120) {
-  const rails = getRailsMap(); // get rails
-  if (!rails || !rails[dir]) return null; // guard lane
-  const rail = rails[dir]; // choose lane
-  const note = document.createElement('div'); // create note
-  note.className = `note note-${dir} note--${dir}`; // set classes
-  const judgePx  = getJudgeDistancePx(rail); // px to judge line
-  const bottomPx = getBottomDistancePx(rail); // px to bottom
-  note.style.setProperty('--drop-distance-judge',  `${judgePx}px`); // set CSS var
-  note.style.setProperty('--drop-distance-bottom', `${bottomPx}px`); // set CSS var
-  const msPerBeat = 60000 / bpm; // ms per beat
-  const secondsToJudge = Math.max(0.08, travelBeats * (msPerBeat / 1000)); // seconds to judge
-  const safeJudge = Math.max(1, judgePx); // avoid zero
-  const safeBottom = Math.max(safeJudge + 1, bottomPx); // ensure > judge
-  const totalSeconds = secondsToJudge * (safeBottom / safeJudge); // scale to reach bottom after judge
-  note.style.animationDuration = `${totalSeconds}s`; // set duration
-  note.dataset.state = 'alive'; // mark alive
-  rail.appendChild(note); // append to lane
-  return note; // return node
+  const rails = getRailsMap();
+  if (!rails || !rails[dir]) return null;
+  const rail = rails[dir];
+  const note = document.createElement('div'); 
+  note.className = `note note-${dir} note--${dir}`;
+  const judgePx  = getJudgeDistancePx(rail); 
+  const bottomPx = getBottomDistancePx(rail); 
+  note.style.setProperty('--drop-distance-judge',  `${judgePx}px`); 
+  note.style.setProperty('--drop-distance-bottom', `${bottomPx}px`); 
+  const msPerBeat = 60000 / bpm;
+  const secondsToJudge = Math.max(0.08, travelBeats * (msPerBeat / 1000));
+  const safeJudge = Math.max(1, judgePx);
+  const safeBottom = Math.max(safeJudge + 1, bottomPx);
+  const totalSeconds = secondsToJudge * (safeBottom / safeJudge);
+  note.style.animationDuration = `${totalSeconds}s`;
+  note.dataset.state = 'alive';
+  rail.appendChild(note); 
+  return note; 
 }
 
 /**
@@ -767,8 +756,8 @@ function spawnNote(dir, travelBeats = 2, bpm = 120) {
  * Hide every panel inside #overlay that uses .play-cta shell.
  */
 function hideAllOverlayPanels() {
-  const panels = document.querySelectorAll('#overlay .play-cta'); // select panels
-  panels.forEach(el => el.classList.add('hidden')); // hide each
+  const panels = document.querySelectorAll('#overlay .play-cta');
+  panels.forEach(el => el.classList.add('hidden'));
 }
 
 /**
@@ -777,8 +766,8 @@ function hideAllOverlayPanels() {
  */
 function showResultsOverlay({ level, score, maxCombo }) {
   // Prep overlay
-  hideAllOverlayPanels();            // hide any other panel
-  showOverlay();                     // show overlay layer
+  hideAllOverlayPanels(); 
+  showOverlay();
 
   // Randomize congrats headline 
   const congratsEl = document.getElementById('resCongrats');
@@ -826,13 +815,13 @@ function showPauseOverlay() {
   if (resultsVisible || gameOverVisible) return;
 
   // Show base CTA with a clear pause message
-  hideAllOverlayPanels();                       // hide other CTA panels
+  hideAllOverlayPanels(); 
   const baseCta = document.querySelector('#overlay .play-cta');
   if (baseCta) baseCta.classList.remove('hidden');
 
-  setOverlayLabel('Game paused\nPress Play to resume'); // caption under the button
-  srSpeak('Game paused. Press Play to resume.');        // screen reader hint
-  showOverlay();                                        // reveal overlay layer
+  setOverlayLabel('Game paused\nPress Play to resume');
+  srSpeak('Game paused. Press Play to resume.');
+  showOverlay();
 }
 
 // helper used by Game Over overlay
@@ -846,8 +835,8 @@ function setText(sel, v) {
  * Show Game Over panel and fill level/score/combo; announce.
  */
 function showGameOverOverlay({ level, score, maxCombo }) {
-  hideAllOverlayPanels();              // hide other panels
-  showOverlay();                       // ensure overlay container is visible
+  hideAllOverlayPanels(); 
+  showOverlay(); 
 
   // Fill fields 
   setText('#goLevel',  level ?? '');
@@ -872,59 +861,63 @@ function showGameOverOverlay({ level, score, maxCombo }) {
  * Wire buttons in Results and Game Over panels to emit UI events.
  */
 function initResultOverlays() {
-  const btnNext    = document.getElementById('btnNextLevel'); // results → next
-  const btnRestart = document.getElementById('btnRestartLevel'); // results → restart
-  const btnRetry   = document.getElementById('btnRetryLevel'); // game over → retry
-  if (btnNext && btnNext.dataset.wired !== 'true') { // guard
-    btnNext.dataset.wired = 'true'; // mark wired
-    btnNext.addEventListener('click', () => { // click
+  const btnNext    = document.getElementById('btnNextLevel');
+  const btnRestart = document.getElementById('btnRestartLevel'); 
+  const btnRetry   = document.getElementById('btnRetryLevel');
+
+  if (btnNext && btnNext.dataset.wired !== 'true') { 
+    btnNext.dataset.wired = 'true';
+    btnNext.addEventListener('click', () => {
       muteOverlayFx(600);
-      hideAllOverlayPanels(); // hide panels
-      window.dispatchEvent(new CustomEvent('ui:nextLevel')); // next level
+      hideAllOverlayPanels();
+      window.dispatchEvent(new CustomEvent('ui:nextLevel')); 
     });
   }
-  if (btnRestart && btnRestart.dataset.wired !== 'true') { // guard
-    btnRestart.dataset.wired = 'true'; // mark wired
-    btnRestart.addEventListener('click', () => { // click
+
+  if (btnRestart && btnRestart.dataset.wired !== 'true') {
+    btnRestart.dataset.wired = 'true';
+    btnRestart.addEventListener('click', () => { 
       muteOverlayFx(600);
-      hideAllOverlayPanels(); // hide panels
-      window.dispatchEvent(new CustomEvent('ui:restartLevel')); // restart level
+      hideAllOverlayPanels();
+      window.dispatchEvent(new CustomEvent('ui:restartLevel'));
     });
   }
-  if (btnRetry && btnRetry.dataset.wired !== 'true') { // guard
-    btnRetry.dataset.wired = 'true'; // mark wired
-    btnRetry.addEventListener('click', () => { // click
+
+  if (btnRetry && btnRetry.dataset.wired !== 'true') {
+    btnRetry.dataset.wired = 'true'; 
+    btnRetry.addEventListener('click', () => { 
       muteOverlayFx(600);
-      hideAllOverlayPanels(); // hide panels
-      window.dispatchEvent(new CustomEvent('ui:retryLevel')); // retry level
+      hideAllOverlayPanels(); 
+      window.dispatchEvent(new CustomEvent('ui:retryLevel'));
     });
   }
 }
+
 
 /**
  * setOverlayIcon(mode)
  * Force overlay icon to 'play' | 'pause' | null (release to CSS when null).
  */
 function setOverlayIcon(mode) {
-  if (!iconPlay || !iconPause) return; // guard
-  if (mode === 'play') { iconPlay.style.display  = 'inline-block'; iconPause.style.display = 'none'; return; } // show play
-  if (mode === 'pause') { iconPlay.style.display  = 'none'; iconPause.style.display = 'inline-block'; return; } // show pause
-  iconPlay.style.display  = ''; // release to CSS
-  iconPause.style.display = ''; // release to CSS
+  if (!iconPlay || !iconPause) return;
+  if (mode === 'play') { iconPlay.style.display  = 'inline-block'; iconPause.style.display = 'none'; return; } 
+  if (mode === 'pause') { iconPlay.style.display  = 'none'; iconPause.style.display = 'inline-block'; return; } 
+  iconPlay.style.display  = '';
+  iconPause.style.display = '';
 }
 
 // Focus helpers for panels (trap + restore)
-const FOCUS_SEL = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'; // focusable elements
-let _panelLastFocus = null; // last focused element before open
-let _trapHandler = null; // keydown handler ref
+const FOCUS_SEL = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+let _panelLastFocus = null; 
+let _trapHandler = null;
 
 /**
  * getFirstFocusable(container)
  * Return the first focusable element within a container or null.
  */
 function getFirstFocusable(container) {
-  const nodes = container.querySelectorAll(FOCUS_SEL); // query
-  return nodes.length ? nodes[0] : null; // first or null
+  const nodes = container.querySelectorAll(FOCUS_SEL);
+  return nodes.length ? nodes[0] : null; 
 }
 
 /**
@@ -932,16 +925,16 @@ function getFirstFocusable(container) {
  * Trap Tab key within a container until panel is closed.
  */
 function _trapFocusIn(container) {
-  if (_trapHandler) document.removeEventListener('keydown', _trapHandler); // cleanup previous
-  _trapHandler = (ev) => { // on keydown
-    if (ev.key !== 'Tab') return; // only Tab
-    const list = Array.from(container.querySelectorAll(FOCUS_SEL)) // all focusables
-      .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null); // visible/enabled
-    if (!list.length) return; // nothing to trap
-    const first = list[0]; // first focusable
-    const last = list[list.length - 1]; // last focusable
-    if (ev.shiftKey && document.activeElement === first) { last.focus(); ev.preventDefault(); } // wrap backward
-    else if (!ev.shiftKey && document.activeElement === last) { first.focus(); ev.preventDefault(); } // wrap forward
+  if (_trapHandler) document.removeEventListener('keydown', _trapHandler);
+  _trapHandler = (ev) => { 
+    if (ev.key !== 'Tab') return;
+    const list = Array.from(container.querySelectorAll(FOCUS_SEL))
+      .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+    if (!list.length) return; 
+    const first = list[0]; 
+    const last = list[list.length - 1]; 
+    if (ev.shiftKey && document.activeElement === first) { last.focus(); ev.preventDefault(); } 
+    else if (!ev.shiftKey && document.activeElement === last) { first.focus(); ev.preventDefault(); } 
   };
   document.addEventListener('keydown', _trapFocusIn.handler = _trapHandler); // attach
 }
@@ -951,7 +944,7 @@ function _trapFocusIn(container) {
  * Store the element that had focus before opening a panel.
  */
 function _rememberFocus() {
-  _panelLastFocus = document.activeElement; // store current focus
+  _panelLastFocus = document.activeElement; 
 }
 
 /**
@@ -959,9 +952,9 @@ function _rememberFocus() {
  * Restore focus to the element that had focus before opening the panel.
  */
 function _restoreFocus() {
-  if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; } // remove trap
-  if (_panelLastFocus && document.contains(_panelLastFocus)) { _panelLastFocus.focus(); } // restore focus
-  _panelLastFocus = null; // clear ref
+  if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; }
+  if (_panelLastFocus && document.contains(_panelLastFocus)) { _panelLastFocus.focus(); } 
+  _panelLastFocus = null; 
 }
 
 /**
@@ -969,16 +962,16 @@ function _restoreFocus() {
  * Pause game, open the named panel, trap focus; if settings, wire its UI.
  */
 function openPanel(name) {
-  window.dispatchEvent(new CustomEvent('ui:requestPause')); // pause the game behind
-  const panel = document.getElementById(`panel-${name}`); // find panel root
-  if (!panel) return; // guard if missing
-  document.body.setAttribute('data-panel-open', name); // mark open on body
-  panel.classList.remove('hidden'); // show panel
-  if (name === 'settings') srSpeak('Settings opened.'); // speak when settings
+  window.dispatchEvent(new CustomEvent('ui:requestPause'));
+  const panel = document.getElementById(`panel-${name}`); 
+  if (!panel) return; 
+  document.body.setAttribute('data-panel-open', name); 
+  panel.classList.remove('hidden'); 
+  if (name === 'settings') srSpeak('Settings opened.'); 
   _rememberFocus(); // store last focus
-  const first = getFirstFocusable(panel) || panel.querySelector('[data-close-panel]') || panel; // find focus target
-  first?.focus(); // move focus inside
-  _trapFocusIn(panel); // trap tab key
+  const first = getFirstFocusable(panel) || panel.querySelector('[data-close-panel]') || panel;
+  first?.focus(); 
+  _trapFocusIn(panel); 
   if (name === 'settings') { wireSettingsTabs(); wireSettingsControls(); renderHighScorePane(); } // ensure settings UI wired
 }
 
@@ -987,11 +980,11 @@ function openPanel(name) {
  * Hide panel, clear open flag, release focus trap, restore focus.
  */
 function closePanel(name) {
-  const panel = document.getElementById(`panel-${name}`); // find panel
-  if (!panel) return; // guard
-  panel.classList.add('hidden'); // hide panel
+  const panel = document.getElementById(`panel-${name}`);
+  if (!panel) return; 
+  panel.classList.add('hidden'); 
   if (document.body.getAttribute('data-panel-open') === name) {
-    document.body.removeAttribute('data-panel-open'); // clear flag
+    document.body.removeAttribute('data-panel-open');
   }
 
   // If the game is paused when a panel closes, and no Results/Game Over is showing,
@@ -1017,7 +1010,7 @@ function closePanel(name) {
 function loadSettings() {
   const raw = localStorage.getItem(SETTINGS_KEY); // read JSON string
   if (raw) { try { return JSON.parse(raw); } catch (_) {} } // parse or ignore
-  return { volume: 0.8, muted: false, reduceMotion: false, noFlash: false, countdown: 3 }; // defaults
+  return { volume: 0.8, muted: false, reduceMotion: false, noFlash: false, countdown: 3 };
 }
 
 /**
@@ -1025,7 +1018,7 @@ function loadSettings() {
  * Persist settings to localStorage.
  */
 function saveSettings(s) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); // save JSON
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
 }
 
 /**
@@ -1059,15 +1052,15 @@ function applySettings(s) {
  * Internally delegates to small helpers for readability.
  */
 function wireSettingsControls() {
-  const form = document.getElementById('settingsForm'); // get form
-  if (!form || form.dataset.wired === 'true') return; // guard duplicate
-  form.dataset.wired = 'true'; // mark wired
-  const refs = _readSettingsFormRefs(); // read control refs
-  let s = loadSettings(); // load current settings
+  const form = document.getElementById('settingsForm'); 
+  if (!form || form.dataset.wired === 'true') return;
+  form.dataset.wired = 'true';
+  const refs = _readSettingsFormRefs();
+  let s = loadSettings(); 
   _syncFormFromSettings(refs, s); // reflect into UI
-  applySettings(s); // apply immediately
-  const persist = () => { saveSettings(s); applySettings(s); }; // persist helper
-  _attachSettingsListeners(refs, s, persist); // attach listeners
+  applySettings(s);
+  const persist = () => { saveSettings(s); applySettings(s); };
+  _attachSettingsListeners(refs, s, persist); 
 }
 
 /**
@@ -1091,11 +1084,11 @@ function _readSettingsFormRefs() {
  */
 function _syncFormFromSettings(refs, s) {
   const { elVolume, elMute, elReduce, elNoFlash, elCountdown } = refs; // destructure
-  if (elVolume)   elVolume.value   = Math.round((s.volume ?? 0.8) * 100); // set slider
-  if (elMute)     elMute.checked   = !!s.muted; // set checkbox
-  if (elReduce)   elReduce.setAttribute('aria-pressed', (!!s.reduceMotion) ? 'true' : 'false'); // set pressed
-  if (elNoFlash)  elNoFlash.setAttribute('aria-pressed', (!!s.noFlash) ? 'true' : 'false'); // set pressed
-  if (elCountdown)elCountdown.value= String(s.countdown ?? 3); // set select
+  if (elVolume)   elVolume.value   = Math.round((s.volume ?? 0.8) * 100);
+  if (elMute)     elMute.checked   = !!s.muted;
+  if (elReduce)   elReduce.setAttribute('aria-pressed', (!!s.reduceMotion) ? 'true' : 'false');
+  if (elNoFlash)  elNoFlash.setAttribute('aria-pressed', (!!s.noFlash) ? 'true' : 'false'); 
+  if (elCountdown)elCountdown.value= String(s.countdown ?? 3); 
 }
 
 
@@ -1119,7 +1112,7 @@ function _attachSettingsListeners(refs, s, persist) {
   if (elMute) {
     elMute.addEventListener('change', () => {
       s.muted = !!elMute.checked; // true if checked
-      persist(); // apply + save
+      persist();
     });
   }
 
@@ -1137,31 +1130,31 @@ function _attachSettingsListeners(refs, s, persist) {
   if (elNoFlash) {
     elNoFlash.addEventListener('click', () => {
       const next = elNoFlash.getAttribute('aria-pressed') !== 'true'; // flip state
-      elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false'); // update attribute
-      s.noFlash = next; // update setting value
-      persist(); // apply + save
+      elNoFlash.setAttribute('aria-pressed', next ? 'true' : 'false'); 
+      s.noFlash = next;
+      persist();
     });
   }
 
   // Countdown select: store 0 / 3 / 5 (or fallback to 3)
   if (elCountdown) {
     elCountdown.addEventListener('change', () => {
-      const v = Number(elCountdown.value); // read selected value
-      s.countdown = (Number.isFinite(v) && v >= 0) ? v : 3; // safe parse / fallback
-      persist(); // apply + save
+      const v = Number(elCountdown.value); 
+      s.countdown = (Number.isFinite(v) && v >= 0) ? v : 3;
+      persist();
     });
   }
 
   // Reset button: clear storage, reload defaults, resync form and settings
   if (elReset) {
     elReset.addEventListener('click', () => {
-      const ok = confirm('Reset all saved progress and settings?'); // confirm with user
-      if (!ok) return; // cancel if user says no
+      const ok = confirm('Reset all saved progress and settings?');
+      if (!ok) return; 
 
       try {
-        localStorage.clear(); // clear all stored data
+        localStorage.clear();
       } catch (_) {
-        // ignore storage errors
+      
       }
 
       const fresh = loadSettings(); // reload default settings
@@ -1174,8 +1167,8 @@ function _attachSettingsListeners(refs, s, persist) {
       s.noFlash = fresh.noFlash;
       s.countdown = fresh.countdown;
 
-      persist(); // apply + save
-      alert('Game data has been reset.'); // notify user
+      persist();
+      alert('Game data has been reset.');
     });
   }
 }
@@ -1188,24 +1181,24 @@ function _attachSettingsListeners(refs, s, persist) {
 function renderHighScorePane() {
   const readBest = () => { // helper to read best
     try {
-      const fromLS = Number(localStorage.getItem('best') || 0); // read LS
-      if (!Number.isNaN(fromLS) && fromLS > 0) return fromLS; // valid
-    } catch (_) {} // ignore
+      const fromLS = Number(localStorage.getItem('best') || 0);
+      if (!Number.isNaN(fromLS) && fromLS > 0) return fromLS;
+    } catch (_) {} 
     const hudBest = Number((document.getElementById('best')?.textContent || '0').replace(/\D+/g, '')) || 0; // fallback to HUD
-    return hudBest; // return fallback
+    return hudBest; 
   };
   const out = document.getElementById('hiBestValue'); // output node
-  if (out) out.textContent = readBest(); // print current BEST
-  const btn = document.getElementById('resetHighScore'); // reset button
-  if (btn && btn.dataset.wired !== 'true') { // guard
-    btn.dataset.wired = 'true'; // mark wired
-    btn.addEventListener('click', () => { // on click
-      const ok = confirm('Reset BEST score only?'); // confirm
-      if (!ok) return; // abort
+  if (out) out.textContent = readBest();
+  const btn = document.getElementById('resetHighScore'); 
+  if (btn && btn.dataset.wired !== 'true') { 
+    btn.dataset.wired = 'true'; 
+    btn.addEventListener('click', () => {
+      const ok = confirm('Reset BEST score only?');
+      if (!ok) return;
       try { localStorage.setItem('best', '0'); } catch (_) {} // reset LS key
-      const hudBest = document.getElementById('best'); // HUD label
-      if (hudBest) hudBest.textContent = '0'; // reset HUD
-      if (out) out.textContent = '0'; // reset pane
+      const hudBest = document.getElementById('best'); 
+      if (hudBest) hudBest.textContent = '0'; 
+      if (out) out.textContent = '0'; // 
     });
   }
 }
@@ -1215,9 +1208,9 @@ function renderHighScorePane() {
  * Switch visible settings pane; keep all tab buttons visible/marked.
  */
 function selectSettingsTab(name) {
-  if (name === 'settings') name = 'audio'; // alias settings→audio
-  const tabs = document.querySelectorAll('.settings-tab'); // tab buttons
-  const panes = { // pane elements
+  if (name === 'settings') name = 'audio'; 
+  const tabs = document.querySelectorAll('.settings-tab'); 
+  const panes = { 
     audio:         document.getElementById('settingsPane-audio'),
     accessibility: document.getElementById('settingsPane-accessibility'),
     tutorial:      document.getElementById('settingsPane-tutorial'),
@@ -1234,22 +1227,21 @@ function selectSettingsTab(name) {
  * Wire settings tab buttons and default to 'audio' pane.
  */
 function wireSettingsTabs() {
-  const bar = document.querySelector('.settings-tabs'); // tab bar
-  if (!bar || bar.dataset.wired === 'true') return; // guard duplicate
-  bar.dataset.wired = 'true'; // mark wired
-  bar.querySelectorAll('.settings-tab').forEach(btn => { // iterate buttons
+  const bar = document.querySelector('.settings-tabs');
+  if (!bar || bar.dataset.wired === 'true') return; 
+  bar.dataset.wired = 'true';
+  bar.querySelectorAll('.settings-tab').forEach(btn => { 
     btn.addEventListener('click', () => { const name = btn.dataset.settingsTab || 'audio'; selectSettingsTab(name); }); // on click select
   });
-  selectSettingsTab('audio'); // default pane
+  selectSettingsTab('audio'); 
 }
 
-/* -----------------------------------------
- * Bonus banner FX: one-shot flash on start
- * ----------------------------------------- */
+// Bonus banner FX: one-shot flash on start
+ 
 
 let _bonusFXWired = false;
 function initBonusBannerFX() {
-  if (_bonusFXWired) return;         // guard against duplicates
+  if (_bonusFXWired) return;  
   _bonusFXWired = true;
 
   const sel = '#bonusBanner';         // target the banner element itself
@@ -1258,7 +1250,7 @@ function initBonusBannerFX() {
   const flashOnce = () => {
     const el = document.querySelector(sel);
     if (!el) return;
-    el.classList.remove('flash-once'); // reset
+    el.classList.remove('flash-once');
     void el.offsetWidth;               // reflow to allow retrigger
     el.classList.add('flash-once');    // play once
   };
@@ -1283,33 +1275,25 @@ function initBonusBannerFX() {
 }
 
 
-
-/* ---------------------------------------------
-   Bonus Banner (separate from feedback)
-   - Sits ABOVE #feedback (not overlapping).
-   - Created on demand as #bonusBanner (class .bonus-banner).
-   - Visible for entire bonus duration.
----------------------------------------------- */
-
 /**
  * _ensureBonusBanner()
  * Create #bonusBanner just before #feedback if missing; return the node.
  */
 function _ensureBonusBanner() {
   let node = document.getElementById('bonusBanner'); // find existing
-  if (node) return node; // return if found
-  const feedback = document.getElementById('feedback'); // locate feedback
+  if (node) return node;
+  const feedback = document.getElementById('feedback');
   node = document.createElement('div'); // create banner
-  node.id = 'bonusBanner'; // set id
-  node.className = 'bonus-banner'; // set class for styling 
-  node.setAttribute('aria-live', 'polite'); // announce updates softly
-  node.setAttribute('aria-atomic', 'true'); // replace whole text
-  if (feedback && feedback.parentNode) { // if feedback exists
-    feedback.parentNode.insertBefore(node, feedback); // insert above feedback
+  node.id = 'bonusBanner';
+  node.className = 'bonus-banner'; 
+  node.setAttribute('aria-live', 'polite');
+  node.setAttribute('aria-atomic', 'true');
+  if (feedback && feedback.parentNode) {
+    feedback.parentNode.insertBefore(node, feedback); 
   } else {
     document.body.appendChild(node); // fallback attach to body
   }
-  return node; // return banner node
+  return node; 
 }
 
 /**
@@ -1317,9 +1301,9 @@ function _ensureBonusBanner() {
  * Show the bonus banner with an initial text.
  */
 function showBonusBanner(text = 'BONUS MODE!') {
-  const node = _ensureBonusBanner(); // ensure node exists
-  node.textContent = text; // set text
-  node.classList.remove('hidden'); // ensure visible
+  const node = _ensureBonusBanner(); 
+  node.textContent = text;
+  node.classList.remove('hidden');
 }
 
 
@@ -1328,41 +1312,42 @@ function showBonusBanner(text = 'BONUS MODE!') {
  * Hide/clear the bonus banner.
  */
 function hideBonusBanner() {
-  const node = document.getElementById('bonusBanner'); // find node
-  if (!node) return; // guard
-  node.textContent = ''; // clear text
-  node.classList.add('hidden'); // hide from view
+  const node = document.getElementById('bonusBanner');
+  if (!node) return;
+  node.textContent = '';
+  node.classList.add('hidden');
 }
 
-/* ---------------------------------------------
-   Bonus UI hooks (banner only)
-   Shows "BONUS MODE!" at start and "BONUS MODE ENDED" briefly at end.
-   No counters/progress in the banner by design.
----------------------------------------------- */
+/**
+  * Bonus UI hooks (banner only)
+  * Shows "BONUS MODE!" at start and "BONUS MODE ENDED" briefly at end.
+  * No counters/progress in the banner by design.
+ */
+
 (function wireBonusUiHooks() {
   let endTimer = null; // timer for hiding the end message
 
   window.addEventListener('bonus:started', () => {
-    if (endTimer) { clearTimeout(endTimer); endTimer = null; } // cancel pending hide
-    document.body.setAttribute('data-bonus', 'true');          // mark bonus on body
-    showBonusBanner('BONUS MODE!');                            // show start banner
-    srSpeak('Bonus mode started');                             // announce to SR
+    if (endTimer) { clearTimeout(endTimer); endTimer = null; } 
+    document.body.setAttribute('data-bonus', 'true');
+    showBonusBanner('BONUS MODE!'); 
+    srSpeak('Bonus mode started'); 
   });
 
   window.addEventListener('bonus:ended', () => {
-    document.body.removeAttribute('data-bonus');               // clear body flag
-    showBonusBanner('BONUS MODE ENDED');                       // show end banner text
-    srSpeak('Bonus mode ended');                               // announce to SR
-    endTimer = setTimeout(() => { hideBonusBanner(); }, 1800);  // hide after a short delay
+    document.body.removeAttribute('data-bonus'); 
+    showBonusBanner('BONUS MODE ENDED'); 
+    srSpeak('Bonus mode ended'); 
+    endTimer = setTimeout(() => { hideBonusBanner(); }, 1800);
   });
 
   window.addEventListener('song:ended', (e) => {
-    const reason = e?.detail?.reason || 'completed';           // read reason
-    if (reason !== 'paused' && reason !== 'stopped') {         // on natural end
-      document.body.removeAttribute('data-bonus');             // clear flag
-      showBonusBanner('BONUS MODE ENDED');                     // mirror end flow
-      srSpeak('Bonus mode ended');                             // announce to SR
-      endTimer = setTimeout(() => { hideBonusBanner(); }, 1500);// hide after delay
+    const reason = e?.detail?.reason || 'completed'; 
+    if (reason !== 'paused' && reason !== 'stopped') { 
+      document.body.removeAttribute('data-bonus');
+      showBonusBanner('BONUS MODE ENDED');
+      srSpeak('Bonus mode ended'); 
+      endTimer = setTimeout(() => { hideBonusBanner(); }, 1500);
     }
   });
 })();
@@ -1420,4 +1405,4 @@ export {
   bindFutureControlsPlaceholder,
   initBonusBannerFX,
   unlockFxOnce,
-};
+}

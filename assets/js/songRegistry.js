@@ -1,4 +1,4 @@
-//songRegistry.js
+// songRegistry.js
 
 export const SONGS = Object.freeze([
   Object.freeze({
@@ -109,8 +109,6 @@ export const SONGS = Object.freeze([
   }),
 ]);
 
-
-
 export const LEVEL_TO_SONG = Object.freeze({
   1:  'itty-bitty-8bit',
   2:  'balloon-game',
@@ -129,15 +127,18 @@ export const LEVEL_TO_SONG = Object.freeze({
   15: 'forkandspoon',
 });
 
-/* Helper: pick song object for a given level.
-   If no explicit mapping exists, fallback to cycling through SONGS. */
+/**
+ * Pick the song object for a given level.
+ * Uses LEVEL_TO_SONG when available, otherwise cycles through SONGS as fallback.
+ */
 function getSongForLevel(level) {
-  const byId = (id) => SONGS.find(s => s.id === id) || SONGS[0]; // resolve by id
-  const mappedId = LEVEL_TO_SONG?.[Number(level)];               // explicit map
-  if (mappedId) return byId(mappedId);                           // mapped → return
-  const idx = Math.max(0, (Number(level) - 1) % SONGS.length);   // cycle fallback
-  return SONGS[idx] || SONGS[0];                                  // safe return
+  const byId = (id) => SONGS.find((s) => s.id === id) || SONGS[0]; // resolve song by id
+  const mappedId = LEVEL_TO_SONG?.[Number(level)];                  // look up explicit mapping
+  if (mappedId) return byId(mappedId);                              // mapped level → exact song
+
+  const idx = Math.max(0, (Number(level) - 1) % SONGS.length);      // cycle through list as fallback
+  return SONGS[idx] || SONGS[0];                                    // safe return
 }
 
-/* ---- exports ---- */
+// Export helper used by the song player and game bootstrap.
 export { getSongForLevel };
